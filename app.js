@@ -1357,7 +1357,7 @@ function taskRewardToast(data = {}, task = {}) {
   const points = Number(data.earned_points || 0);
   const parts = [tr('taskRewardAwarded')];
   if (points > 0) {
-    parts.push(`+${fmt(points)} Game FOX`);
+    parts.push(`+${fmt(points)} G-FOX`);
   }
   if (tickets > 0) {
     parts.push(tr('dailyTicketAwarded', { count: fmt(tickets, 0) }));
@@ -2956,7 +2956,7 @@ function earnView() {
       ? (skinClaimed ? tr('skinTapsClaimed') : tr('skinTapsReady', { count: fmt(skinDaily, 0) }))
       : tr('winSkinsRoulette');
       
-  const balanceLabel = isFree ? 'Puntos Game FOX' : tr('generatedPack');
+  const balanceLabel = isFree ? 'G-FOX' : tr('generatedPack');
   const balanceValue = isFree ? fmt(player.game_fox_balance || 0) : fmt(cycleTokens);
   
   const upgradeTargetView = isFree ? 'packs' : (capReached ? 'packs' : 'tasks');
@@ -2966,8 +2966,8 @@ function earnView() {
   return `
     <section class="hero-stage">
       <div class="badges-row" style="display:flex; gap:8px; justify-content:center; width:100%; margin-bottom:4px;">
-        <div class="hour-badge"><span class="coin-icon">${coinIcon()}</span><span>+${isFree ? '1' : fmt(pack.tap_reward_tokens || 1)} FOX/tap</span></div>
-        ${isFree ? `<div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} FOX/h</span></div>` : ''}
+        <div class="hour-badge"><span class="coin-icon">${coinIcon()}</span><span>+${isFree ? '1' : fmt(pack.tap_reward_tokens || 1)} ${isFree ? 'G-FOX' : 'FOX'}/tap</span></div>
+        ${isFree ? `<div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} G-FOX/h</span></div>` : ''}
       </div>
       <div class="main-balance-wrap">
         <small>${balanceLabel}</small>
@@ -3728,7 +3728,7 @@ function minerView() {
           <div>
             <small style="color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Producción por Hora</small>
             <div style="font-size: 1.5rem; font-weight: 800; color: #a855f7; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px;">
-              ${icon('ph:clock-fill')} +${fmt(passiveRate)} FOX/h
+              ${icon('ph:clock-fill')} +${fmt(passiveRate)} G-FOX/h
             </div>
           </div>
           
@@ -3737,7 +3737,7 @@ function minerView() {
           <div>
             <small style="color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Por reclamar</small>
             <div style="font-size: 1.5rem; font-weight: 800; color: #10b981; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px;">
-              +${fmt(claimablePoints)} Game FOX
+              +${fmt(claimablePoints)} G-FOX
             </div>
           </div>
         </div>
@@ -4043,7 +4043,7 @@ function dailyStreakCalendarHtml() {
 
       ${!claimedToday ? `
         <button class="claim-streak-btn" type="button" data-action="task" data-task="daily_check" style="width: 100%; background: #a855f7; color: #fff; border: none; padding: 10px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: transform 0.2s;">
-          Hacer Check-in Diario (+${fmt(rewards[currentDay - 1]?.points || 100)} Game FOX)
+          Hacer Check-in Diario (+${fmt(rewards[currentDay - 1]?.points || 100)} G-FOX)
         </button>
       ` : `
         <button class="claim-streak-btn claim-streak-btn--done" type="button" disabled style="width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 12px; font-weight: 800;">
@@ -5968,7 +5968,7 @@ async function doAction(action, button, event) {
       const data = await api('/api/foxpay/passive/claim', { player_id: playerId, account_token: accountToken });
       updateDashboard(data);
       if (data.earned > 0) {
-        toast(`+${fmt(data.earned)} Game FOX reclamados!`);
+        toast(`+${fmt(data.earned)} G-FOX reclamados!`);
       }
       return;
     }
