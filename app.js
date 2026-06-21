@@ -3819,13 +3819,11 @@ function minerView() {
                 lockReason = `Requiere paquete de pago activo`;
               }
             }
-          }
-
-          if (isLocked) {
+             if (isLocked) {
             return `
-              <article class="card-item locked" style="background: #15161a; border: 1px dashed rgba(255,255,255,0.06); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 125px; opacity: 0.75; position: relative;">
+              <article class="card-item locked" style="background: rgba(15, 17, 26, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; opacity: 0.8; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
                 <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <div style="background: rgba(255,255,255,0.02); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.05); flex-shrink: 0;">
+                  <div style="background: rgba(255,255,255,0.02); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: rgba(255,255,255,0.25); border: 1px dashed rgba(255,255,255,0.08); flex-shrink: 0;">
                     ${icon('ph:lock-key-fill')}
                   </div>
                   <div>
@@ -3838,8 +3836,8 @@ function minerView() {
                   </div>
                 </div>
                 
-                <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 8px; text-align: center;">
-                  <span style="font-size: 0.65rem; color: #ef4444; font-weight: 600; line-height: 1.2; background: rgba(239,68,68,0.05); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(239,68,68,0.1); display: inline-block; max-width: 95%;">
+                <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px; text-align: center;">
+                  <span style="font-size: 0.62rem; color: #fb7185; font-weight: 600; line-height: 1.2; background: rgba(244, 63, 94, 0.08); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(244, 63, 94, 0.2); display: inline-block; max-width: 95%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
                     ${lockReason}
                   </span>
                 </div>
@@ -3848,24 +3846,24 @@ function minerView() {
           }
 
           return `
-            <article class="card-item" style="background: #1c1e22; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 125px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            <article class="card-item" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(99, 102, 241, 0.03)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
               <div style="display: flex; gap: 10px; align-items: flex-start;">
-                <div style="background: #252830; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #c084fc; border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;">
+                <div style="background: rgba(168, 85, 247, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); flex-shrink: 0;">
                   ${icon(getCardIcon(c.id))}
                 </div>
                 <div>
-                  <strong style="font-size: 0.8rem; color: #fff; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 2px; word-break: break-word;">${c.name}</strong>
-                  <small style="font-size: 0.62rem; color: rgba(255,255,255,0.4); display: block;">Profit per hour</small>
+                  <strong style="font-size: 0.8rem; color: #fff; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 2px; word-break: break-word; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${c.name}</strong>
+                  <small style="font-size: 0.62rem; color: rgba(255,255,255,0.55); display: block;">Profit per hour</small>
                   <div style="display: flex; align-items: center; gap: 4px; margin-top: 1px;">
                     <span style="width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
-                    <span style="font-size: 0.72rem; color: #fff; font-weight: 700;">+${fmt(profit)}</span>
+                    <span style="font-size: 0.72rem; color: #34d399; font-weight: 800;">+${fmt(profit)}</span>
                   </div>
                 </div>
               </div>
               
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;">
-                <span style="font-size: 0.72rem; color: rgba(255,255,255,0.5); font-weight: 700;">lvl ${currentLvl}</span>
-                <button class="upgrade-card-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'} style="border: none; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; ${hasBalance ? 'background: #2e3035; color: #fff; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 2px 6px rgba(0,0,0,0.2);' : 'background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.02);'}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+                <span style="font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 700;">lvl ${currentLvl}</span>
+                <button class="upgrade-card-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'} style="border: none; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; ${hasBalance ? 'background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);' : 'background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.05);'}">
                   <span style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
                   <span>${fmt(cost)}</span>
                 </button>
