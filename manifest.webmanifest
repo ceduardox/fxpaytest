@@ -1,0 +1,44 @@
+{
+  "name": "FoxPay Tap Game",
+  "short_name": "FoxPay",
+  "description": "Mobile tap game with FOX rewards, packages, referrals and daily progress.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#07133d",
+  "theme_color": "#101550",
+  "categories": ["games", "finance", "entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "251x251",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo2-meta.jpg",
+      "sizes": "627x627",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Earn",
+      "short_name": "Earn",
+      "description": "Open FoxPay tap screen.",
+      "url": "/?view=earn",
+      "icons": [{ "src": "/favicon.png", "sizes": "251x251", "type": "image/png" }]
+    },
+    {
+      "name": "Packages",
+      "short_name": "Packs",
+      "description": "Open FoxPay packages.",
+      "url": "/?view=packs",
+      "icons": [{ "src": "/favicon.png", "sizes": "251x251", "type": "image/png" }]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "source": "../",
+  "purpose": "Optimized FoxPay UI sprites generated from UIGAME.png, uigame2.png, packs.png and card.png.",
+  "sheets": {
+    "uigame-sheet.webp": "Half-size reference sheet of neon buttons, bars, task cards and icons.",
+    "uigame-transparent-sheet.webp": "Half-size transparent component sheet with banners, cards, buttons, avatar and snowflake.",
+    "packs-sheet.webp": "Half-size pack/avatar/emblem reference sheet."
+  },
+  "sprites": {
+    "top-banner.webp": "Long blue neon banner/header.",
+    "wide-task-card.webp": "Large dark blue card with icon/button areas.",
+    "medium-task-card.webp": "Compact dark blue card with icon/button areas.",
+    "ornate-panel.webp": "Decorative dark panel.",
+    "gold-button-large.webp": "Large gold CTA button.",
+    "gold-button-small.webp": "Small gold CTA button.",
+    "blue-square-button.webp": "Blue square icon button.",
+    "small-blue-pill.webp": "Small blue pill button.",
+    "fox-avatar-round.webp": "Round fox avatar for ranking/referrals.",
+    "snowflake.webp": "Snowflake decoration.",
+    "fox-gift.webp": "Fox gift icon for referrals/rewards.",
+    "paw-badge.webp": "Paw badge for low tier packs.",
+    "fox-hex-badge.webp": "Fox badge for mid tier packs.",
+    "fox-diamond-badge.webp": "Fox diamond badge for higher tier packs.",
+    "fox-gold-wreath.webp": "Gold wreath fox badge.",
+    "fox-crown-wreath.webp": "Crown fox badge for premium packs.",
+    "gift-icon.webp": "Gift pack icon.",
+    "profile-icon.webp": "Profile icon.",
+    "diamond-emblem.webp": "Diamond premium emblem.",
+    "sparkle.webp": "Sparkle decoration.",
+    "task-card.webp": "Standalone original card.png converted to WebP."
+  }
+}

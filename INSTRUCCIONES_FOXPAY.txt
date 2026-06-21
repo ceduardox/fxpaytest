@@ -1,0 +1,102 @@
+FOXPAY - INSTRUCCIONES OPERATIVAS
+
+Este juego es independiente del resto del workspace.
+
+DIRECTORIO DE TRABAJO
+- Trabajar solo dentro de:
+  G:\NERAVERSE\NERATAPCOIN\foxpay
+- No mezclar cambios de newgame, public/newgame, public/foxpay ni archivos del proyecto raiz, salvo que el usuario lo pida explicitamente.
+- Si el workspace raiz esta sucio, ignorar cambios ajenos y publicar solo el contenido de foxpay.
+
+REPOSITORIO DE PRODUCCION
+- Repositorio destino:
+  https://github.com/ceduardox/fxta.git
+- Al subir a GitHub, debe publicarse un repo cuya raiz sea el contenido de foxpay.
+- No subir el directorio foxpay como subcarpeta. El index.html, server.js, package.json, admin.html, etc. deben quedar en la raiz del repo fxta.
+
+FORMA SEGURA DE PUBLICAR SOLO FOXPAY
+Forma recomendada ahora:
+  powershell -ExecutionPolicy Bypass -File .\scripts\publish-foxpay.ps1 -Message "mensaje del cambio"
+
+Opciones utiles:
+  -NoPush       prepara la copia temporal y el commit, pero no sube a GitHub.
+  -SkipCheck    omite npm.cmd run check si ya se valido manualmente.
+
+El script hace automaticamente:
+- Validar con npm.cmd run check.
+- Crear una copia temporal limpia fuera de foxpay:
+  G:\NERAVERSE\NERATAPCOIN\_foxpay_publish_YYYYMMDDHHMMSS
+- Excluir .git, node_modules, .cache, _publish_tmp_* y archivos temporales ~$*.
+- Inicializar git dentro del temporal.
+- Crear commit.
+- Agregar remoto:
+  https://github.com/ceduardox/fxta.git
+- Hacer push force a main.
+
+Flujo manual equivalente, solo si el script falla:
+1. Crear un directorio temporal en:
+   G:\NERAVERSE\NERATAPCOIN\_foxpay_publish_YYYYMMDDHHMMSS
+2. Copiar todo el contenido de foxpay dentro de ese temporal.
+3. Inicializar git dentro del temporal.
+4. Hacer commit.
+5. Agregar remoto:
+   https://github.com/ceduardox/fxta.git
+6. Hacer push force a main.
+
+Comandos base usados:
+  git init
+  git add -A
+  git commit -m "mensaje"
+  git branch -M main
+  git remote add origin https://github.com/ceduardox/fxta.git
+  git push --force origin main
+
+VARIABLES IMPORTANTES EN RAILWAY
+- PORT=3000
+- NODE_ENV=production
+- DATABASE_URL=postgres://...
+- FOXPAY_ADMIN_KEY=clave-segura-del-admin
+- FOXPAY_ADMIN_PATH=/ceduardox
+- NOWPAYMENTS_API_KEY=clave-api-nowpayments
+- NOWPAYMENTS_IPN_SECRET=secret-ipn-nowpayments
+- NOWPAYMENTS_IPN_URL=https://foxpay.live/api/foxpay/nowpayments/ipn
+- NOWPAYMENTS_SUCCESS_URL=https://foxpay.live/
+- NOWPAYMENTS_CANCEL_URL=https://foxpay.live/
+
+Notas:
+- En local se puede usar DATABASE_URL=disable para probar en memoria.
+- En produccion debe usarse PostgreSQL para que usuarios, saldos, paquetes, retiros, compras, temporadas y admin persistan.
+- La ruta admin actual depende de FOXPAY_ADMIN_PATH. Si se cambia en Railway, cambia la URL del panel.
+- La clave admin nunca debe hardcodearse en frontend ni commitearse en archivos reales de entorno.
+- NOWPayments se usa desde backend. No se requiere public key para el flujo actual.
+- El usuario puede pagar paquetes y avatares premium con USDT BEP20, USDT Polygon o USDT TRON.
+- El sistema crea pagos con ipn_callback_url propio de FoxPay; no hay que reemplazar el webhook de otra web en el panel de NOWPayments si esta ya funciona.
+- El endpoint IPN de FoxPay es:
+  POST /api/foxpay/nowpayments/ipn
+- Al recibir estado confirmed o finished, FoxPay activa automaticamente el paquete o avatar.
+
+FUNCIONES ACTUALES IMPORTANTES
+- Juego tap con energia, tareas diarias, videos, paquetes, referidos, perfil, avatares, retiros y ranking.
+- Admin financiero en ruta protegida.
+- Admin permite editar token, seguridad anti multi-cuenta, videos, paquetes, avatares, temporada, compras y retiros.
+- Temporada:
+  - Si no hay temporada activa, el usuario ve ranking normal sin promocion.
+  - Si hay inicio y fin activos, aparece contador y premio.
+  - El admin define recompensa FOX por ganador.
+  - El admin paga ganadores una sola vez por temporada.
+  - Si cambia nombre, fechas, cantidad de ganadores o recompensa, se considera una temporada nueva y se limpia el estado de pago.
+
+SEGURIDAD Y ABUSO
+- Existe bloqueo configurable por misma IP y mismo dispositivo desde admin.
+- La identificacion por dispositivo desde navegador no es infalible contra perfiles/incognito; se complementa con IP, user agent y reglas del servidor.
+- La bandera/pais se obtiene por cabeceras del hosting/CDN o por lookup de IP cuando es posible.
+- No prometer bloqueo perfecto de multi-cuentas en web pura; para mayor seguridad se requiere KYC, telefono, wallet verificada, antifraude o reglas adicionales.
+
+REGLA PRINCIPAL
+Antes de modificar o subir:
+- Revisar archivos reales de foxpay.
+- Validar con:
+  node --check foxpay\server.js
+  node --check foxpay\app.js
+  node --check foxpay\admin.js
+- Publicar solo foxpay al repo ceduardox/fxta.git.

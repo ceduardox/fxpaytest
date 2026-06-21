@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>FoxPay Admin</title>
+    <script>
+      try {
+        const savedAdminSession = JSON.parse(localStorage.getItem('foxpay_admin_session_v1') || '{}');
+        if (savedAdminSession.authToken || savedAdminSession.authKey) {
+          document.documentElement.classList.add('admin-session-restoring');
+        }
+      } catch {
+        localStorage.removeItem('foxpay_admin_session_v1');
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
+    <link rel="stylesheet" href="/admin.css?v=20260607-rank-progress" />
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.FOXPAY_ONESIGNAL_APP_ID = 'e951a9b5-2c5a-42ce-9c30-7be3dca788d5';
+      window.FOXPAY_ADMIN_BASE = window.location.pathname.replace(/\/+$/, '') || '/ceduardox';
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+    </script>
+  </head>
+  <body>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations()
+          .then((registrations) => registrations.forEach((registration) => {
+            const script = registration.active?.scriptURL || registration.installing?.scriptURL || registration.waiting?.scriptURL || '';
+            if (!script.includes('OneSignalSDKWorker')) registration.unregister();
+          }))
+          .catch(() => {});
+      }
+    </script>
+    <div class="admin-shell" id="adminApp">
+      <section class="login-view" data-view="login">
+        <form class="login-card" id="loginForm">
+          <span class="brand-mark">FP</span>
+          <p class="eyebrow">FoxPay Console</p>
+          <h1>Admin financiero</h1>
+          <label for="adminUsername">Usuario</label>
+          <input id="adminUsername" name="adminUsername" type="text" autocomplete="username" placeholder="Usuario admin" />
+          <label for="adminPassword">Contrasena</label>
+          <div class="secret-row">
+            <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" placeholder="Contrasena admin" />
+            <button class="icon-button" type="button" id="toggleSecret" aria-label="Mostrar clave" title="Mostrar clave">
+              <iconify-icon icon="ph:eye-bold"></iconify-icon>
+            </button>
+          </div>
+          <div class="local-admin-key is-hidden" id="localAdminKeyBlock">
+            <label for="localAdminKey">Clave local</label>
+            <input id="localAdminKey" name="localAdminKey" type="password" autocomplete="off" placeholder="dev-admin" />
+            <small>Solo visible en localhost para pruebas.</small>
+          </div>
+          <button class="primary-button" type="submit">
+            <iconify-icon icon="ph:lock-key-bold"></iconify-icon>
+            Entrar
+          </button>
+          <p class="login-note">Usa el usuario y la contrasena del super admin.</p>
+        </form>
+      </section>
+
+      <section class="dashboard-view is-hidden" data-view="dashboard">
+        <aside class="sidebar">
+          <div class="sidebar-brand">
+            <span class="brand-mark">FP</span>
+            <div>
+              <strong>FoxPay</strong>
+              <span>Admin Console</span>
+            </div>
+            <button class="icon-button sidebar-close-button" type="button" id="sidebarCloseButton" aria-label="Cerrar menu" title="Cerrar menu">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <div class="sidebar-admin-card" aria-label="Admin actual">
+            <iconify-icon icon="ph:user-circle-bold"></iconify-icon>
+            <div>
+              <span>Admin</span>
+              <strong id="sidebarAdminName">Admin</strong>
+            </div>
+          </div>
+          <nav class="side-nav" aria-label="Admin">
+            <button class="nav-link is-active" type="button" data-panel="overview"><iconify-icon icon="ph:gauge-bold"></iconify-icon>Resumen</button>
+            <button class="nav-link" type="button" data-panel="users"><iconify-icon icon="ph:users-three-bold"></iconify-icon>Usuarios</button>
+            <button class="nav-link" type="button" data-panel="support"><iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>Soporte <span class="nav-badge" id="supportNavBadge"></span></button>
+            <button class="nav-link" type="button" data-panel="packages"><iconify-icon icon="ph:package-bold"></iconify-icon>Paquetes</button>
+            <button class="nav-link" type="button" data-panel="ranks"><iconify-icon icon="ph:medal-bold"></iconify-icon>Rangos</button>
+            <button class="nav-link" type="button" data-panel="avatars"><iconify-icon icon="ph:user-square-bold"></iconify-icon>Avatares</button>
+            <button class="nav-link" type="button" data-panel="skins"><iconify-icon icon="ph:sparkle-bold"></iconify-icon>Skins</button>
+            <button class="nav-link" type="button" data-panel="roulette"><iconify-icon icon="ph:circle-notch-bold"></iconify-icon>Ruleta</button>
+            <button class="nav-link" type="button" data-panel="unilevel"><iconify-icon icon="ph:tree-structure-bold"></iconify-icon>Unilevel</button>
+            <button class="nav-link" type="button" data-panel="season"><iconify-icon icon="ph:trophy-bold"></iconify-icon>Temporada</button>
+            <button class="nav-link" type="button" data-panel="purchases"><iconify-icon icon="ph:receipt-bold"></iconify-icon>Compras</button>
+            <button class="nav-link" type="button" data-panel="withdrawals"><iconify-icon icon="ph:bank-bold"></iconify-icon>Retiros</button>
+            <button class="nav-link" type="button" data-panel="hotwallet"><iconify-icon icon="ph:wallet-bold"></iconify-icon>Hot wallet</button>
+            <button class="nav-link" type="button" data-panel="admins"><iconify-icon icon="ph:shield-star-bold"></iconify-icon>Admins</button>
+            <button class="nav-link" type="button" data-panel="maintenance" data-superadmin-section><iconify-icon icon="ph:warning-octagon-bold"></iconify-icon>Mantenimiento</button>
+          </nav>
+          <button class="ghost-button logout-button" type="button" id="logoutButton">
+            <iconify-icon icon="ph:sign-out-bold"></iconify-icon>
+            Salir
+          </button>
+        </aside>
+        <button class="sidebar-backdrop" type="button" id="sidebarBackdrop" aria-label="Cerrar menu"></button>
+
+        <main class="content">
+          <header class="topbar">
+            <div class="topbar-title">
+              <button class="icon-button sidebar-menu-button" type="button" id="sidebarMenuButton" aria-label="Abrir menu" title="Abrir menu">
+                <iconify-icon icon="ph:list-bold"></iconify-icon>
+              </button>
+              <div>
+                <p class="eyebrow">Operacion FoxPay</p>
+                <h2 id="panelTitle">Resumen</h2>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <span class="sync-pill" id="syncStatus">Sincronizando</span>
+              <button class="ghost-button" type="button" id="adminPushButton">
+                <iconify-icon icon="ph:bell-ringing-bold"></iconify-icon>
+                Notificaciones
+              </button>
+              <button class="ghost-button" type="button" id="adminPushTestButton">
+                <iconify-icon icon="ph:paper-plane-tilt-bold"></iconify-icon>
+                Probar push
+              </button>
+              <button class="ghost-button" type="button" id="refreshButton">
+                <iconify-icon icon="ph:arrow-clockwise-bold"></iconify-icon>
+                Actualizar
+              </button>
+            </div>
+          </header>
+
+          <section class="alert is-hidden" id="alertBox"></section>
+
+          <section class="panel is-active" data-panel-view="overview">
+            <div class="metrics-grid" id="metricsGrid"></div>
+            <div class="split-grid">
+              <article class="surface">
+                <div class="section-head">
+                  <span class="section-icon"><iconify-icon icon="ph:tag"></iconify-icon></span>
+                  <div>
+                    <p class="eyebrow">Token</p>
+                    <h3>Precio editable</h3>
+                  </div>
+                </div>
+                <form class="inline-form" id="tokenPriceForm">
+                  <label>
+                    Precio USD
+                    <input name="priceUsd" type="number" min="0" step="0.000001" placeholder="0.000000" required />
+                  </label>
+                  <label>
+                    Simbolo
+                    <input name="symbol" type="text" maxlength="12" placeholder="NRT" />
+                  </label>
+                  <button class="primary-button" type="submit">Guardar precio</button>
+                </form>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <span class="section-icon"><iconify-icon icon="ph:arrows-left-right"></iconify-icon></span>
+                  <div>
+                    <p class="eyebrow">Retiros</p>
+                    <h3>Minimo editable</h3>
+                  </div>
+                </div>
+                <form class="inline-form" id="withdrawalSettingsForm">
+                  <label>
+                    Minimo USDT
+                    <input name="minUsdt" type="number" min="0.01" step="0.01" required />
+                  </label>
+                  <button class="primary-button" type="submit" id="withdrawalSettingsButton">Guardar minimo</button>
+                  <p class="form-feedback" id="withdrawalSettingsFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <span class="section-icon"><iconify-icon icon="ph:shield"></iconify-icon></span>
+                  <div>
+                    <p class="eyebrow">Seguridad</p>
+                    <h3>Anti multi-cuenta</h3>
+                  </div>
+                </div>
+                <form class="security-form" id="securityForm">
+                  <label class="toggle-row">
+                    <input name="blockSameIp" type="checkbox" />
+                    <span>Bloquear misma IP</span>
+                  </label>
+                  <label class="toggle-row">
+                    <input name="blockSameDevice" type="checkbox" />
+                    <span>Bloquear mismo dispositivo</span>
+                  </label>
+                  <label>
+                    Ciclo diario (minutos)
+                    <input name="dailyCycleMinutes" type="number" min="1" max="1440" step="1" />
+                    <small class="field-hint">Produccion: 1440 = 1 dia UTC. Test: 1, 10 o 60 minutos.</small>
+                  </label>
+                  <button class="primary-button" type="submit" id="securitySaveButton">Guardar seguridad</button>
+                  <p class="form-feedback" id="securityFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <span class="section-icon"><iconify-icon icon="ph:activity"></iconify-icon></span>
+                  <div>
+                    <p class="eyebrow">Actividad</p>
+                    <h3>Cola operativa</h3>
+                  </div>
+                </div>
+                <div class="activity-list" id="activityList"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="users">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Usuarios</p>
+                <h3>Cuentas y balance</h3>
+              </div>
+              <input class="search-input" id="userSearch" type="search" placeholder="Buscar usuario" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                    <th>Pais / IP</th>
+                    <th>Dispositivo</th>
+                    <th>Patrocinador</th>
+                    <th>Rango</th>
+                    <th>Pack</th>
+                    <th>Balance</th>
+                    <th>Produccion diaria</th>
+                    <th>Estado</th>
+                    <th>Registro</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+            <div class="users-mobile-list" id="usersMobileList"></div>
+            <div class="pagination-bar" id="usersPagination">
+              <button class="ghost-button compact-button" type="button" data-users-page="prev">
+                <iconify-icon icon="ph:caret-left-bold"></iconify-icon>Anterior
+              </button>
+              <span id="usersPageInfo">Pagina 1 / 1</span>
+              <button class="ghost-button compact-button" type="button" data-users-page="next">
+                Siguiente<iconify-icon icon="ph:caret-right-bold"></iconify-icon>
+              </button>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="support">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Soporte</p>
+                <h3>Mensajes de usuarios</h3>
+              </div>
+              <select class="select-control" id="supportFilter">
+                <option value="open">Abiertos</option>
+                <option value="unread">Sin leer</option>
+                <option value="all">Todos</option>
+                <option value="closed">Cerrados</option>
+              </select>
+            </div>
+            <div class="support-admin-layout">
+              <div class="support-admin-list" id="supportTicketList"></div>
+              <article class="surface support-admin-detail" id="supportTicketDetail"></article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="packages">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Paquetes</p>
+                <h3>Ofertas editables</h3>
+              </div>
+              <button class="primary-button" type="button" id="newPackageButton">
+                <iconify-icon icon="ph:plus-bold"></iconify-icon>
+                Nuevo paquete
+              </button>
+            </div>
+            <div class="package-grid" id="packagesGrid"></div>
+          </section>
+
+          <section class="panel" data-panel-view="ranks">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Rangos</p>
+                <h3>Niveles visuales editables</h3>
+              </div>
+              <button class="primary-button" type="button" id="newRankButton">
+                <iconify-icon icon="ph:plus-bold"></iconify-icon>
+                Nuevo rango
+              </button>
+            </div>
+            <p class="help-note">Los rangos son visuales por ahora. Se calculan por directos, volumen acumulado de organizacion y requisitos del equipo directo.</p>
+            <div class="package-grid rank-grid" id="ranksGrid"></div>
+          </section>
+
+          <section class="panel" data-panel-view="avatars">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Perfil</p>
+                <h3>Imagenes de perfil</h3>
+              </div>
+              <button class="primary-button" type="button" id="newAvatarButton">
+                <iconify-icon icon="ph:plus-bold"></iconify-icon>
+                Nuevo avatar
+              </button>
+            </div>
+            <div class="package-grid" id="avatarsGrid"></div>
+          </section>
+
+          <section class="panel" data-panel-view="skins">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Skins</p>
+                <h3>Premios y auto tap</h3>
+              </div>
+              <button class="primary-button" type="button" id="newSkinButton">
+                <iconify-icon icon="ph:plus-bold"></iconify-icon>
+                Nueva skin
+              </button>
+            </div>
+            <div class="package-grid" id="skinsGrid"></div>
+          </section>
+
+          <section class="panel" data-panel-view="roulette">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Premios</p>
+                <h3>Ruleta por paquete</h3>
+              </div>
+              <button class="primary-button" type="button" id="newRouletteRewardButton">
+                <iconify-icon icon="ph:plus-bold"></iconify-icon>
+                Nuevo premio
+              </button>
+            </div>
+            <article class="surface compact-surface">
+              <form class="inline-form" id="rouletteSettingForm">
+                <label>
+                  Paquete
+                  <select name="packageId"></select>
+                </label>
+                <label>
+                  Tickets por intento
+                  <input name="ticketCost" type="number" min="1" step="1" required />
+                </label>
+                <button class="primary-button" type="submit">Guardar costo</button>
+              </form>
+              <p class="help-note">El usuario ve hasta 12 premios activos por ciclo. La seleccion rota cada 3 dias; si el ciclo trae premios USDT altos, el sistema puede subir el costo efectivo por encima del minimo configurado.</p>
+            </article>
+            <article class="surface compact-surface">
+              <div class="section-head compact-head">
+                <div>
+                  <p class="eyebrow">Referidos</p>
+                  <h3>Tickets por compra de pack</h3>
+                </div>
+              </div>
+              <p class="help-note">Se acreditan al referente directo cuando la compra queda aprobada o activada.</p>
+              <form class="referral-ticket-form" id="referralTicketRewardsForm"></form>
+              <p class="form-feedback" id="referralTicketRewardsFeedback"></p>
+            </article>
+            <div class="package-grid" id="rouletteRewardsGrid"></div>
+          </section>
+
+          <section class="panel" data-panel-view="season">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Ranking</p>
+                <h3>Temporada y ganadores</h3>
+              </div>
+              <span class="sync-pill" id="seasonStatus">Sin fechas</span>
+            </div>
+            <div class="split-grid season-grid">
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Calendario</p>
+                    <h3>Editar temporada</h3>
+                  </div>
+                </div>
+                <form class="security-form" id="seasonForm">
+                  <label>
+                    Nombre
+                    <input name="seasonName" type="text" maxlength="80" placeholder="Monthly Season" />
+                  </label>
+                  <label>
+                    Empieza
+                    <input name="seasonStart" type="datetime-local" />
+                  </label>
+                  <label>
+                    Termina
+                    <input name="seasonEnd" type="datetime-local" />
+                  </label>
+                  <label>
+                    Ganadores visibles
+                    <input name="winnerLimit" type="number" min="1" max="100" step="1" />
+                  </label>
+                  <label>
+                    Pool total FOX
+                    <input name="rewardTokens" type="number" min="0" step="1" placeholder="0 FOX" />
+                  </label>
+                  <label>
+                    Distribución
+                    <select name="rewardMode">
+                      <option value="competitive">Competitiva por ranking</option>
+                      <option value="equal">Igual para todos</option>
+                    </select>
+                  </label>
+                  <button class="primary-button" type="submit" id="seasonSaveButton">Guardar temporada</button>
+                  <button class="ghost-button" type="button" id="seasonPayButton">Pagar ganadores</button>
+                  <p class="form-feedback" id="seasonFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface season-winners-surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Ganadores</p>
+                    <h3>Lista actual</h3>
+                  </div>
+                  <span class="sync-pill" id="seasonWinnerCount">0</span>
+                </div>
+                <div class="winner-list" id="seasonWinnersList"></div>
+              </article>
+              <article class="surface season-calendar-surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Calendario 2026</p>
+                    <h3>Temporadas creadas</h3>
+                  </div>
+                  <span class="sync-pill">Auto</span>
+                </div>
+                <div class="season-calendar-list" id="seasonScheduleList"></div>
+                <button class="primary-button" type="button" id="seasonScheduleSaveButton">Guardar calendario</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="unilevel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Referidos</p>
+                <h3>Unilevel configurable</h3>
+              </div>
+              <span class="sync-pill">Pack del receptor define niveles</span>
+            </div>
+            <div class="split-grid">
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Porcentajes</p>
+                    <h3>Editar por paquete</h3>
+                  </div>
+                </div>
+                <form class="security-form" id="unilevelForm">
+                  <div class="unilevel-config-grid" id="unilevelConfigGrid"></div>
+                  <button class="primary-button" type="submit" id="unilevelSaveButton">Guardar unilevel</button>
+                  <p class="form-feedback" id="unilevelFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Red</p>
+                    <h3>Mapa por usuario</h3>
+                  </div>
+                </div>
+                <input class="search-input" id="unilevelUserSearch" type="search" placeholder="Buscar usuario para mapa" />
+                <div class="unilevel-user-list" id="unilevelUserList"></div>
+                <div class="unilevel-rank-progress" id="unilevelRankProgress"></div>
+                <div class="unilevel-map" id="adminUnilevelMap"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="purchases">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Compras</p>
+                <h3>Historial de pagos</h3>
+              </div>
+              <select class="select-control" id="purchaseFilter">
+                <option value="all">Todas</option>
+                <option value="pending">Pendientes</option>
+                <option value="approved">Aprobadas</option>
+                <option value="rejected">Rechazadas</option>
+              </select>
+            </div>
+            <article class="surface">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Pago manual</p>
+                  <h3>Activar pack sin NOWPayments</h3>
+                </div>
+                <span class="sync-pill">Solo admin finanzas</span>
+              </div>
+              <form class="inline-form" id="manualPurchaseForm">
+                <label>Player ID <input name="playerId" type="text" placeholder="fox_..." required /></label>
+                <label>Pack <select name="packageId" required></select></label>
+                <label>Confirmacion <input name="confirmation" type="text" placeholder="PAGO MANUAL" required /></label>
+                <button class="primary-button" type="submit">Crear pago manual</button>
+              </form>
+              <p class="task-editor-note">Usalo solo para pruebas o pagos verificados fuera de NOWPayments. Activa el pack y registra la compra.</p>
+            </article>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Compra</th>
+                    <th>Usuario</th>
+                    <th>Paquete</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody id="purchasesBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="withdrawals">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Retiros</p>
+                <h3>Aprobar o rechazar</h3>
+              </div>
+              <select class="select-control" id="withdrawalFilter">
+                <option value="pending">Pendientes</option>
+                <option value="all">Todos</option>
+                <option value="approved">Aprobados</option>
+                <option value="rejected">Rechazados</option>
+              </select>
+            </div>
+            <div class="withdrawal-list" id="withdrawalsList"></div>
+          </section>
+
+          <section class="panel" data-panel-view="hotwallet">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Configuracion</p>
+                <h3>Hot wallet visual</h3>
+              </div>
+            </div>
+            <div class="split-grid hot-wallet-grid">
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Wallet</p>
+                    <h3>Direccion guardada</h3>
+                  </div>
+                </div>
+                <form class="security-form" id="hotWalletForm">
+                  <div class="form-grid">
+                    <label>
+                      Red
+                      <select name="network">
+                        <option value="BEP20">USDT BEP20</option>
+                        <option value="POLYGON">USDT Polygon</option>
+                        <option value="TRON">USDT TRON</option>
+                        <option value="ETH">Ethereum</option>
+                        <option value="OTHER">Otra red</option>
+                      </select>
+                    </label>
+                    <label>
+                      Direccion
+                      <input name="address" type="text" placeholder="0x... / T..." autocomplete="off" />
+                    </label>
+                  </div>
+                  <label>
+                    Nota interna
+                    <textarea name="note" rows="3" placeholder="Nota interna"></textarea>
+                  </label>
+                  <label>
+                    Tu contrasena admin
+                    <input name="adminPassword" type="password" autocomplete="current-password" placeholder="Confirma tu contrasena" required />
+                  </label>
+                  <button class="primary-button" type="submit" id="hotWalletSaveButton">
+                    <iconify-icon icon="ph:floppy-disk-bold"></iconify-icon>
+                    Guardar hot wallet
+                  </button>
+                  <p class="form-feedback" id="hotWalletFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface hot-wallet-preview">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Vista</p>
+                    <h3>Dato guardado</h3>
+                  </div>
+                </div>
+                <div class="wallet-preview-card">
+                  <span id="hotWalletPreviewNetwork">Sin red</span>
+                  <strong id="hotWalletPreviewAddress">Sin direccion</strong>
+                  <small id="hotWalletPreviewNote"></small>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="admins">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Seguridad</p>
+                <h3>Admins y perfil</h3>
+              </div>
+              <span class="sync-pill" id="adminRolePill">Admin</span>
+            </div>
+            <div class="split-grid">
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Mi perfil</p>
+                    <h3>Cambiar contrasena</h3>
+                  </div>
+                </div>
+                <div class="admin-profile-summary">
+                  <strong id="adminProfileName">Admin</strong>
+                  <small id="adminProfileRole">Rol</small>
+                  <small id="adminProfileCreator">Creado por: origen del sistema</small>
+                </div>
+                <form class="security-form" id="adminPasswordForm">
+                  <label>Contrasena actual <input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+                  <label>Nueva contrasena <input name="newPassword" type="password" minlength="8" autocomplete="new-password" required /></label>
+                  <button class="primary-button" type="submit" id="adminPasswordSaveButton">Cambiar contrasena</button>
+                  <p class="form-feedback" id="adminPasswordFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Push admin</p>
+                    <h3>Diagnostico OneSignal</h3>
+                  </div>
+                  <button class="ghost-button compact-button" type="button" id="adminPushRefreshButton">Actualizar</button>
+                </div>
+                <div class="push-diagnostics" id="adminPushDiagnostics">
+                  <div class="empty-state">Sin diagnostico todavia.</div>
+                </div>
+              </article>
+              <article class="surface">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Nuevo acceso</p>
+                    <h3>Crear o actualizar admin</h3>
+                  </div>
+                </div>
+                <form class="security-form" id="adminUserForm" data-superadmin-section>
+                  <label>Usuario <input name="username" type="text" autocomplete="off" required /></label>
+                  <label>Contrasena <input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="Solo nueva o cambio" /></label>
+                  <div class="form-grid">
+                    <label>Estado
+                      <select name="active">
+                        <option value="true">Activo</option>
+                        <option value="false">Pausado</option>
+                      </select>
+                    </label>
+                    <label data-real-super-section>Aprobado
+                      <select name="approved">
+                        <option value="false">Pendiente</option>
+                        <option value="true">Aprobado</option>
+                      </select>
+                    </label>
+                    <label data-real-super-section>Puede editar
+                      <select name="canEdit">
+                        <option value="false">No, solo visualizar</option>
+                        <option value="true">Si, puede editar</option>
+                      </select>
+                    </label>
+                    <label data-real-super-section>Recibe push
+                      <select name="pushEnabled">
+                        <option value="true">Si, recibir notificaciones</option>
+                        <option value="false">No recibe push</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button class="primary-button" type="submit" id="adminUserSaveButton">Guardar admin</button>
+                  <p class="form-feedback" id="adminUserFeedback" aria-live="polite"></p>
+                </form>
+              </article>
+              <article class="surface" data-superadmin-section>
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">Cuentas</p>
+                    <h3>Accesos creados</h3>
+                  </div>
+                </div>
+                <div class="admin-user-list" id="adminUserList"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="maintenance" data-superadmin-section>
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Super admin</p>
+                <h3>Mantenimiento de datos</h3>
+              </div>
+              <span class="sync-pill">Accion destructiva</span>
+            </div>
+            <article class="surface">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">Reset operativo</p>
+                  <h3>Borrar usuarios, pagos y retiros</h3>
+                </div>
+              </div>
+              <p class="task-editor-note">Borra jugadores, pagos, compras, retiros y comisiones. Mantiene admins, paquetes, avatares, configuracion y hot wallet.</p>
+              <form class="security-form" id="maintenanceResetForm">
+                <label>Confirmacion exacta <input name="confirmation" type="text" autocomplete="off" placeholder="RESET FOXPAY" required /></label>
+                <button class="danger-button" type="submit" id="maintenanceResetButton">
+                  <iconify-icon icon="ph:trash-bold"></iconify-icon>
+                  Ejecutar reset operativo
+                </button>
+                <p class="form-feedback" id="maintenanceResetFeedback" aria-live="polite"></p>
+              </form>
+            </article>
+          </section>
+        </main>
+      </section>
+
+      <dialog class="modal" id="packageModal">
+        <form class="modal-card" id="packageForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Paquete</p>
+              <h3 id="packageModalTitle">Nuevo paquete</h3>
+            </div>
+            <button class="icon-button" type="button" data-close-modal aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <input type="hidden" name="id" />
+          <input type="hidden" name="iconUrl" />
+          <label>Nombre <input name="name" type="text" required /></label>
+          <div class="package-image-editor">
+            <div class="package-image-preview" id="packageImagePreview">
+              <iconify-icon icon="ph:image-square-bold"></iconify-icon>
+            </div>
+            <label>
+              Imagen del paquete
+              <input name="iconFile" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <button class="ghost-button" type="button" id="clearPackageImage">Quitar imagen</button>
+          </div>
+          <div class="form-grid">
+            <label>Precio USD <input name="priceUsd" type="number" min="0" step="0.01" required /></label>
+            <label>FOX por tap <input name="tokens" type="number" min="0" step="1" required /></label>
+          </div>
+          <div class="form-grid">
+            <label>Cap free USDT <input name="freeCapUsd" type="number" min="0" step="0.01" /></label>
+            <label>Energia diaria <input name="dailyEnergy" type="number" min="0" step="1" /></label>
+          </div>
+          <label>Descripcion <textarea name="description" rows="3"></textarea></label>
+          <section class="task-editor">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Tareas del paquete</p>
+                <h3>Videos y redes</h3>
+              </div>
+              <div class="task-add-row">
+                <button class="ghost-button" type="button" id="openTaskHelp">
+                  <iconify-icon icon="ph:info-bold"></iconify-icon> Guia
+                </button>
+                <select id="taskAddType">
+                  <option value="youtube">Ver video</option>
+                  <option value="social">Seguir cuenta / canal</option>
+                  <option value="partner">Partner verificado</option>
+                </select>
+                <button class="ghost-button" type="button" id="addPackageTask">Agregar</button>
+              </div>
+            </div>
+          <p class="task-editor-note">Configura que tareas desbloquean el tap. Al completar todas las tareas requeridas del dia, el usuario recibe 1 ticket para la ruleta. Las tareas ya no acreditan FOX directo.</p>
+            <div class="form-grid">
+              <label>Videos min/dia <input name="dailyVideoMin" type="number" min="0" max="30" step="1" placeholder="Auto por pack" /></label>
+              <label>Videos max/dia <input name="dailyVideoMax" type="number" min="0" max="30" step="1" placeholder="Auto por pack" /></label>
+            </div>
+            <p class="task-editor-note">Puedes guardar muchos videos por paquete. Cada dia FoxPay selecciona una parte aleatoria segun idioma del usuario. Si dejas 0/0, usa la regla automatica: Free ve mas videos y los packs altos ven menos.</p>
+            <article class="surface compact-surface">
+              <div class="section-head compact-head">
+                <div>
+                  <p class="eyebrow">Afiliados</p>
+                  <h3>Tarea aleatoria de referidos</h3>
+                </div>
+              </div>
+              <p class="task-editor-note">Cuenta referidos nuevos desde que la tarea aparece ese dia. Free la ve mas seguido; packs altos la ven menos.</p>
+              <div class="form-grid">
+                <label>
+                  <span class="label-with-help">Estado <button class="field-info-button" type="button" aria-label="Ayuda sobre estado" title="Activa muestra esta tarea aleatoria a los usuarios. Pausada la guarda pero no aparece."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <select name="referralTaskEnabled">
+                    <option value="true">Activa</option>
+                    <option value="false">Pausada</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="label-with-help">Tipo <button class="field-info-button" type="button" aria-label="Ayuda sobre tipo" title="Requerida bloquea el tap/ticket diario hasta completarla. Opcional aparece como accion extra sin bloquear."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <select name="referralTaskRequired">
+                    <option value="true">Requerida</option>
+                    <option value="false">Opcional</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  <span class="label-with-help">Probabilidad diaria % <button class="field-info-button" type="button" aria-label="Ayuda sobre probabilidad diaria" title="Porcentaje de dias en que esta tarea puede aparecer para un usuario de este pack. Ej: 45 significa 45 de cada 100 dias aproximadamente."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <input name="referralTaskProbability" type="number" min="0" max="100" step="1" />
+                </label>
+                <label>
+                  <span class="label-with-help">Cooldown dias <button class="field-info-button" type="button" aria-label="Ayuda sobre cooldown" title="Dias minimos de descanso despues de que esta tarea aparece. Evita que se pida todos los dias seguidos."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <input name="referralTaskCooldown" type="number" min="0" max="30" step="1" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  <span class="label-with-help">Primer objetivo <button class="field-info-button" type="button" aria-label="Ayuda sobre primer objetivo" title="Cantidad de referidos nuevos que pide la primera vez que esta tarea aparece para ese usuario."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <input name="referralTaskFirstTarget" type="number" min="1" max="20" step="1" />
+                </label>
+                <label>
+                  <span class="label-with-help">Despues objetivo <button class="field-info-button" type="button" aria-label="Ayuda sobre objetivo posterior" title="Cantidad de referidos nuevos que pide en futuras apariciones de esta tarea. Normalmente menor que el primer objetivo."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                  <input name="referralTaskRepeatTarget" type="number" min="1" max="20" step="1" />
+                </label>
+              </div>
+              <label>
+                <span class="label-with-help">Validacion <button class="field-info-button" type="button" aria-label="Ayuda sobre validacion" title="Cuenta creada por link valida cuando FoxPay crea el ID desde tu enlace. Cuenta registrada exige que ademas cree usuario y contrasena."><iconify-icon icon="ph:info-bold"></iconify-icon></button></span>
+                <select name="referralTaskValidation">
+                  <option value="created">Cuenta creada por link</option>
+                  <option value="registered">Cuenta registrada con contrasena</option>
+                </select>
+              </label>
+            </article>
+            <div class="task-editor-list" id="packageTaskList"></div>
+          </section>
+          <div class="form-grid">
+            <label>Cap pagado <input name="bonusPercent" type="text" readonly /></label>
+            <label>Estado
+              <select name="status">
+                <option value="active">Activo</option>
+                <option value="paused">Pausado</option>
+                <option value="archived">Archivado</option>
+              </select>
+            </label>
+          </div>
+          <button class="primary-button" type="submit">Guardar paquete</button>
+        </form>
+      </dialog>
+
+      <dialog class="modal" id="rankModal">
+        <form class="modal-card" id="rankForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Rango</p>
+              <h3 id="rankModalTitle">Editar rango</h3>
+            </div>
+            <button class="icon-button" type="button" data-close-rank-modal aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <input type="hidden" name="imageUrl" />
+          <div class="form-grid">
+            <label>ID <input name="id" type="text" required /></label>
+            <label>Nombre <input name="name" type="text" required /></label>
+          </div>
+          <div class="package-image-editor">
+            <div class="package-image-preview" id="rankImagePreview">
+              <iconify-icon icon="ph:medal-bold"></iconify-icon>
+            </div>
+            <label>
+              Imagen del rango
+              <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <button class="ghost-button" type="button" id="clearRankImage">Quitar imagen</button>
+          </div>
+          <div class="form-grid">
+            <label>Directos requeridos <input name="requiredDirects" type="number" min="0" step="1" required /></label>
+            <label>Volumen organizacion USDT <input name="requiredLifetimeUsd" type="number" min="0" step="0.01" required /></label>
+          </div>
+          <label>Requisito de equipo
+            <textarea name="teamRequirements" rows="3" placeholder="bronze-fox:1&#10;silver-fox:2"></textarea>
+            <small class="field-hint">Una regla por linea: id-del-rango:cantidad. Ej: bronze-fox:2. Un rango superior tambien cuenta para ese requisito.</small>
+          </label>
+          <div class="form-grid">
+            <label>Orden <input name="sortOrder" type="number" min="0" step="1" /></label>
+            <label>Estado
+              <select name="active">
+                <option value="true">Activo</option>
+                <option value="false">Pausado</option>
+              </select>
+            </label>
+          </div>
+          <button class="primary-button" id="rankSaveButton" type="submit">Guardar rango</button>
+        </form>
+      </dialog>
+
+      <dialog class="modal compact-modal" id="taskHelpModal">
+        <form class="modal-card" method="dialog">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Guia</p>
+              <h3>Campos de videos y tareas</h3>
+            </div>
+            <button class="icon-button" type="submit" aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <div class="help-grid">
+            <article><strong>Titulo</strong><span>Nombre que vera el usuario, por ejemplo: Ver video 1.</span></article>
+            <article><strong>URL</strong><span>Enlace del video, canal o red social. YouTube se abre fuera de la app.</span></article>
+            <article><strong>Idioma</strong><span>El video entra solo para usuarios de ese idioma. Usa Todos como respaldo global.</span></article>
+            <article><strong>Ver seg.</strong><span>Tiempo minimo que debe pasar antes de que el usuario vuelva a validar. Ejemplo: 30 = 30 segundos.</span></article>
+            <article><strong>Validacion seg.</strong><span>Espera adicional antes de marcar el check. Ejemplo: 30 = se valida 30 segundos despues de volver.</span></article>
+            <article><strong>Videos diarios</strong><span>El sistema elige una parte aleatoria cada dia. Free ve mas videos; los packs altos ven menos.</span></article>
+            <article><strong>Ticket diario</strong><span>Las tareas no pagan FOX directo. Si completa todas las requeridas, recibe 1 ticket para la ruleta.</span></article>
+            <article><strong>Requerida / Opcional</strong><span>Si es requerida, el usuario debe completarla para desbloquear el tap.</span></article>
+            <article><strong>Afiliados</strong><span>Al activarse guarda una linea base; solo cuentan referidos nuevos desde ese momento.</span></article>
+          </div>
+          <p class="help-note">Ejemplo: URL de YouTube + Ver seg. 30 + Validacion seg. 30 significa que el usuario abre el video, vuelve despues de 30 segundos y luego se marca el check. El ticket se entrega solo cuando complete todas las tareas requeridas.</p>
+        </form>
+      </dialog>
+
+      <dialog class="modal" id="rouletteRewardModal">
+        <form class="modal-card" id="rouletteRewardForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Ruleta</p>
+              <h3>Premio por paquete</h3>
+            </div>
+            <button class="icon-button" type="button" data-close-roulette-modal aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <input type="hidden" name="id" />
+          <div class="form-grid">
+            <label>Paquete
+              <select name="packageId" required></select>
+            </label>
+            <label>Tipo
+              <select name="rewardType" required>
+                <option value="tokens">FOX</option>
+                <option value="tickets">Tickets</option>
+                <option value="skin">Skin</option>
+                <option value="avatar">Avatar</option>
+                <option value="none">Nada</option>
+              </select>
+            </label>
+          </div>
+          <label>Nombre visible <input name="label" type="text" maxlength="80" placeholder="5 FOX" required /></label>
+          <div class="form-grid">
+            <label id="rouletteAmountField">Cantidad FOX
+              <input name="amount" type="number" min="0" step="1" value="0" />
+              <small class="field-hint" id="rouletteAmountHint">Solo se usa cuando el premio es FOX o Tickets.</small>
+            </label>
+            <label id="rouletteAmountUsdtField">Equivalente USDT
+              <input name="amountUsdt" type="number" min="0" step="0.000001" value="0" />
+              <small class="field-hint" id="rouletteAmountUsdtHint">Visual: se calcula con el precio FOX del admin.</small>
+            </label>
+            <label>Probabilidad
+              <input name="weight" type="number" min="0" step="1" value="1" />
+              <small class="field-hint">Mientras mas alto, mas veces sale. Ej: 80 perder, 10 FOX, 5 skin.</small>
+            </label>
+          </div>
+          <input name="itemId" type="hidden" />
+          <div class="roulette-selected-info is-hidden" id="rouletteSelectedInfo"></div>
+          <div class="reward-item-picker is-hidden" id="rouletteItemPicker">
+            <div class="section-head compact-head">
+              <div>
+                <p class="eyebrow">Item del premio</p>
+                <h3 id="rouletteItemPickerTitle">Selecciona item</h3>
+              </div>
+              <span class="sync-pill" id="rouletteItemPickerValue">Sin item</span>
+            </div>
+            <div class="reward-item-list" id="rouletteItemList"></div>
+          </div>
+          <label>Posicion visual
+            <input name="sortOrder" type="number" min="0" step="1" value="0" />
+            <small class="field-hint">Solo ordena la lista y la rueda: 1 aparece antes que 5. No cambia la probabilidad.</small>
+          </label>
+          <label>Estado
+            <select name="active">
+              <option value="true">Activo</option>
+              <option value="false">Pausado</option>
+            </select>
+          </label>
+          <button class="primary-button" id="rouletteRewardSaveButton" type="submit">Guardar premio</button>
+        </form>
+      </dialog>
+
+      <dialog class="modal" id="skinModal">
+        <form class="modal-card" id="skinForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Skin</p>
+              <h3>Auto tap diario</h3>
+            </div>
+            <button class="icon-button" type="button" data-close-skin-modal aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <label>ID <input name="id" type="text" required /></label>
+          <label>Nombre <input name="name" type="text" required /></label>
+          <label>Imagen <input name="imageUrl" type="text" required placeholder="./images/skin/optimized/skin.webp" /></label>
+          <div class="package-image-preview" id="skinImagePreview"><iconify-icon icon="ph:sparkle-bold"></iconify-icon></div>
+          <div class="form-grid">
+            <label>Precio USDT <input name="priceUsdt" type="number" min="0" step="0.01" /></label>
+            <label>Precio FOX <input name="priceFox" type="number" min="0" step="1" /></label>
+            <label>FOX por dia <input name="tapBonus" type="number" min="0" step="1" /></label>
+          </div>
+          <p class="field-hint" id="skinPriceHint"></p>
+          <div class="skin-pack-list" id="skinPackageList"></div>
+          <div class="form-grid">
+            <label>Orden <input name="sortOrder" type="number" min="0" step="1" /></label>
+            <label>Estado
+              <select name="active"><option value="true">Activo</option><option value="false">Pausado</option></select>
+            </label>
+          </div>
+          <button class="primary-button" id="skinSaveButton" type="submit">Guardar skin</button>
+        </form>
+      </dialog>
+
+      <dialog class="modal" id="avatarModal">
+        <form class="modal-card" id="avatarForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Avatar</p>
+              <h3>Imagen de perfil</h3>
+            </div>
+            <button class="icon-button" type="button" data-close-avatar-modal aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <input type="hidden" name="imageUrl" />
+          <label>ID <input name="id" type="text" required /></label>
+          <label>Nombre <input name="name" type="text" required /></label>
+          <div class="package-image-editor">
+            <div class="package-image-preview" id="avatarImagePreview"><iconify-icon icon="ph:user-square-bold"></iconify-icon></div>
+            <label>Imagen <input name="imageFile" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+          </div>
+          <div class="form-grid">
+            <label>Tokens <input name="priceTokens" type="number" min="0" step="1" /></label>
+            <label>USDT <input name="priceUsdt" type="number" min="0" step="0.01" /></label>
+          </div>
+          <p class="form-feedback" id="avatarPriceHint"></p>
+          <div class="form-grid">
+            <label>Gratis
+              <select name="isFree"><option value="true">Si</option><option value="false">No</option></select>
+            </label>
+            <label>Estado
+              <select name="active"><option value="true">Activo</option><option value="false">Pausado</option></select>
+            </label>
+          </div>
+          <button class="primary-button" id="avatarSaveButton" type="submit">Guardar avatar</button>
+        </form>
+      </dialog>
+    </div>
+
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script src="/admin.js?v=20260607-rank-progress"></script>
+  </body>
+</html>

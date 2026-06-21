@@ -1,0 +1,8 @@
+# Ignore local configs and logs
+.env
+.env.local
+*.log
+.local_pg18/
+node_modules/
+dist/
+tmp/

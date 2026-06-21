@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FOX Market Pulse</title>
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071019;
+      --panel: rgba(8, 18, 32, 0.9);
+      --panel-strong: rgba(15, 29, 48, 0.94);
+      --line: rgba(112, 148, 192, 0.26);
+      --text: #f7fbff;
+      --muted: #9fb0c8;
+      --green: #17d7a0;
+      --red: #ff5c7a;
+      --gold: #ffc857;
+      --blue: #5aa7ff;
+      --cyan: #52e5ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(90deg, rgba(82, 229, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(82, 229, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(135deg, #061018 0%, #081827 46%, #0a101d 100%);
+      background-size: 72px 72px, 72px 72px, auto;
+    }
+
+    .page {
+      width: min(1500px, calc(100vw - 40px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+    }
+
+    .topline {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 16px;
+      border: 1px solid rgba(112, 148, 192, 0.2);
+      border-radius: 8px;
+      background: rgba(5, 12, 22, 0.7);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 950;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(82, 229, 255, 0.38);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(23, 215, 160, 0.95), rgba(90, 167, 255, 0.85));
+      color: #061018;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid rgba(23, 215, 160, 0.28);
+      border-radius: 999px;
+      color: #bdfde9;
+      background: rgba(23, 215, 160, 0.09);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(23, 215, 160, 0.85);
+    }
+
+    .market-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.95fr);
+      align-items: stretch;
+      gap: 16px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .market-top > div:first-child,
+    .ticker {
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      border: 1px solid rgba(23, 215, 160, 0.22);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 75% 50%, rgba(23, 215, 160, 0.14), transparent 18rem),
+        linear-gradient(135deg, rgba(5, 15, 26, 0.96), rgba(4, 10, 18, 0.94));
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    }
+
+    .market-top > div:first-child {
+      padding: 28px 38px;
+    }
+
+    .market-top > div:first-child::after {
+      content: "";
+      position: absolute;
+      right: 28px;
+      top: 28px;
+      width: min(240px, 34%);
+      aspect-ratio: 1;
+      background: url("./images/fox-optimized.webp") center / contain no-repeat;
+      opacity: 0.16;
+      filter: drop-shadow(0 0 26px rgba(23, 215, 160, 0.35)) saturate(1.3);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 650px;
+      font-size: clamp(48px, 6vw, 78px);
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+    }
+
+    .gradient-word {
+      color: var(--green);
+      background: linear-gradient(90deg, #ffffff 0%, #bffff0 30%, #12e8ad 66%, #01c88f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      max-width: 650px;
+      margin: 13px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .ticker {
+      min-width: 330px;
+      padding: 23px 25px;
+    }
+
+    .ticker-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 7px;
+    }
+
+    .price {
+      font-size: clamp(52px, 5.2vw, 72px);
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .change {
+      color: var(--green);
+      font-size: 15px;
+      font-weight: 900;
+      white-space: nowrap;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(23, 215, 160, 0.1);
+    }
+
+    .ticker-spark {
+      position: absolute;
+      right: 24px;
+      top: 76px;
+      width: 160px;
+      height: 54px;
+      opacity: 0.95;
+    }
+
+    .mini-tape {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .mini-tape span {
+      display: block;
+      padding: 9px 10px;
+      border: 1px solid rgba(112, 148, 192, 0.18);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .mini-tape b {
+      display: block;
+      margin-top: 5px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 385px;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .chart-shell,
+    .side-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 24px 76px rgba(0, 0, 0, 0.32);
+      overflow: hidden;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 17px 19px;
+      border-bottom: 1px solid rgba(109, 139, 178, 0.2);
+      background: linear-gradient(180deg, rgba(15, 29, 48, 0.94), rgba(8, 15, 27, 0.76));
+    }
+
+    .pair {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .coin {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(23, 215, 160, 0.55);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(23, 215, 160, 0.2), transparent 58%),
+        url("./images/fox-optimized.webp") center / 86% no-repeat,
+        rgba(2, 15, 24, 0.9);
+      color: transparent;
+      font-size: 0;
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+
+    .pair strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .pair span,
+    .range {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ohlc {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .ohlc b {
+      color: var(--green);
+      font-weight: 850;
+    }
+
+    .range {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .range span {
+      padding: 7px 10px;
+      border: 1px solid rgba(109, 139, 178, 0.24);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .range span.is-active {
+      color: #071019;
+      border-color: rgba(82, 229, 255, 0.58);
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      box-shadow: 0 0 18px rgba(82, 229, 255, 0.18);
+    }
+
+    .expand {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(109, 139, 178, 0.24);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .chart-body {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .toolbox {
+      display: grid;
+      align-content: start;
+      justify-items: center;
+      gap: 11px;
+      padding: 16px 10px;
+      border-right: 1px solid rgba(109, 139, 178, 0.18);
+      background: rgba(5, 12, 22, 0.68);
+    }
+
+    .toolbox button {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .toolbox button.is-active {
+      color: var(--green);
+      border: 1px solid rgba(23, 215, 160, 0.35);
+      background: rgba(23, 215, 160, 0.09);
+      box-shadow: 0 0 24px rgba(23, 215, 160, 0.12);
+    }
+
+    #foxChart {
+      width: 100%;
+      height: clamp(520px, 58vh, 690px);
+    }
+
+    .chart-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px 14px 92px;
+      border-top: 1px solid rgba(109, 139, 178, 0.2);
+      background: rgba(5, 12, 22, 0.72);
+    }
+
+    .footer-ranges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .chart-clock {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .side-panel {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background:
+        linear-gradient(180deg, rgba(14, 28, 48, 0.96), rgba(7, 14, 25, 0.92));
+    }
+
+    .metric {
+      position: relative;
+      min-height: 100px;
+      padding: 16px;
+      border: 1px solid rgba(109, 139, 178, 0.22);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(20, 39, 64, 0.9), rgba(12, 24, 42, 0.92));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    }
+
+    .metric canvas {
+      position: absolute;
+      right: 15px;
+      bottom: 17px;
+      width: 112px;
+      height: 42px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 26px;
+      line-height: 1.1;
+    }
+
+    .insight {
+      margin-top: auto;
+      padding: 15px;
+      border: 1px solid rgba(82, 229, 255, 0.22);
+      border-radius: 8px;
+      background: rgba(82, 229, 255, 0.055);
+    }
+
+    .insight strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--cyan);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .insight p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .metric[data-tone="green"] strong {
+      color: var(--green);
+    }
+
+    .metric[data-tone="gold"] strong {
+      color: var(--gold);
+    }
+
+    .session-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 14px;
+      padding: 8px 8px 4px;
+    }
+
+    .session-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .session-list b {
+      color: var(--text);
+    }
+
+    .session-list li:last-child b {
+      color: var(--green);
+    }
+
+    .market-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      border: 1px solid rgba(23, 215, 160, 0.22);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(8, 22, 34, 0.95), rgba(5, 12, 22, 0.92));
+    }
+
+    .strip-item {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 110px;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      padding: 13px 20px;
+      border-right: 1px solid rgba(109, 139, 178, 0.16);
+    }
+
+    .strip-item:last-child {
+      border-right: 0;
+    }
+
+    .strip-icon {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(23, 215, 160, 0.25);
+      color: var(--green);
+      background: rgba(23, 215, 160, 0.08);
+      font-weight: 950;
+    }
+
+    .strip-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .strip-item strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .strip-item canvas {
+      width: 110px;
+      height: 32px;
+    }
+
+    .fallback {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-height: 440px;
+      padding: 30px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .chart-shell.is-fallback #foxChart {
+      display: none;
+    }
+
+    .chart-shell.is-fallback .fallback {
+      display: flex;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        width: min(100vw - 22px, 680px);
+        padding: 18px 0;
+      }
+
+      .market-top,
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .topline {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .ticker {
+        min-width: 0;
+      }
+
+      .mini-tape {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chart-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .chart-body {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbox {
+        display: none;
+      }
+
+      .chart-footer {
+        padding-left: 16px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .market-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .strip-item {
+        border-right: 0;
+        border-bottom: 1px solid rgba(109, 139, 178, 0.16);
+      }
+
+      .strip-item:last-child {
+        border-bottom: 0;
+      }
+
+      .range {
+        justify-content: flex-start;
+      }
+
+      #foxChart {
+        height: 430px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page {
+        width: 100%;
+        padding: 0;
+        gap: 0;
+      }
+
+      .market-top,
+      .chart-shell,
+      .side-panel,
+      .topline,
+      .market-strip {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
+      .market-top > div:first-child,
+      .ticker {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
+      .market-top > div:first-child::after {
+        display: none;
+      }
+
+      .market-top {
+        gap: 0;
+      }
+
+      .market-top > div:first-child,
+      .ticker {
+        min-height: auto;
+        padding: 22px 16px;
+      }
+
+      .chart-header,
+      .side-panel,
+      .topline {
+        padding: 15px;
+      }
+
+      .price-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .change {
+        align-self: flex-start;
+      }
+
+      .price {
+        font-size: clamp(42px, 14vw, 54px);
+      }
+
+      .ticker-spark {
+        top: 86px;
+        width: 130px;
+      }
+
+      #foxChart {
+        height: 380px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="topline" aria-label="FOX mercado">
+      <div class="brand">
+        <span class="brand-mark">FP</span>
+        <span>FoxPay Market</span>
+      </div>
+      <div class="live-pill"><span class="live-dot"></span> Mercado demo en vivo</div>
+    </nav>
+
+    <section class="market-top">
+      <div>
+        <p class="eyebrow">FoxPay Market Lab</p>
+        <h1>FOX vela <span class="gradient-word">diaria</span></h1>
+        <p class="subtitle">Vista de demostracion para presentar movimiento de precio, liquidez y momentum del token FOX con una grafica de velas limpia y responsive.</p>
+      </div>
+      <aside class="ticker" aria-label="Precio FOX">
+        <span class="ticker-label">FOX / USDT</span>
+        <div class="price-row">
+          <strong class="price" id="lastPrice">$0.0000</strong>
+          <span class="change" id="sessionChange">+0.00%</span>
+        </div>
+        <canvas class="ticker-spark" data-sparkline="price"></canvas>
+        <div class="mini-tape">
+          <span>Market cap<b>$3.04M</b></span>
+          <span>Liquidez<b>$412K</b></span>
+          <span>Holders<b>18.4K</b></span>
+          <span>Rango<b>#FOX</b></span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="dashboard">
+      <div class="chart-shell" id="chartShell">
+        <header class="chart-header">
+          <div class="pair">
+            <div class="coin">FX</div>
+            <div>
+              <strong>FOXUSDT <span aria-hidden="true">*</span></strong>
+              <div class="ohlc">
+                <span>Foxpay Token / Tether - 1D</span>
+                <span>O <b>0.00278</b></span>
+                <span>H <b>0.00312</b></span>
+                <span>L <b>0.00276</b></span>
+                <span>C <b>0.00304</b></span>
+                <span><b>+0.00026 (+9.36%)</b></span>
+              </div>
+            </div>
+          </div>
+          <div class="range" aria-label="Rangos">
+            <span>1D</span>
+            <span>7D</span>
+            <span class="is-active">30D</span>
+            <button class="expand" type="button" aria-label="Expandir">NE</button>
+          </div>
+        </header>
+        <div class="chart-body">
+          <div class="toolbox" aria-label="Herramientas de grafica">
+            <button class="is-active" type="button" title="Cursor">+</button>
+            <button type="button" title="Linea">/</button>
+            <button type="button" title="Tendencia">~</button>
+            <button type="button" title="Caja">[]</button>
+            <button type="button" title="Texto">T</button>
+            <button type="button" title="Medir">x</button>
+            <button type="button" title="Borrar">del</button>
+          </div>
+          <div id="foxChart"></div>
+        </div>
+        <div class="chart-footer">
+          <div class="footer-ranges">
+            <span>1D</span><span>5D</span><span>1M</span><span>3M</span><span>6M</span><span>YTD</span><span>1Y</span><span>5Y</span><span>All</span>
+          </div>
+          <div class="chart-clock"><span id="liveClock">--:--:--</span> (UTC) &nbsp; % &nbsp; log &nbsp; <b>auto</b></div>
+        </div>
+        <div class="fallback">No se pudo cargar la libreria de grafica. Revisa conexion a CDN o usa la pagina con internet disponible.</div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="metric" data-tone="green">
+          <span>Volumen 24h</span>
+          <strong id="volume24h">0 FOX</strong>
+          <canvas data-sparkline="volume"></canvas>
+        </div>
+        <div class="metric" data-tone="gold">
+          <span>Maximo diario</span>
+          <strong id="highPrice">$0.0000</strong>
+          <canvas data-sparkline="high"></canvas>
+        </div>
+        <div class="metric">
+          <span>Minimo diario</span>
+          <strong id="lowPrice">$0.0000</strong>
+          <canvas data-sparkline="low"></canvas>
+        </div>
+        <ul class="session-list" aria-label="Resumen de sesion">
+          <li><span>Apertura</span><b id="openPrice">$0.0000</b></li>
+          <li><span>Cierre estimado</span><b id="closePrice">$0.0000</b></li>
+          <li><span>Velas</span><b id="candleCount">0</b></li>
+          <li><span>Tendencia</span><b id="trendLabel">Neutral</b></li>
+        </ul>
+        <div class="insight">
+          <strong>Lectura rapida</strong>
+          <p>FOX mantiene una estructura alcista con volumen creciente y cierres superiores en el tramo final.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market-strip" aria-label="Metricas de mercado">
+      <div class="strip-item">
+        <div class="strip-icon">L</div>
+        <div><span>Liquidez</span><strong>$412K</strong></div>
+        <canvas data-sparkline="liquidity"></canvas>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">H</div>
+        <div><span>Holders</span><strong>18.4K</strong></div>
+        <canvas data-sparkline="holders"></canvas>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">T</div>
+        <div><span>Txn 24h</span><strong>4.892</strong></div>
+        <canvas data-sparkline="tx"></canvas>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">V</div>
+        <div><span>Volatilidad 24h</span><strong>8.72%</strong></div>
+        <canvas data-sparkline="volatility"></canvas>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">R</div>
+        <div><span>Rank</span><strong>#FOX</strong></div>
+        <canvas data-sparkline="rank"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const candles = [
+      { time: '2026-05-02', open: 0.00082, high: 0.00091, low: 0.00078, close: 0.00088 },
+      { time: '2026-05-03', open: 0.00088, high: 0.00096, low: 0.00083, close: 0.00093 },
+      { time: '2026-05-04', open: 0.00093, high: 0.00102, low: 0.0009, close: 0.00098 },
+      { time: '2026-05-05', open: 0.00098, high: 0.00101, low: 0.00089, close: 0.00092 },
+      { time: '2026-05-06', open: 0.00092, high: 0.00099, low: 0.00086, close: 0.00095 },
+      { time: '2026-05-07', open: 0.00095, high: 0.00108, low: 0.00094, close: 0.00104 },
+      { time: '2026-05-08', open: 0.00104, high: 0.00117, low: 0.00101, close: 0.00112 },
+      { time: '2026-05-09', open: 0.00112, high: 0.0012, low: 0.00105, close: 0.00108 },
+      { time: '2026-05-10', open: 0.00108, high: 0.00122, low: 0.00106, close: 0.00119 },
+      { time: '2026-05-11', open: 0.00119, high: 0.00131, low: 0.00114, close: 0.00127 },
+      { time: '2026-05-12', open: 0.00127, high: 0.00138, low: 0.00118, close: 0.00123 },
+      { time: '2026-05-13', open: 0.00123, high: 0.00136, low: 0.0012, close: 0.00133 },
+      { time: '2026-05-14', open: 0.00133, high: 0.00149, low: 0.00129, close: 0.00144 },
+      { time: '2026-05-15', open: 0.00144, high: 0.00153, low: 0.00135, close: 0.00139 },
+      { time: '2026-05-16', open: 0.00139, high: 0.00156, low: 0.00138, close: 0.00151 },
+      { time: '2026-05-17', open: 0.00151, high: 0.0017, low: 0.00148, close: 0.00163 },
+      { time: '2026-05-18', open: 0.00163, high: 0.00181, low: 0.00158, close: 0.00176 },
+      { time: '2026-05-19', open: 0.00176, high: 0.0019, low: 0.00165, close: 0.00169 },
+      { time: '2026-05-20', open: 0.00169, high: 0.00186, low: 0.00162, close: 0.00182 },
+      { time: '2026-05-21', open: 0.00182, high: 0.00202, low: 0.00179, close: 0.00196 },
+      { time: '2026-05-22', open: 0.00196, high: 0.00214, low: 0.00187, close: 0.00208 },
+      { time: '2026-05-23', open: 0.00208, high: 0.00222, low: 0.00194, close: 0.00201 },
+      { time: '2026-05-24', open: 0.00201, high: 0.0022, low: 0.00198, close: 0.00216 },
+      { time: '2026-05-25', open: 0.00216, high: 0.00239, low: 0.00208, close: 0.00233 },
+      { time: '2026-05-26', open: 0.00233, high: 0.0025, low: 0.00221, close: 0.00229 },
+      { time: '2026-05-27', open: 0.00229, high: 0.00256, low: 0.00226, close: 0.00247 },
+      { time: '2026-05-28', open: 0.00247, high: 0.00272, low: 0.00241, close: 0.00266 },
+      { time: '2026-05-29', open: 0.00266, high: 0.00284, low: 0.00252, close: 0.00258 },
+      { time: '2026-05-30', open: 0.00258, high: 0.00291, low: 0.00255, close: 0.00286 },
+      { time: '2026-05-31', open: 0.00286, high: 0.00312, low: 0.00277, close: 0.00304 }
+    ];
+
+    const volume = candles.map((item, index) => ({
+      time: item.time,
+      value: Math.round(720000 + index * 64000 + Math.abs(item.close - item.open) * 420000000),
+      color: item.close >= item.open ? 'rgba(23, 215, 160, 0.35)' : 'rgba(255, 92, 122, 0.35)'
+    }));
+
+    function money(value) {
+      return `$${Number(value).toFixed(5)}`;
+    }
+
+    function compactFox(value) {
+      return `${Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value)} FOX`;
+    }
+
+    function drawSparkline(canvas, values, color = '#17d7a0', fill = true) {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = max - min || 1;
+      const pad = 4;
+      const points = values.map((value, index) => ({
+        x: values.length === 1 ? rect.width / 2 : (index / (values.length - 1)) * rect.width,
+        y: rect.height - pad - ((value - min) / span) * (rect.height - pad * 2),
+      }));
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      if (fill) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
+        gradient.addColorStop(0, `${color}66`);
+        gradient.addColorStop(1, `${color}00`);
+        ctx.lineTo(rect.width, rect.height);
+        ctx.lineTo(0, rect.height);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      }
+    }
+
+    function drawSparkBars(canvas, values, color = '#17d7a0') {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const max = Math.max(...values) || 1;
+      const gap = 3;
+      const barWidth = Math.max(2, (rect.width - gap * (values.length - 1)) / values.length);
+      values.forEach((value, index) => {
+        const h = Math.max(2, (value / max) * (rect.height - 4));
+        const x = index * (barWidth + gap);
+        const y = rect.height - h;
+        ctx.fillStyle = value > max * 0.72 ? color : 'rgba(23, 215, 160, 0.28)';
+        ctx.fillRect(x, y, barWidth, h);
+      });
+    }
+
+    function drawAllSparklines() {
+      const closeValues = candles.map((item) => item.close);
+      const highValues = candles.map((item) => item.high);
+      const lowValues = candles.map((item) => item.low);
+      const volumeValues = volume.map((item) => item.value);
+      document.querySelectorAll('[data-sparkline="price"], [data-sparkline="liquidity"], [data-sparkline="holders"], [data-sparkline="tx"]').forEach((canvas) => {
+        drawSparkline(canvas, closeValues, '#17d7a0', true);
+      });
+      drawSparkBars(document.querySelector('[data-sparkline="volume"]'), volumeValues, '#17d7a0');
+      drawSparkline(document.querySelector('[data-sparkline="high"]'), highValues, '#ffb11f', false);
+      drawSparkline(document.querySelector('[data-sparkline="low"]'), lowValues.map((value, index) => value + Math.sin(index) * 0.00004), '#2e8cff', false);
+      drawSparkline(document.querySelector('[data-sparkline="volatility"]'), volumeValues.map((value, index) => value / 1000000 + Math.sin(index / 2) * 0.2), '#17d7a0', true);
+      drawSparkline(document.querySelector('[data-sparkline="rank"]'), closeValues.slice().reverse(), '#ffc857', false);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toISOString().slice(11, 19);
+      const clock = document.querySelector('#liveClock');
+      if (clock) clock.textContent = time;
+    }
+
+    function setMetrics() {
+      const first = candles[0];
+      const last = candles[candles.length - 1];
+      const high = candles.reduce((max, item) => Math.max(max, item.high), 0);
+      const low = candles.reduce((min, item) => Math.min(min, item.low), Number.POSITIVE_INFINITY);
+      const dayVolume = volume[volume.length - 1].value;
+      const change = ((last.close - first.open) / first.open) * 100;
+      document.querySelector('#lastPrice').textContent = money(last.close);
+      document.querySelector('#sessionChange').textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+      document.querySelector('#volume24h').textContent = compactFox(dayVolume);
+      document.querySelector('#highPrice').textContent = money(high);
+      document.querySelector('#lowPrice').textContent = money(low);
+      document.querySelector('#openPrice').textContent = money(first.open);
+      document.querySelector('#closePrice').textContent = money(last.close);
+      document.querySelector('#candleCount').textContent = String(candles.length);
+      document.querySelector('#trendLabel').textContent = change >= 0 ? 'Alcista' : 'Bajista';
+    }
+
+    function buildChart() {
+      const shell = document.querySelector('#chartShell');
+      if (!window.LightweightCharts) {
+        shell.classList.add('is-fallback');
+        return;
+      }
+
+      const container = document.querySelector('#foxChart');
+      const chart = LightweightCharts.createChart(container, {
+        layout: {
+          background: { type: 'solid', color: '#07101c' },
+          textColor: '#9fb0c8',
+          fontFamily: 'Inter, system-ui, sans-serif'
+        },
+        grid: {
+          vertLines: { color: 'rgba(109, 139, 178, 0.09)' },
+          horzLines: { color: 'rgba(109, 139, 178, 0.11)' }
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(109, 139, 178, 0.24)'
+        },
+        timeScale: {
+          borderColor: 'rgba(109, 139, 178, 0.24)',
+          timeVisible: true
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal
+        }
+      });
+
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: '#17d7a0',
+        downColor: '#ff5c7a',
+        borderUpColor: '#17d7a0',
+        borderDownColor: '#ff5c7a',
+        wickUpColor: '#63f0c4',
+        wickDownColor: '#ff89a0',
+        priceFormat: {
+          type: 'price',
+          precision: 5,
+          minMove: 0.00001
+        }
+      });
+      candleSeries.setData(candles);
+
+      const volumeSeries = chart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: '',
+        scaleMargins: { top: 0.78, bottom: 0 }
+      });
+      volumeSeries.setData(volume);
+      chart.timeScale().fitContent();
+
+      const resize = () => {
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight
+        });
+      };
+      resize();
+      window.addEventListener('resize', resize);
+    }
+
+    setMetrics();
+    updateClock();
+    setInterval(updateClock, 1000);
+    window.addEventListener('load', () => {
+      buildChart();
+      drawAllSparklines();
+    });
+    window.addEventListener('resize', drawAllSparklines);
+  </script>
+</body>
+</html>
