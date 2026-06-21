@@ -6253,6 +6253,11 @@ app.addEventListener('change', (event) => {
 });
 
 app.addEventListener('click', (event) => {
+  // Close cap-note tooltip if clicking outside of it and the toggle button
+  if (showCapInfo && !event.target.closest('.status-pill-button') && !event.target.closest('.cap-note')) {
+    showCapInfo = false;
+    render();
+  }
   if (event.target.closest('[data-video-close]')) {
     return;
   }
