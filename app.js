@@ -3747,25 +3747,6 @@ function minerView() {
         text-align: left;
         animation: ellipsis-dots 1.5s steps(4, end) infinite;
       }
-      .miner-stats-card {
-        position: relative;
-        overflow: hidden;
-      }
-      .miner-stats-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-image: linear-gradient(rgba(10, 22, 70, 0.65), rgba(10, 22, 70, 0.65)), url('./images/miner-bg.webp');
-        background-size: cover;
-        background-position: center;
-        opacity: 0.45;
-        z-index: 1;
-        pointer-events: none;
-      }
-      .miner-stats-card > * {
-        position: relative;
-        z-index: 2;
-      }
     </style>
     <section class="sheet-panel">
       <div class="sheet-head"><span>Mineración Pasiva</span><strong>Mineradora</strong></div>
