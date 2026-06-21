@@ -132,6 +132,7 @@ const i18n = {
     capReached: 'Cap reached: this pack already completed {cap} USDT. You can withdraw balance or buy another pack to restart from 0.',
     capInfo: 'Pack cap: tap, tasks, ranking and referrals/commissions add up to {cap} USDT.',
     freeCapInfo: 'One-time free withdrawal limit: {cap} USD. Purchase a package for unlimited withdrawals.',
+    minerMaxOffline: 'Max offline accumulation: 3 hours',
     generatesUpTo: 'Generates up to',
     packInfoTitle: 'Pack recovery',
     packInfoTotal: 'Total recovery gain',
@@ -599,6 +600,7 @@ const i18n = {
     capReached: 'Cap alcanzado: este pack ya completo {cap} USDT. Puedes retirar balance o comprar otro pack para reiniciar desde 0.',
     capInfo: 'Cap del pack: se suma tap, tareas, ranking y referidos/comisiones hasta {cap} USDT.',
     freeCapInfo: 'Límite único de retiro gratuito: {cap} USD. Adquiere un paquete para retiros ilimitados.',
+    minerMaxOffline: 'Acumulación máxima: 3 horas fuera del juego',
     generatesUpTo: 'Genera hasta',
     packInfoTitle: 'Recuperacion del pack',
     packInfoTotal: 'Ganancia total de recuperacion',
@@ -1056,6 +1058,7 @@ const i18n = {
 i18n.pt = {
   ...i18n.es,
   freeCapInfo: 'Limite único de saque gratuito: {cap} USD. Adquira um pacote para saques ilimitados.',
+  minerMaxOffline: 'Acúmulo máximo: 3 horas fora do jogo',
   installTitle: 'Instalar FoxPay',
   installText: 'Acesso rapido e carregamento otimizado.',
   install: 'Instalar',
@@ -3722,6 +3725,29 @@ function minerView() {
   }
 
   return `
+    <style>
+      @keyframes spin-slow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 0.95; }
+      }
+      @keyframes ellipsis-dots {
+        0% { content: ""; }
+        25% { content: "."; }
+        50% { content: ".."; }
+        75% { content: "..."; }
+      }
+      .ellipsis-dots::after {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        text-align: left;
+        animation: ellipsis-dots 1.5s steps(4, end) infinite;
+      }
+    </style>
     <section class="sheet-panel">
       <div class="sheet-head"><span>Mineración Pasiva</span><strong>Mineradora</strong></div>
       
@@ -3750,12 +3776,15 @@ function minerView() {
             Reclamar Ganancias Pasivas
           </button>
         ` : `
-          <button type="button" disabled style="margin-top: 15px; width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.08); padding: 12px; border-radius: 12px; font-weight: 800;">
-            Minando... (Reclamar cuando sume)
+          <button type="button" disabled style="margin-top: 15px; width: 100%; background: rgba(16, 45, 111, 0.35); color: rgba(255, 255, 255, 0.5); border: 1px solid rgba(91, 177, 255, 0.15); padding: 12px; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; animation: pulse-soft 2.5s ease-in-out infinite;">
+            <span style="display: inline-flex; animation: spin-slow 4s linear infinite; font-size: 1.2rem; color: #7cecff;">
+              ${icon('ph:clock-fill')}
+            </span>
+            <span>Minando<span class="ellipsis-dots"></span> (Reclamar cuando sume)</span>
           </button>
         `}
         <div style="margin-top: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
-          Límite de acumulación: 3 horas sin conexión
+          ${tr('minerMaxOffline')}
         </div>
       </div>
       
