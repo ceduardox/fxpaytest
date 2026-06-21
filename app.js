@@ -3760,12 +3760,12 @@ function minerView() {
       </div>
       
       <!-- Category Tabs -->
-      <div class="miner-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);">
+      <div class="miner-tabs" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 5px; border: 1px solid rgba(91, 177, 255, 0.28); border-radius: 18px; background: rgba(6, 18, 58, 0.72); margin-bottom: 20px;">
         ${categories.map(cat => {
           const isActive = activeMinerTab === cat.id;
           return `
-            <button class="miner-tab-btn" type="button" data-action="miner-tab" data-tab="${cat.id}" style="flex: 1; border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: background 0.2s, color 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; ${isActive ? 'background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.3);' : 'background: transparent; color: rgba(255,255,255,0.6);'}">
-              ${icon(cat.icon)} ${cat.label}
+            <button class="miner-tab-btn ${isActive ? 'active' : ''}" type="button" data-action="miner-tab" data-tab="${cat.id}" style="min-height: 42px; border-radius: 14px; border: none; cursor: pointer; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; ${isActive ? 'color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22);' : 'color: rgba(255, 255, 255, 0.76); background: rgba(5, 17, 56, 0.72);'}">
+              ${icon(cat.icon)} <span>${cat.label}</span>
             </button>
           `;
         }).join('')}
@@ -3823,7 +3823,7 @@ function minerView() {
 
           if (isLocked) {
             return `
-              <article class="card-item locked" style="background: rgba(15, 17, 26, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; opacity: 0.8; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+              <article class="card-item locked" style="background: linear-gradient(180deg, rgba(16, 45, 111, 0.25), rgba(10, 22, 70, 0.15)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed rgba(91, 177, 255, 0.15); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; opacity: 0.8; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.25);">
                 <div style="display: flex; gap: 10px; align-items: flex-start;">
                   <div style="background: rgba(255,255,255,0.02); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: rgba(255,255,255,0.25); border: 1px dashed rgba(255,255,255,0.08); flex-shrink: 0;">
                     ${icon('ph:lock-key-fill')}
@@ -3848,9 +3848,9 @@ function minerView() {
           }
 
           return `
-            <article class="card-item" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(99, 102, 241, 0.03)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
+            <article class="card-item" style="background: linear-gradient(180deg, rgba(16, 45, 111, 0.55), rgba(10, 22, 70, 0.45)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(91, 177, 255, 0.25); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
               <div style="display: flex; gap: 10px; align-items: flex-start;">
-                <div style="background: rgba(168, 85, 247, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); flex-shrink: 0;">
+                <div style="background: rgba(52, 139, 255, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #7cecff; border: 1px solid rgba(52, 139, 255, 0.3); flex-shrink: 0;">
                   ${icon(getCardIcon(c.id))}
                 </div>
                 <div>
@@ -3865,7 +3865,7 @@ function minerView() {
               
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
                 <span style="font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 700;">lvl ${currentLvl}</span>
-                <button class="upgrade-card-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'} style="border: none; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; ${hasBalance ? 'background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);' : 'background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.05);'}">
+                <button class="upgrade-card-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'} style="border: none; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; ${hasBalance ? 'background: linear-gradient(180deg, #57e7ff, #2b8cff); color: #10205a; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 12px rgba(43, 140, 255, 0.25);' : 'background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255, 255, 255, 0.05);'}">
                   <span style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
                   <span>${fmt(cost)}</span>
                 </button>
