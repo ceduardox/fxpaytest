@@ -131,6 +131,7 @@ const i18n = {
     pullRefreshRefreshing: 'Updating',
     capReached: 'Cap reached: this pack already completed {cap} USDT. You can withdraw balance or buy another pack to restart from 0.',
     capInfo: 'Pack cap: tap, tasks, ranking and referrals/commissions add up to {cap} USDT.',
+    freeCapInfo: 'One-time free withdrawal limit: {cap} USD. Purchase a package for unlimited withdrawals.',
     generatesUpTo: 'Generates up to',
     packInfoTitle: 'Pack recovery',
     packInfoTotal: 'Total recovery gain',
@@ -597,6 +598,7 @@ const i18n = {
     pullRefreshRefreshing: 'Actualizando',
     capReached: 'Cap alcanzado: este pack ya completo {cap} USDT. Puedes retirar balance o comprar otro pack para reiniciar desde 0.',
     capInfo: 'Cap del pack: se suma tap, tareas, ranking y referidos/comisiones hasta {cap} USDT.',
+    freeCapInfo: 'Límite único de retiro gratuito: {cap} USD. Adquiere un paquete para retiros ilimitados.',
     generatesUpTo: 'Genera hasta',
     packInfoTitle: 'Recuperacion del pack',
     packInfoTotal: 'Ganancia total de recuperacion',
@@ -1053,6 +1055,7 @@ const i18n = {
 
 i18n.pt = {
   ...i18n.es,
+  freeCapInfo: 'Limite único de saque gratuito: {cap} USD. Adquira um pacote para saques ilimitados.',
   installTitle: 'Instalar FoxPay',
   installText: 'Acesso rapido e carregamento otimizado.',
   install: 'Instalar',
@@ -2941,7 +2944,7 @@ function earnView() {
   const skinClaimHidden = dismissedSkinClaimKey === skinDismissKey;
   
   const capText = isFree
-    ? `Límite único de retiro gratuito: $${fmt(capLimitUsd, 2)} USD. Adquiere un paquete para retiros ilimitados.`
+    ? tr('freeCapInfo', { cap: fmt(capLimitUsd, 2) })
     : (capReached
       ? tr('capReached', { cap: fmt(player.cap_usd, 2) })
       : tr('capInfo', { cap: fmt(player.cap_usd, 2) }));
