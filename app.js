@@ -3819,7 +3819,9 @@ function minerView() {
                 lockReason = `Requiere paquete de pago activo`;
               }
             }
-             if (isLocked) {
+          }
+
+          if (isLocked) {
             return `
               <article class="card-item locked" style="background: rgba(15, 17, 26, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; opacity: 0.8; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
                 <div style="display: flex; gap: 10px; align-items: flex-start;">
