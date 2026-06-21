@@ -696,7 +696,7 @@ button.avatar-box {
     inset 0 -7px 13px rgba(4, 25, 115, 0.34),
     0 0 20px rgba(47, 153, 255, 0.36),
     0 10px 20px rgba(3, 32, 120, 0.34);
-  font-size: clamp(16px, 4.8vw, 21px);
+  font-size: clamp(12px, 3.4vw, 15px);
   text-shadow: 0 2px 7px rgba(0, 31, 108, 0.55);
 }
 
