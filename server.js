@@ -8757,6 +8757,9 @@ async function handleFoxPaySkinSelect(request, response, url) {
     if (!foxPayAccountEnabled(player)) {
       return sendFoxPayAccountDisabled(response, playerId);
     }
+    if (player.active_package_id === 'free') {
+      return sendJson(response, 403, { ok: false, error: 'skins_locked_free', dashboard: await buildFoxPayDashboard(playerId) });
+    }
     const skins = await getFoxPaySkins();
     const owned = new Set(Array.isArray(player.owned_skins) ? player.owned_skins : []);
     const valid = skinIds
@@ -8781,6 +8784,9 @@ async function handleFoxPaySkinClaim(request, response, url) {
     const player = await ensureFoxPayPlayer(playerId);
     if (!foxPayAccountEnabled(player)) {
       return sendFoxPayAccountDisabled(response, playerId);
+    }
+    if (player.active_package_id === 'free') {
+      return sendJson(response, 403, { ok: false, error: 'skins_locked_free', dashboard: await buildFoxPayDashboard(playerId) });
     }
     const settings = await getFoxPaySettings();
     const pack = await getFoxPayPackage(player.active_package_id || 'free');

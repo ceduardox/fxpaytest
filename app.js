@@ -133,6 +133,9 @@ const i18n = {
     capInfo: 'Pack cap: tap, tasks, ranking and referrals/commissions add up to {cap} USDT.',
     freeCapInfo: 'One-time free withdrawal limit: {cap} USD. Purchase a package for unlimited withdrawals.',
     minerMaxOffline: 'Max offline accumulation: 3 hours',
+    skinsLockedTitle: 'Skins Locked',
+    skinsLockedDesc: 'Using skins and earning real FOX daily is an exclusive feature for players with an active paid package.',
+    skinsLockedBtn: 'Unlock Packages',
     generatesUpTo: 'Generates up to',
     packInfoTitle: 'Pack recovery',
     packInfoTotal: 'Total recovery gain',
@@ -601,6 +604,9 @@ const i18n = {
     capInfo: 'Cap del pack: se suma tap, tareas, ranking y referidos/comisiones hasta {cap} USDT.',
     freeCapInfo: 'Límite único de retiro gratuito: {cap} USD. Adquiere un paquete para retiros ilimitados.',
     minerMaxOffline: 'Acumulación máxima: 3 horas fuera del juego',
+    skinsLockedTitle: 'Skins Bloqueadas',
+    skinsLockedDesc: 'El uso de Skins y la generación diaria de FOX real es una característica exclusiva para usuarios con un paquete de minería activo.',
+    skinsLockedBtn: 'Adquirir Paquete',
     generatesUpTo: 'Genera hasta',
     packInfoTitle: 'Recuperacion del pack',
     packInfoTotal: 'Ganancia total de recuperacion',
@@ -1059,6 +1065,9 @@ i18n.pt = {
   ...i18n.es,
   freeCapInfo: 'Limite único de saque gratuito: {cap} USD. Adquira um pacote para saques ilimitados.',
   minerMaxOffline: 'Acúmulo máximo: 3 horas fora do jogo',
+  skinsLockedTitle: 'Skins Bloqueadas',
+  skinsLockedDesc: 'O uso de Skins e a geração diária de FOX real é um recurso exclusivo para usuários com um pacote de mineração ativo.',
+  skinsLockedBtn: 'Adquirir Pacote',
   installTitle: 'Instalar FoxPay',
   installText: 'Acesso rapido e carregamento otimizado.',
   install: 'Instalar',
@@ -2952,9 +2961,9 @@ function earnView() {
       ? tr('capReached', { cap: fmt(player.cap_usd, 2) })
       : tr('capInfo', { cap: fmt(player.cap_usd, 2) }));
       
-  const skins = activeSkins();
+  const skins = isFree ? [] : activeSkins();
   const isOutOfEnergy = Number(player.energy || 0) <= 0;
-  const skinDaily = Number(player.skin_taps?.daily_tokens || 0);
+  const skinDaily = isFree ? 0 : Number(player.skin_taps?.daily_tokens || 0);
   const skinClaimed = Boolean(player.skin_taps?.claimed_today);
   const skinClaimText = capReached
     ? tr('capReached', { cap: fmt(player.cap_usd, 2) })
@@ -4947,6 +4956,42 @@ function skinsView() {
         `}
       </div>
   `;
+  const isFree = dashboard.player?.active_package_id === 'free';
+  if (isFree) {
+    return `
+      <section class="sheet-panel skins-view" style="position: relative;">
+        <div class="sheet-head"><span>${tr('skins')}</span><strong>${tr('skins')}</strong></div>
+        
+        <!-- Locked overlay with blur -->
+        <div style="position: absolute; top: 70px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(6, 18, 58, 0.45); border-radius: 20px; padding: 20px; text-align: center;">
+          <div style="background: rgba(16, 45, 111, 0.75); border: 1px solid rgba(91, 177, 255, 0.28); padding: 30px 20px; border-radius: 24px; max-width: 90%; box-shadow: 0 12px 32px rgba(0,0,0,0.4);">
+            <div style="font-size: 3rem; color: #7cecff; margin-bottom: 15px; display: inline-flex;">
+              ${icon('ph:lock-key-fill')}
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 10px;">${tr('skinsLockedTitle')}</h3>
+            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 20px;">
+              ${tr('skinsLockedDesc')}
+            </p>
+            <button type="button" data-view="packs" style="border: none; padding: 12px 24px; border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer; color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22); width: 100%;">
+              ${tr('skinsLockedBtn')}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Blurred background content just for display -->
+        <div style="filter: blur(2px); opacity: 0.35; pointer-events: none; width: 100%;">
+          <div class="skin-tabs" role="tablist">
+            <button class="active" type="button">${tr('skinShop')}</button>
+            <button type="button">${tr('skinInventory')}</button>
+          </div>
+          ${shopMarkup}
+        </div>
+        
+        <button class="roulette-back" type="button" data-view="earn" style="position: relative; z-index: 11; margin-top: 15px;">${icon('ph:arrow-left-bold')} ${tr('backToEarn')}</button>
+      </section>
+    `;
+  }
+
   return `
     <section class="sheet-panel skins-view">
       <div class="sheet-head"><span>${tr('skins')}</span><strong>${skinsTab === 'shop' ? tr('skinStore') : tr('mySkins')}</strong></div>
