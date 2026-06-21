@@ -3747,6 +3747,20 @@ function minerView() {
         text-align: left;
         animation: ellipsis-dots 1.5s steps(4, end) infinite;
       }
+      @keyframes glowing-pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        50% {
+          transform: scale(1.02);
+          box-shadow: 0 4px 25px rgba(16, 185, 129, 0.7), 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+      }
     </style>
     <section class="sheet-panel">
       <div class="sheet-head"><span>Mineración Pasiva</span><strong>Mineradora</strong></div>
@@ -3772,7 +3786,7 @@ function minerView() {
         </div>
         
         ${claimablePoints > 0 ? `
-          <button class="claim-passive-btn" type="button" data-action="claim-passive" style="margin-top: 15px; width: 100%; background: #10b981; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+          <button class="claim-passive-btn" type="button" data-action="claim-passive" style="margin-top: 15px; width: 100%; background: #10b981; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; animation: glowing-pulse 2s infinite ease-in-out;">
             Reclamar Ganancias Pasivas
           </button>
         ` : `
