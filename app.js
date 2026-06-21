@@ -2982,7 +2982,7 @@ function earnView() {
       <button class="roulette-float" type="button" data-view="roulette" aria-label="${tr('roulette')}">
         <img src="./images/roulette/roulette-optimized.webp" alt="" draggable="false" />
       </button>
-      <div class="cap-note ${capReached ? 'cap-note--reached' : ''} ${showCapInfo || capReached || isFree ? 'cap-note--visible' : ''}">
+      <div class="cap-note ${capReached ? 'cap-note--reached' : ''} ${showCapInfo || capReached ? 'cap-note--visible' : ''}">
         <span>${icon(capReached ? 'ph:lock-key-fill' : 'ph:info-fill')}</span>
         <small>${capText}</small>
       </div>
