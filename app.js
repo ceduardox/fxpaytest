@@ -3755,10 +3755,10 @@ function minerView() {
         content: "";
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-image: url('./images/miner-bg.webp');
+        background-image: linear-gradient(rgba(10, 22, 70, 0.65), rgba(10, 22, 70, 0.65)), url('./images/miner-bg.webp');
         background-size: cover;
         background-position: center;
-        opacity: 0.2;
+        opacity: 0.45;
         z-index: 1;
         pointer-events: none;
       }
