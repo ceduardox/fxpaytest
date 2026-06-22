@@ -8872,7 +8872,7 @@ button.avatar-box {
 /* Títulos y subtítulos de tarjetas */
 .hk-cards-widget .card-title {
   font-size: clamp(9px, 2.5vw, 11px);
-  font-weight: 600;
+  font-weight: 500;
   color: #fff;
   text-align: center;
   white-space: nowrap;
@@ -9044,7 +9044,7 @@ button.avatar-box {
 .hud-profit-title {
   font-size: 8px;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.3px;
   line-height: 1;
   margin-bottom: 2px;
