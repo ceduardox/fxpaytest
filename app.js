@@ -2981,12 +2981,78 @@ function earnView() {
   const upgradeLabel = isFree ? 'Optimizar Mineradora' : (capReached ? tr('buyAnotherPack') : (tasksDoneToday() ? tr('tomorrow') : (player.can_tap ? tr('dailyTasks') : tr('unlockTasks'))));
   const upgradeIcon = isFree ? 'ph:cpu-fill' : (capReached ? 'ph:package-fill' : (player.can_tap ? 'ph:clipboard-text-fill' : 'ph:lock-key-fill'));
 
+  // Skins Card
+  const hasSelectedSkins = (player.selected_skins || []).length > 0;
+  const ownedSkinsCount = ownedSkins().length;
+  const skinsLabel = 'Skins';
+  const skinsTime = `${ownedSkinsCount} Skin${ownedSkinsCount !== 1 ? 's' : ''}`;
+  const skinsCompleted = hasSelectedSkins;
+  const skinsDot = !skinsCompleted && ownedSkinsCount > 0;
+
+  // Miner Card
+  const packName = isFree ? 'Gratis' : (pack.name || 'Premium');
+  const minerLabel = isFree ? 'Minar' : 'Mineradoras';
+  const minerTime = packName;
+  const minerCompleted = !isFree;
+  const minerDot = isFree && Number(player.energy || 0) > 0;
+
+  // Tareas Card
+  const allTasks = taskList().filter(t => t.required !== false);
+  const completedTasks = allTasks.filter(t => t.claimed).length;
+  const tasksTime = `${completedTasks}/${allTasks.length}`;
+  const tasksCompleted = tasksDoneToday();
+  const tasksDot = !tasksCompleted && allTasks.some(t => t.ready && !t.claimed);
+
+  // Ruleta Card
+  const ticketsCount = player.roulette_tickets || 0;
+  const rouletteLabel = 'Ruleta';
+  const rouletteTime = `${ticketsCount} Ticket${ticketsCount !== 1 ? 's' : ''}`;
+  const rouletteDot = ticketsCount > 0;
+  const rouletteCompleted = ticketsCount === 0 && tasksCompleted;
+
   return `
     <section class="hero-stage">
       <div class="badges-row" style="display:flex; gap:8px; justify-content:center; width:100%; margin-bottom:4px;">
         <div class="hour-badge"><span class="coin-icon">${coinIcon()}</span><span>+${isFree ? '1' : fmt(pack.tap_reward_tokens || 1)} ${isFree ? 'GFOX' : 'FOX'}/tap</span></div>
         ${isFree ? `<div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>` : ''}
       </div>
+      
+      <div class="hk-cards-widget">
+        <div class="content-panel">
+          <div class="cards-grid">
+            
+            <button class="card ${skinsCompleted ? 'completed' : ''}" type="button" data-view="skins">
+              ${skinsCompleted ? '<div class="check-badge"></div>' : (skinsDot ? '<div class="dot-badge"></div>' : '')}
+              <div class="icon-3d-box">🎭</div>
+              <div class="card-title">${skinsLabel}</div>
+              <div class="card-time">${skinsTime}</div>
+            </button>
+
+            <button class="card ${minerCompleted ? 'completed' : ''}" type="button" data-view="packs">
+              ${minerCompleted ? '<div class="check-badge"></div>' : (minerDot ? '<div class="dot-badge"></div>' : '')}
+              <div class="icon-3d-box" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);">⛏️</div>
+              <div class="card-title">${minerLabel}</div>
+              <div class="card-time">${minerTime}</div>
+            </button>
+
+            <button class="card ${tasksCompleted ? 'completed' : ''}" type="button" data-view="tasks">
+              ${tasksCompleted ? '<div class="check-badge"></div>' : (tasksDot ? '<div class="dot-badge"></div>' : '')}
+              <div class="icon-3d-box" style="background: linear-gradient(135deg, #4f7396 0%, #2f455c 100%);">📋</div>
+              <div class="card-title">Tareas</div>
+              <div class="card-time">${tasksTime}</div>
+            </button>
+
+            <button class="card ${rouletteCompleted ? 'completed' : ''}" type="button" data-view="roulette">
+              ${rouletteCompleted ? '<div class="check-badge"></div>' : (rouletteDot ? '<div class="dot-badge"></div>' : '')}
+              <div class="icon-3d-box" style="background: linear-gradient(135deg, #4447e3 0%, #26289c 100%);">🎡</div>
+              <div class="card-title">${rouletteLabel}</div>
+              <div class="card-time">${rouletteTime}</div>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
       <div class="main-balance-wrap">
         <small>${balanceLabel}</small>
         <div class="main-balance"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span></div>
