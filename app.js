@@ -4010,8 +4010,6 @@ function packsView() {
       <div style="margin-top: 15px; width: 100%;">
         ${packsTab === 'miner' ? minerViewContent() : cardsViewContent()}
       </div>
-      
-      <button class="roulette-back" type="button" data-view="earn">${icon('ph:arrow-left-bold')} ${tr('backToEarn')}</button>
     </section>
   `;
 }
