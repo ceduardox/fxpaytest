@@ -3015,7 +3015,7 @@ function earnView() {
     <section class="hero-stage">
       ${isFree ? `
       <div class="earn-badges-row">
-        <div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>
+        <div class="hour-badge"><img src="images/icons/icons card/reloj.png" alt="" /><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>
       </div>
       ` : ''}
 

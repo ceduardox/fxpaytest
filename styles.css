@@ -677,35 +677,44 @@ button.avatar-box {
 .hour-badge {
   position: relative;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  min-width: clamp(110px, 36vw, 150px);
+  min-width: clamp(120px, 38vw, 160px);
   height: clamp(32px, 4.8dvh, 40px);
   color: #fff;
+  border-radius: 999px;
+  padding: 0 14px;
+  border: 1px solid rgba(110, 224, 255, 0.34);
   background:
-    radial-gradient(circle at 30% 20%, rgba(42, 232, 255, 0.18), transparent 60%),
-    linear-gradient(135deg, rgba(7, 43, 122, 0.94), rgba(4, 15, 56, 0.92) 48%, rgba(4, 20, 76, 0.96));
-  background-clip: padding-box;
-  border-radius: 12px;
-  border: 1.5px solid transparent;
+    linear-gradient(90deg, rgba(61, 218, 255, 0.9), rgba(54, 105, 255, 0.68) 48%, rgba(126, 69, 255, 0.62)),
+    rgba(6, 24, 76, 0.86);
   box-shadow:
-    0 4px 10px rgba(0, 12, 64, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 8px 16px rgba(0, 14, 62, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -6px 12px rgba(2, 18, 75, 0.24);
   font-size: clamp(10px, 2.8vw, 12px);
-  font-weight: 700;
-  text-shadow: 0 2px 7px rgba(0, 31, 108, 0.55);
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 7, 40, 0.6);
   box-sizing: border-box;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .hour-badge::before {
-  content: '';
+  content: "";
   position: absolute;
-  inset: -1.5px;
-  border-radius: 13.5px;
-  background: linear-gradient(to bottom, rgba(42, 232, 255, 0.9) 0%, rgba(42, 180, 255, 0.3) 40%, transparent 100%);
+  inset: 1.5px;
   z-index: -1;
-  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(6, 29, 91, 0.9), rgba(5, 17, 62, 0.86));
+}
+
+.hour-badge img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .status-strip {
