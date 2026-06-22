@@ -2973,7 +2973,8 @@ function earnView() {
       ? (skinClaimed ? tr('skinTapsClaimed') : tr('skinTapsReady', { count: fmt(skinDaily, 0) }))
       : tr('winSkinsRoulette');
       
-  const balanceLabel = isFree ? 'GFOX' : tr('generatedPack');
+  const tapRewardValue = isFree ? '1' : fmt(pack?.tap_reward_tokens || 1);
+  const balanceLabel = isFree ? `+${tapRewardValue} GFOX/tap` : tr('generatedPack');
   const balanceValue = isFree ? fmt(player.game_fox_balance || 0) : fmt(cycleTokens);
   
   const upgradeTargetView = isFree ? 'packs' : (capReached ? 'packs' : 'tasks');
@@ -3012,10 +3013,11 @@ function earnView() {
 
   return `
     <section class="hero-stage">
+      ${isFree ? `
       <div class="earn-badges-row">
-        <div class="hour-badge"><span class="coin-icon">${coinIcon()}</span><span>+${isFree ? '1' : fmt(pack.tap_reward_tokens || 1)} ${isFree ? 'GFOX' : 'FOX'}/tap</span></div>
-        ${isFree ? `<div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>` : ''}
+        <div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>
       </div>
+      ` : ''}
 
       <div class="hk-cards-spacer"></div>
       <div class="hk-cards-widget">
