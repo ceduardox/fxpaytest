@@ -8773,10 +8773,12 @@ button.avatar-box {
     linear-gradient(135deg, rgba(7, 43, 122, 0.94), rgba(4, 15, 56, 0.92) 48%, rgba(4, 20, 76, 0.96));
   background-clip: padding-box;
   border-radius: 14px;
-  padding: 12px 4px 10px;
+  padding: 6px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
   border: 1.5px solid transparent;
   cursor: pointer;
   min-width: 0;
@@ -8853,9 +8855,9 @@ button.avatar-box {
 
 /* Icono 3D */
 .hk-cards-widget .icon-3d-box {
-  width: 44px;
-  height: 44px;
-  margin-bottom: 8px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
