@@ -3059,7 +3059,6 @@ function earnView() {
         <div class="main-balance"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span></div>
       </div>
       <div class="status-pills">
-        <span>${icon('ph:lightning-fill')}<b data-energy-value>${fmt(player.energy)} / ${fmt(player.max_energy)}</b></span>
         <button class="status-pill-button" type="button" data-action="toggle-cap-info" aria-expanded="${showCapInfo || capReached ? 'true' : 'false'}">
           ${icon('ph:target-fill')}<b data-cap-value>${isFree ? `Retiro: ${fmt(player.total_earned_usd, 2)} / ${fmt(capLimitUsd, 2)} USDT` : `${fmt(player.total_earned_usd, 2)} / ${fmt(player.cap_usd, 2)} USDT`}</b>
         </button>
@@ -3077,9 +3076,9 @@ function earnView() {
         ${skins.map((skin, index) => `<img class="skin-companion skin-companion--${index + 1}" src="${skin.image_url}" alt="" draggable="false" />`).join('')}
       </button>
       ${skinClaimHidden ? `
-        <button class="skin-shortcut-button" type="button" data-action="open-skins" aria-label="${tr('goSkins')}">
-          ${skins.slice(0, 1).map((skin) => `<img src="${skin.image_url}" alt="" />`).join('') || icon('ph:sparkle-fill')}
-        </button>
+        <div class="energy-shortcut-pill">
+          ${icon('ph:lightning-fill')}<b data-energy-value>${fmt(player.energy)} / ${fmt(player.max_energy)}</b>
+        </div>
       ` : `
       <article class="skin-claim-card ${skinDaily > 0 ? '' : 'skin-claim-card--empty'}">
         <button class="skin-claim-info" type="button" data-action="open-skins" aria-label="${tr('goSkins')}">
