@@ -1717,6 +1717,7 @@ let dailyTicketReward = null;
 let roulettePrizeReward = null;
 let skinPreviewId = '';
 let skinsTab = 'shop';
+let packsTab = 'miner';
 let pendingSkinFoxPurchase = null;
 let skinFoxError = '';
 let pendingPackageFoxPurchase = null;
@@ -2265,6 +2266,7 @@ function patchEarnDom() {
     taskButton.classList.toggle('upgrade-button--locked', !player.can_tap);
     if (capReached) {
       taskButton.dataset.view = 'packs';
+      taskButton.dataset.packsTab = 'shop';
       const label = taskButton.querySelector('strong');
       if (label) label.textContent = 'Compra otro pack';
     }
@@ -2975,6 +2977,7 @@ function earnView() {
   const balanceValue = isFree ? fmt(player.game_fox_balance || 0) : fmt(cycleTokens);
   
   const upgradeTargetView = isFree ? 'packs' : (capReached ? 'packs' : 'tasks');
+  const upgradePacksTab = isFree ? 'miner' : 'shop';
   const upgradeLabel = isFree ? 'Optimizar Mineradora' : (capReached ? tr('buyAnotherPack') : (tasksDoneToday() ? tr('tomorrow') : (player.can_tap ? tr('dailyTasks') : tr('unlockTasks'))));
   const upgradeIcon = isFree ? 'ph:cpu-fill' : (capReached ? 'ph:package-fill' : (player.can_tap ? 'ph:clipboard-text-fill' : 'ph:lock-key-fill'));
 
@@ -3020,13 +3023,13 @@ function earnView() {
           <small>${tr('activeSkins')} · ${tr('goSkins')}</small>
           <strong>${skinClaimText}</strong>
         </button>
-        <button class="skin-claim-action" type="button" ${capReached ? 'data-view="packs"' : `data-action="${skinDaily > 0 ? 'claim-skin-taps' : 'open-skins'}"`} ${skinDaily > 0 && skinClaimed && !capReached ? 'disabled' : ''}>
+        <button class="skin-claim-action" type="button" ${capReached ? 'data-view="packs" data-packs-tab="shop"' : `data-action="${skinDaily > 0 ? 'claim-skin-taps' : 'open-skins'}"`} ${skinDaily > 0 && skinClaimed && !capReached ? 'disabled' : ''}>
           ${capReached ? tr('buyAnotherPack') : (skinDaily > 0 ? tr('claimSkinTaps', { count: fmt(skinDaily, 0) }) : tr('goSkins'))}
         </button>
         <button class="skin-claim-close" type="button" data-action="dismiss-skin-claim" aria-label="${tr('close')}">${icon('ph:x-bold')}</button>
       </article>
       `}
-      <button class="upgrade-button ${player.can_tap ? 'upgrade-button--ready' : 'upgrade-button--locked'}" type="button" data-view="${upgradeTargetView}">
+      <button class="upgrade-button ${player.can_tap ? 'upgrade-button--ready' : 'upgrade-button--locked'}" type="button" data-view="${upgradeTargetView}" ${upgradeTargetView === 'packs' ? `data-packs-tab="${upgradePacksTab}"` : ''}>
         <span>${icon(upgradeIcon)}</span>
         <strong>${upgradeLabel}</strong>
       </button>
@@ -3192,7 +3195,7 @@ function walletView() {
       </article>
       <div class="wallet-actions">
         <button type="button" data-view="withdraw">${icon('ph:arrow-circle-up-right-fill')} ${tr('withdraw')}</button>
-        <button type="button" data-view="packs">${icon('ph:package-fill')} ${tr('buyPacks')}</button>
+        <button type="button" data-view="packs" data-packs-tab="shop">${icon('ph:package-fill')} ${tr('buyPacks')}</button>
       </div>
       <section class="wallet-history">
         <div class="wallet-history-head">
@@ -3638,12 +3641,10 @@ function animateRouletteSpin(spin = {}, rewards = []) {
   });
 }
 
-function cardsView() {
+function cardsViewContent() {
   const tokenPrice = Number(dashboard.settings?.token_price_usd || 0.0001);
   const wallet = walletTokens(dashboard.player);
   return `
-    <section class="sheet-panel">
-      <div class="sheet-head"><span>${tr('packages')}</span><strong>${tr('usdtPacks')}</strong></div>
       ${cryptoNetworkSelector()}
       <div class="pack-grid">
         ${dashboard.packages.map((pack) => {
@@ -3690,11 +3691,10 @@ function cardsView() {
           `;
         }).join('')}
       </div>
-    </section>
   `;
 }
 
-function minerView() {
+function minerViewContent() {
   const player = dashboard.player;
   const levels = player.upgrade_cards_levels || {};
   const passiveRate = Number(player.passive_income_per_hour || 0);
@@ -3771,9 +3771,6 @@ function minerView() {
         }
       }
     </style>
-    <section class="sheet-panel">
-      <div class="sheet-head"><span>Mineración Pasiva</span><strong>Mineradora</strong></div>
-      
       <!-- Stats Board -->
       <div class="miner-stats-card" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.05)); border: 1px solid rgba(168,85,247,0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-around; align-items: center; gap: 15px;">
@@ -3816,7 +3813,7 @@ function minerView() {
         ${categories.map(cat => {
           const isActive = activeMinerTab === cat.id;
           return `
-            <button class="miner-tab-btn ${isActive ? 'active' : ''}" type="button" data-action="miner-tab" data-tab="${cat.id}" style="min-height: 42px; border-radius: 14px; border: none; cursor: pointer; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; ${isActive ? 'color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22);' : 'color: rgba(255, 255, 255, 0.76); background: rgba(5, 17, 56, 0.72);'}">
+            <button class="miner-tab-btn ${isActive ? 'active' : ''}" type="button" data-action="miner-tab" data-tab="${cat.id}" style="min-height: 42px; border-radius: 14px; cursor: pointer; font-size: 13px; font-weight: 200; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; ${isActive ? 'color: #08205a; border: 1px solid rgba(255, 239, 157, 0.95); background: linear-gradient(180deg, #fff7aa 0%, #ffda5e 48%, #f2ad24 100%); box-shadow: 0 0 8px rgba(255, 226, 92, 0.8), 0 0 20px rgba(255, 188, 42, 0.52), inset 0 2px 0 rgba(255, 255, 255, 0.62), inset 0 -4px 8px rgba(155, 91, 0, 0.32); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);' : 'border: none; color: rgba(255, 255, 255, 0.76); background: rgba(5, 17, 56, 0.72);'}">
               ${icon(cat.icon)} <span>${cat.label}</span>
             </button>
           `;
@@ -3926,6 +3923,31 @@ function minerView() {
           `;
         }).join('')}
       </div>
+  `;
+}
+
+function packsView() {
+  return `
+    <section class="sheet-panel packs-view">
+      <div class="sheet-head">
+        <span>${tr('packages')}</span>
+        <strong>${packsTab === 'miner' ? 'Mineradora' : tr('navPacks')}</strong>
+      </div>
+      
+      <div class="skin-tabs" role="tablist" aria-label="${tr('packages')}">
+        <button class="${packsTab === 'miner' ? 'active' : ''}" type="button" data-action="packs-tab" data-tab="miner" role="tab" aria-selected="${packsTab === 'miner'}">
+          <img class="tab-pico-img" src="./images/pico.png" alt="" /> Mineradora
+        </button>
+        <button class="${packsTab === 'shop' ? 'active' : ''}" type="button" data-action="packs-tab" data-tab="shop" role="tab" aria-selected="${packsTab === 'shop'}">
+          ${coinIcon('tab-coin-img')} Paquetes
+        </button>
+      </div>
+      
+      <div style="margin-top: 15px; width: 100%;">
+        ${packsTab === 'miner' ? minerViewContent() : cardsViewContent()}
+      </div>
+      
+      <button class="roulette-back" type="button" data-view="earn">${icon('ph:arrow-left-bold')} ${tr('backToEarn')}</button>
     </section>
   `;
 }
@@ -4972,7 +4994,7 @@ function skinsView() {
             <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 20px;">
               ${tr('skinsLockedDesc')}
             </p>
-            <button type="button" data-view="packs" style="border: none; padding: 12px 24px; border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer; color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22); width: 100%;">
+            <button type="button" data-view="packs" data-packs-tab="shop" style="border: none; padding: 12px 24px; border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer; color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22); width: 100%;">
               ${tr('skinsLockedBtn')}
             </button>
           </div>
@@ -5007,10 +5029,7 @@ function skinsView() {
 
 function mainView() {
   if (activeView === 'packs') {
-    if (dashboard.player.active_package_id === 'free') {
-      return minerView();
-    }
-    return cardsView();
+    return packsView();
   }
   if (activeView === 'avatars') return avatarsView();
   if (activeView === 'tasks') return shopView();
@@ -5068,8 +5087,8 @@ function avatarsView() {
 function nav() {
   const isFree = dashboard?.player?.active_package_id === 'free';
   const items = [
-    ['earn', tr('navEarn'), 'ph:heart-fill'],
-    ['packs', isFree ? 'Mineradora' : tr('navPacks'), isFree ? 'ph:wrench-fill' : 'ph:credit-card-fill'],
+    ['earn', tr('navEarn'), 'images/exchange.png'],
+    ['packs', isFree ? 'Minar' : tr('navPacks'), isFree ? 'images/pico.png' : 'ph:credit-card-fill'],
     ['tasks', tr('navTasks'), 'ph:clipboard-text-fill'],
     ['leaderboard', tr('navRank'), 'ph:trophy-fill'],
     ['friends', tr('navFriends'), 'ph:users-three-fill'],
@@ -5079,7 +5098,7 @@ function nav() {
     <nav class="bottom-nav" aria-label="Navigation">
       ${items.map(([view, label, itemIcon]) => `
         <button class="nav-item ${activeView === view ? 'active' : ''}" type="button" data-view="${view}">
-          ${icon(itemIcon)}${label}
+          ${itemIcon.includes('/') ? `<img class="nav-icon-img" src="${itemIcon}" alt="" />` : icon(itemIcon)}${label}
         </button>
       `).join('')}
     </nav>
@@ -6055,6 +6074,11 @@ async function doAction(action, button, event) {
       render();
       return;
     }
+    if (action === 'packs-tab') {
+      packsTab = button.dataset.tab;
+      render();
+      return;
+    }
     if (action === 'claim-passive') {
       const data = await api('/api/foxpay/passive/claim', { player_id: playerId, account_token: accountToken });
       updateDashboard(data);
@@ -6411,6 +6435,9 @@ app.addEventListener('click', (event) => {
   }
   if (button.dataset.view) {
     if (button.dataset.view === 'skins') skinsTab = 'shop';
+    if (button.dataset.view === 'packs') {
+      packsTab = button.dataset.packsTab || (dashboard.player?.active_package_id === 'free' ? 'miner' : 'shop');
+    }
     activeView = button.dataset.view;
     render();
     return;

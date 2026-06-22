@@ -665,12 +665,12 @@ button.avatar-box {
   justify-items: center;
   min-height: 0;
   height: 100%;
-  padding: clamp(26px, 4.5dvh, 46px) clamp(12px, 4vw, 18px) var(--nav-space);
+  padding: clamp(10px, 1.8dvh, 22px) clamp(12px, 4vw, 18px) var(--nav-space);
   overflow: hidden;
 }
 
 .tap-phone.has-install-banner .hero-stage {
-  padding-top: clamp(12px, 2.6dvh, 28px);
+  padding-top: clamp(6px, 1.2dvh, 14px);
   padding-bottom: var(--nav-space);
 }
 
@@ -1221,6 +1221,7 @@ button.avatar-box {
   border-radius: 16px;
   background: transparent;
   font-size: clamp(8px, 2.45vw, 10px);
+  font-weight: 400;
 }
 
 .mini-bars {
@@ -5420,6 +5421,32 @@ button.avatar-box {
   background: rgba(5, 17, 56, 0.72);
   font-size: 13px;
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-coin-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  order: -1;
+}
+
+.tab-pico-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  order: -1;
+  filter: brightness(0) invert(1);
+  opacity: 0.76;
+  transition: filter 0.2s, opacity 0.2s;
+}
+
+.skin-tabs button.active .tab-pico-img {
+  filter: brightness(0.1) contrast(1.5); /* make it dark (#10205a-like) when active */
+  opacity: 1;
 }
 
 .skin-tabs button.active {
@@ -8088,6 +8115,19 @@ button.avatar-box {
 
 .nav-item iconify-icon {
   font-size: clamp(18px, 5.4vw, 22px);
+}
+
+.nav-icon-img {
+  width: clamp(18px, 5.4vw, 22px);
+  height: clamp(18px, 5.4vw, 22px);
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.65;
+  transition: opacity 0.2s;
+}
+
+.nav-item.active .nav-icon-img {
+  opacity: 1;
 }
 
 .nav-item span {
