@@ -804,7 +804,7 @@ button.avatar-box {
   width: clamp(210px, 72vw, 300px);
   height: clamp(248px, calc(100dvh - 408px), 350px);
   min-height: 218px;
-  margin-top: clamp(-16px, -1.8dvh, -9px);
+  margin-top: clamp(-36px, -4dvh, -22px);
   padding: 0;
   border: 0;
   background: transparent;
@@ -9018,6 +9018,12 @@ button.avatar-box {
   box-shadow: 0 2px 5px rgba(66, 232, 255, 0.3);
 }
 
+.hud-pill-circle-btn.exchange-btn img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
 .hud-pill-circle-btn.settings-btn {
   background: linear-gradient(135deg, rgba(7, 43, 122, 0.8), rgba(4, 15, 56, 0.9));
   border: 1px solid rgba(87, 231, 255, 0.4);
@@ -9037,8 +9043,7 @@ button.avatar-box {
 
 .hud-profit-title {
   font-size: 8px;
-  color: rgba(87, 231, 255, 0.6);
-  text-transform: uppercase;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.3px;
   line-height: 1;

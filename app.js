@@ -2947,7 +2947,7 @@ function topHud() {
         <div class="hud-right-pill">
           <!-- Botón de intercambio (billetera/redes) -->
           <button class="hud-pill-circle-btn exchange-btn" type="button" data-view="wallet" aria-label="Wallet">
-            ${icon('ph:arrows-left-right-bold')}
+            <img src="images/icons/icons card/exchange.png" alt="" />
           </button>
           
           <!-- Profit per hour -->
