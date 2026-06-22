@@ -3012,39 +3012,40 @@ function earnView() {
 
   return `
     <section class="hero-stage">
-      <div class="badges-row" style="display:flex; gap:8px; justify-content:center; width:100%; margin-bottom:4px;">
+      <div class="earn-badges-row">
         <div class="hour-badge"><span class="coin-icon">${coinIcon()}</span><span>+${isFree ? '1' : fmt(pack.tap_reward_tokens || 1)} ${isFree ? 'GFOX' : 'FOX'}/tap</span></div>
         ${isFree ? `<div class="hour-badge passive-badge" style="background: rgba(168, 85, 247, 0.2); border-color: rgb(168, 85, 247);"><span class="coin-icon">${icon('ph:clock-fill')}</span><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>` : ''}
       </div>
-      
+
+      <div class="hk-cards-spacer"></div>
       <div class="hk-cards-widget">
         <div class="content-panel">
           <div class="cards-grid">
             
             <button class="card ${skinsCompleted ? 'completed' : ''}" type="button" data-view="skins">
               ${skinsCompleted ? '<div class="check-badge"></div>' : (skinsDot ? '<div class="dot-badge"></div>' : '')}
-              <div class="icon-3d-box">🎭</div>
+              <div class="icon-3d-box"><img src="images/icons/icons card/iconos_10.png" alt="Skins" /></div>
               <div class="card-title">${skinsLabel}</div>
               <div class="card-time">${skinsTime}</div>
             </button>
 
             <button class="card ${minerCompleted ? 'completed' : ''}" type="button" data-view="packs">
               ${minerCompleted ? '<div class="check-badge"></div>' : (minerDot ? '<div class="dot-badge"></div>' : '')}
-              <div class="icon-3d-box" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);">⛏️</div>
+              <div class="icon-3d-box"><img src="images/icons/icons card/iconos_05.png" alt="Minar" /></div>
               <div class="card-title">${minerLabel}</div>
               <div class="card-time">${minerTime}</div>
             </button>
 
             <button class="card ${tasksCompleted ? 'completed' : ''}" type="button" data-view="tasks">
               ${tasksCompleted ? '<div class="check-badge"></div>' : (tasksDot ? '<div class="dot-badge"></div>' : '')}
-              <div class="icon-3d-box" style="background: linear-gradient(135deg, #4f7396 0%, #2f455c 100%);">📋</div>
+              <div class="icon-3d-box"><img src="images/icons/icons card/iconos_07.png" alt="Tareas" /></div>
               <div class="card-title">Tareas</div>
               <div class="card-time">${tasksTime}</div>
             </button>
 
             <button class="card ${rouletteCompleted ? 'completed' : ''}" type="button" data-view="roulette">
               ${rouletteCompleted ? '<div class="check-badge"></div>' : (rouletteDot ? '<div class="dot-badge"></div>' : '')}
-              <div class="icon-3d-box" style="background: linear-gradient(135deg, #4447e3 0%, #26289c 100%);">🎡</div>
+              <div class="icon-3d-box"><img src="images/icons/icons card/iconos_03.png" alt="Ruleta" /></div>
               <div class="card-title">${rouletteLabel}</div>
               <div class="card-time">${rouletteTime}</div>
             </button>
@@ -3063,9 +3064,6 @@ function earnView() {
           ${icon('ph:target-fill')}<b data-cap-value>${isFree ? `Retiro: ${fmt(player.total_earned_usd, 2)} / ${fmt(capLimitUsd, 2)} USDT` : `${fmt(player.total_earned_usd, 2)} / ${fmt(player.cap_usd, 2)} USDT`}</b>
         </button>
       </div>
-      <button class="roulette-float" type="button" data-view="roulette" aria-label="${tr('roulette')}">
-        <img src="./images/roulette/roulette-optimized.webp" alt="" draggable="false" />
-      </button>
       <div class="cap-note ${capReached ? 'cap-note--reached' : ''} ${showCapInfo || capReached ? 'cap-note--visible' : ''}">
         <span>${icon(capReached ? 'ph:lock-key-fill' : 'ph:info-fill')}</span>
         <small>${capText}</small>

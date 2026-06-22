@@ -666,7 +666,7 @@ button.avatar-box {
   min-height: 0;
   height: 100%;
   padding: clamp(10px, 1.8dvh, 22px) clamp(12px, 4vw, 18px) var(--nav-space);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tap-phone.has-install-banner .hero-stage {
@@ -677,11 +677,11 @@ button.avatar-box {
 .hour-badge {
   position: relative;
   display: flex;
-  gap: 5px;
+  gap: 4px;
   align-items: center;
   justify-content: center;
-  min-width: clamp(170px, 47vw, 214px);
-  height: clamp(43px, 6.8dvh, 52px);
+  min-width: clamp(110px, 36vw, 150px);
+  height: clamp(32px, 4.8dvh, 40px);
   clip-path: polygon(13% 0, 87% 0, 100% 100%, 0 100%);
   color: #fff;
   background:
@@ -696,7 +696,7 @@ button.avatar-box {
     inset 0 -7px 13px rgba(4, 25, 115, 0.34),
     0 0 20px rgba(47, 153, 255, 0.36),
     0 10px 20px rgba(3, 32, 120, 0.34);
-  font-size: clamp(12px, 3.4vw, 15px);
+  font-size: clamp(10px, 2.8vw, 12px);
   text-shadow: 0 2px 7px rgba(0, 31, 108, 0.55);
 }
 
@@ -8516,197 +8516,379 @@ button.avatar-box {
   width: 100% !important;
 }
 
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes skin-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-8px) scale(1.04);
+  }
+}
+
+@keyframes ring-hit {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.99);
+  }
+
+  to {
+    opacity: 0.82;
+    transform: translate(-50%, -50%) scale(1.035);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(16px, -12px, 0) scale(1.08);
+  }
+}
+
+@media (min-width: 390px) and (min-height: 760px) {
+  .tap-target {
+    height: clamp(282px, calc(100dvh - 430px), 378px);
+  }
+}
+
+@media (max-width: 350px), (max-height: 660px) {
+  .profile-row {
+    min-height: 50px;
+  }
+
+  .hero-stage {
+    padding-top: 8px;
+    padding-bottom: var(--nav-space);
+  }
+
+  .tap-phone.has-install-banner .hero-stage {
+    padding-top: 6px;
+    padding-bottom: var(--nav-space);
+  }
+
+  .status-strip {
+    padding: 6px;
+  }
+
+  .tap-target {
+    width: clamp(186px, 66vw, 236px);
+    height: clamp(210px, calc(100dvh - 374px), 280px);
+  }
+
+  .tap-phone.has-install-banner .tap-target {
+    height: clamp(190px, calc(100dvh - 438px), 250px);
+  }
+
+  .main-balance {
+    margin-top: 8px;
+    font-size: clamp(30px, 10vw, 38px);
+  }
+
+  .pack-card,
+  .task-card {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    min-height: 70px;
+    padding: 8px;
+  }
+
+  .withdraw-card {
+    grid-template-columns: 1fr;
+    min-height: max-content;
+    padding: 10px;
+  }
+
+  .withdraw-headline {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .bottom-nav {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-height: 570px) {
+  .status-strip {
+    display: none;
+  }
+
+  .tap-target {
+    height: clamp(196px, calc(100dvh - 318px), 250px);
+  }
+
+  .tap-phone.has-install-banner .tap-target {
+    height: clamp(172px, calc(100dvh - 392px), 220px);
+  }
+
+  .energy-panel {
+    padding: 8px;
+  }
+
+  .nav-item {
+    min-height: 39px;
+  }
+
+  .install-banner {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 5px;
+    margin-right: 13px;
+  }
+
+  .install-banner-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .install-banner-action {
+    min-height: 30px;
+    padding: 0 9px;
+  }
+}
+
+.profile-card .auth-input-wrap .password-toggle-button {
+  position: absolute;
+  right: 6px;
+  left: auto;
+  top: 50%;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  color: rgba(226, 240, 255, 0.9);
+  background: linear-gradient(180deg, rgba(43, 85, 172, 0.44), rgba(5, 18, 58, 0.64));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%);
+}
+
+.profile-card .auth-input-wrap .password-toggle-button iconify-icon {
+  position: static;
+  color: currentColor;
+  font-size: 18px;
+  transform: none;
+}
+
+.pack-card button.pack-info-trigger {
+  width: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: inherit !important;
+  text-shadow: none !important;
+}
+
+.pack-card button.pack-card-art.pack-info-trigger {
+  width: 84px !important;
+  height: 76px !important;
+}
+
+.pack-card button.pack-cap-showcase.pack-info-trigger {
+  display: grid !important;
+  width: 100% !important;
+}
+
 .pack-card button.pack-info-trigger::before,
 .pack-card button.pack-info-trigger::after {
   content: none !important;
 }
 
 /* --- HK Cards Widget Styles --- */
+
+/* Fila de badges: dos elementos lado a lado, centrados */
+.earn-badges-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+/* Widget de tarjetas: ocupa todo el ancho usando márgenes negativos para escapar el padding del hero-stage */
 .hk-cards-widget {
-  --bg-card: #1c1f24;
-  --gold-line: #f2ba43;
-  --text-gray: #6d737d;
-  
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  position: relative;
+  width: calc(100% + 2 * clamp(12px, 4vw, 18px));
+  margin-left: calc(-1 * clamp(12px, 4vw, 18px));
+  margin-right: calc(-1 * clamp(12px, 4vw, 18px));
+  margin-top: 10px;
   padding: 0;
-  box-sizing: border-box;
-  position: relative;
-  width: calc(100% + 2 * clamp(12px, 4vw, 18px)) !important;
-  margin: 0 calc(-1 * clamp(12px, 4vw, 18px)) !important;
-  max-width: none !important;
-  background: transparent !important;
-  background-color: transparent !important;
+  z-index: 5;
 }
 
-/* --- Panel con Arco de Luz Superior --- */
-.hk-cards-widget .content-panel {
-  position: relative;
-  border-radius: 32px 32px 0 0;
-  padding: 22px 10px 10px 10px;
-  margin-top: 35px; /* Espacio para que el reflejo superior respire */
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-/* El Arco con la proyección de luz apuntando estrictamente HACIA ARRIBA */
-.hk-cards-widget .content-panel::before {
+/* Arco dorado de extremo a extremo con borde redondeado */
+.hk-cards-widget::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 32px;
-  border-top: 2.5px solid var(--gold-line);
+  height: 64px;
+  border-top: 2.5px solid #f2ba43;
   border-radius: 32px 32px 0 0;
-  pointer-events: none;
-  box-shadow: 0 -8px 20px rgba(242, 186, 67, 0.45);
+  box-shadow: 0 -8px 22px rgba(242, 186, 67, 0.5);
+  /* Arriba: muestra el brillo (-70px hacia arriba). Abajo: corta los 32px inferiores para ocultar los extremos del arco */
+  clip-path: inset(-70px 0 32px 0);
   z-index: 2;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: transparent;
 }
 
-/* Destello difuminado en el fondo por encima de la línea */
-.hk-cards-widget .content-panel::after {
-  content: '';
-  position: absolute;
-  top: -50px;
-  left: 5%;
-  right: 5%;
-  height: 50px;
-  background: radial-gradient(ellipse at bottom, rgba(242, 186, 67, 0.22) 0%, rgba(0,0,0,0) 75%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Grid de Tarjetas */
+/* Grid de 4 columnas con padding lateral para que las tarjetas no queden en los bordes */
 .hk-cards-widget .cards-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  position: relative;
-  z-index: 3;
+  gap: clamp(3px, 1.2vw, 5px);
+  padding: 10px clamp(12px, 4vw, 18px) 10px clamp(12px, 4vw, 18px);
 }
 
-/* --- Tarjetas Estilizadas --- */
+/* Tarjetas con borde degradado: dorado arriba → transparente abajo */
 .hk-cards-widget .card {
   position: relative;
-  background-color: var(--bg-card);
-  border-radius: 16px;
-  padding: 14px 4px 12px 4px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(42, 232, 255, 0.18), transparent 60%),
+    linear-gradient(135deg, rgba(7, 43, 122, 0.94), rgba(4, 15, 56, 0.92) 48%, rgba(4, 20, 76, 0.96));
+  background-clip: padding-box;
+  border-radius: 14px;
+  padding: 12px 4px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;
-  z-index: 1;
-  border: 0;
-  font: inherit;
+  border: 1.5px solid transparent;
   cursor: pointer;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
   outline: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.1s ease;
+  overflow: visible;
 }
 
-.hk-cards-widget .card:active {
-  transform: translateY(1px) scale(0.97);
-}
-
-/* Bordes degradados de las tarjetas (Brillo superior acentuado) */
+/* Borde degradado celeste arriba → transparente abajo */
 .hk-cards-widget .card::before {
   content: '';
   position: absolute;
-  inset: 0; 
-  border-radius: 16px;
-  padding: 1.5px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  inset: -1.5px;
+  border-radius: 15.5px;
+  background: linear-gradient(to bottom, rgba(42, 232, 255, 0.9) 0%, rgba(42, 180, 255, 0.3) 40%, transparent 100%);
   z-index: -1;
+  pointer-events: none;
 }
 
-/* Tarjeta Completada (Borde Verde Degradado) */
+/* Tarjeta completada: borde verde */
 .hk-cards-widget .card.completed::before {
-  background: linear-gradient(to bottom, rgba(76, 175, 80, 1) 0%, rgba(76, 175, 80, 0.2) 50%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(76, 175, 80, 0.9) 0%, rgba(76, 175, 80, 0.2) 50%, transparent 100%);
 }
 
 .hk-cards-widget .card.completed {
-  box-shadow: inset 0 4px 12px rgba(76, 175, 80, 0.12);
+  box-shadow: inset 0 3px 10px rgba(76, 175, 80, 0.1);
 }
 
-/* Notificaciones y Estados (Borde acoplado al fondo de la card) */
+.hk-cards-widget .card:active {
+  transform: scale(0.96);
+}
+
+/* Badge de check verde */
 .hk-cards-widget .check-badge {
   position: absolute;
   top: -6px;
-  right: -5px;
+  right: -6px;
   width: 18px;
   height: 18px;
-  background: linear-gradient(135deg, #66bb6a 0%, #388e3c 100%);
+  background: linear-gradient(135deg, #66bb6a, #388e3c);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px solid var(--bg-card);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  border: 2px solid rgba(4, 15, 56, 0.95);
   z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
 .hk-cards-widget .check-badge::after {
   content: '';
-  width: 3.5px;
+  width: 4px;
   height: 7px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
-  margin-bottom: 1.5px;
+  margin-bottom: 2px;
 }
 
+/* Punto de notificación */
 .hk-cards-widget .dot-badge {
   position: absolute;
-  top: 7px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   width: 6px;
   height: 6px;
-  background-color: #ffffff;
+  background: #fff;
   border-radius: 50%;
-  box-shadow: 0 0 6px #ffffff;
+  box-shadow: 0 0 5px #fff;
 }
 
-/* Contenedores de Iconos Metálicos 3D */
+/* Icono 3D */
 .hk-cards-widget .icon-3d-box {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #5b61e5 0%, #373ab1 100%);
-  border-radius: 10px;
-  margin-bottom: 10px;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 2px 3px rgba(255,255,255,0.2);
-  color: #fff;
+  flex-shrink: 0;
 }
 
-.hk-cards-widget .card:nth-child(3) .icon-3d-box {
-  background: linear-gradient(135deg, #4f7396 0%, #2f455c 100%);
-}
-
-.hk-cards-widget .card-title {
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.2;
-  margin-bottom: 8px;
+.hk-cards-widget .icon-3d-box img {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Títulos y subtítulos de tarjetas */
+.hk-cards-widget .card-title {
+  font-size: clamp(9px, 2.5vw, 11px);
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.95;
+  width: 100%;
+  margin-bottom: 3px;
 }
 
 .hk-cards-widget .card-time {
-  color: var(--text-gray);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: clamp(8px, 2.2vw, 10px);
+  font-weight: 400;
+  color: #6d737d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
 }
