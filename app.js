@@ -2904,8 +2904,13 @@ function topHud() {
   const avatarUrl = player.avatar_url || './images/fox-optimized.webp';
   const rank = player.rank || defaultVisualRank();
   const wallet = walletTokens(player);
-  const capPercent = Math.min(100, (Number(player.total_earned_usd || 0) / Math.max(1, Number(player.cap_usd || 1))) * 100);
-  const energyPercent = Math.min(100, (Number(player.energy || 0) / Math.max(1, Number(player.max_energy || 1))) * 100);
+  
+  const ranks = rankList();
+  const currentRankIndex = ranks.findIndex((r) => r.id === rank.id);
+  const displayLevel = currentRankIndex !== -1 ? currentRankIndex + 1 : 1;
+  const totalLevels = ranks.length || 10;
+  const rankPercent = Math.min(100, Math.max(0, (displayLevel / totalLevels) * 100));
+
   return `
     <header class="game-head">
       <div class="profile-row">
@@ -2923,10 +2928,45 @@ function topHud() {
         </div>
         <button class="menu-button" type="button" data-view="profile" aria-label="Profile">${icon('ph:user-circle-bold')}</button>
       </div>
-      <div class="mini-bars">
-        <span><b data-energy-bar style="width:${energyPercent}%"></b></span>
-        <span><b data-cap-bar style="width:${capPercent}%"></b></span>
+      
+      <!-- Fila de estadísticas modernas debajo de profile-row -->
+      <div class="hud-stats-row">
+        <!-- Rango y progreso a la izquierda -->
+        <button class="hud-rank-box" type="button" data-action="open-rank-rules" aria-label="${tr('rankRulesTitle')}">
+          <div class="hud-rank-header">
+            <span class="hud-rank-name">${escapeHtml(rank.name || 'Free')}</span>
+            ${icon('ph:caret-right-bold')}
+          </div>
+          <span class="hud-rank-level-text">${displayLevel} / ${totalLevels}</span>
+          <div class="hud-rank-bar">
+            <span style="width: ${rankPercent}%"></span>
+          </div>
+        </button>
+
+        <!-- Pastilla de stats a la derecha -->
+        <div class="hud-right-pill">
+          <!-- Botón de intercambio (billetera/redes) -->
+          <button class="hud-pill-circle-btn exchange-btn" type="button" data-view="wallet" aria-label="Wallet">
+            ${icon('ph:arrows-left-right-bold')}
+          </button>
+          
+          <!-- Profit per hour -->
+          <div class="hud-profit-box">
+            <span class="hud-profit-title">Profit per hour</span>
+            <div class="hud-profit-values">
+              <span class="hud-profit-coin">${coinIcon()}</span>
+              <strong class="hud-profit-amount">+${fmt(player.passive_income_per_hour || 0)}</strong>
+              <span class="hud-profit-info">${icon('ph:info-bold')}</span>
+            </div>
+          </div>
+
+          <!-- Botón de configuración/perfil -->
+          <button class="hud-pill-circle-btn settings-btn" type="button" data-view="profile" aria-label="Profile">
+            ${icon('ph:gear-fill')}
+          </button>
+        </div>
       </div>
+      
       ${pwaInstallBanner()}
     </header>
   `;
@@ -3013,12 +3053,6 @@ function earnView() {
 
   return `
     <section class="hero-stage">
-      ${isFree ? `
-      <div class="earn-badges-row">
-        <div class="hour-badge"><img src="images/icons/icons card/reloj.png" alt="" /><span>+${fmt(player.passive_income_per_hour || 0)} GFOX/h</span></div>
-      </div>
-      ` : ''}
-
       <div class="hk-cards-spacer"></div>
       <div class="hk-cards-widget">
         <div class="content-panel">
