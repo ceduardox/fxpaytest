@@ -8531,9 +8531,11 @@ button.avatar-box {
   padding: 0;
   box-sizing: border-box;
   position: relative;
-  width: 100%;
-  max-width: 450px;
-  margin: 0 auto;
+  width: calc(100% + 2 * clamp(12px, 4vw, 18px)) !important;
+  margin: 0 calc(-1 * clamp(12px, 4vw, 18px)) !important;
+  max-width: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* --- Panel con Arco de Luz Superior --- */
@@ -8542,6 +8544,8 @@ button.avatar-box {
   border-radius: 32px 32px 0 0;
   padding: 22px 10px 10px 10px;
   margin-top: 35px; /* Espacio para que el reflejo superior respire */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* El Arco con la proyección de luz apuntando estrictamente HACIA ARRIBA */
@@ -8557,6 +8561,8 @@ button.avatar-box {
   pointer-events: none;
   box-shadow: 0 -8px 20px rgba(242, 186, 67, 0.45);
   z-index: 2;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Destello difuminado en el fondo por encima de la línea */
