@@ -3092,10 +3092,6 @@ function earnView() {
         <button class="skin-claim-close" type="button" data-action="dismiss-skin-claim" aria-label="${tr('close')}">${icon('ph:x-bold')}</button>
       </article>
       `}
-      <button class="upgrade-button ${player.can_tap ? 'upgrade-button--ready' : 'upgrade-button--locked'}" type="button" data-view="${upgradeTargetView}" ${upgradeTargetView === 'packs' ? `data-packs-tab="${upgradePacksTab}"` : ''}>
-        <span>${icon(upgradeIcon)}</span>
-        <strong>${upgradeLabel}</strong>
-      </button>
     </section>
   `;
 }
