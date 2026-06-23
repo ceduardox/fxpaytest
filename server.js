@@ -47,105 +47,41 @@ const foxpayPaymentExpirationGraceMs = Math.max(0, Number(process.env.FOXPAY_PAY
 const freeWithdrawalLimitUsd = Number(process.env.FREE_WITHDRAWAL_LIMIT_USD || 10.0);
 
 const FOXPAY_UPGRADE_CARDS = [
-  {
-    id: 'tg_channel',
-    name: 'Canal de Telegram',
-    category: 'marketing',
-    baseCost: 100,
-    baseProfit: 10,
-    costMultiplier: 1.18,
-    requires: null
-  },
-  {
-    id: 'wa_group',
-    name: 'Grupo de WhatsApp',
-    category: 'marketing',
-    baseCost: 250,
-    baseProfit: 25,
-    costMultiplier: 1.18,
-    requires: { type: 'card', id: 'tg_channel', level: 3 }
-  },
-  {
-    id: 'tiktok_campaign',
-    name: 'Campaña de TikTok',
-    category: 'marketing',
-    baseCost: 800,
-    baseProfit: 85,
-    costMultiplier: 1.18,
-    requires: { type: 'card', id: 'wa_group', level: 5 }
-  },
-  {
-    id: 'influencer_mkt',
-    name: 'Marketing de Influencers',
-    category: 'marketing',
-    baseCost: 2500,
-    baseProfit: 300,
-    costMultiplier: 1.18,
-    requires: { type: 'invites', count: 2 }
-  },
-  {
-    id: 'local_servers',
-    name: 'Servidores Locales',
-    category: 'technology',
-    baseCost: 150,
-    baseProfit: 15,
-    costMultiplier: 1.18,
-    requires: null
-  },
-  {
-    id: 'aws_cloud',
-    name: 'Servidores Cloud (AWS)',
-    category: 'technology',
-    baseCost: 500,
-    baseProfit: 55,
-    costMultiplier: 1.18,
-    requires: { type: 'card', id: 'local_servers', level: 5 }
-  },
-  {
-    id: 'foxpay_validator',
-    name: 'Nodo Validador FoxPay',
-    category: 'technology',
-    baseCost: 1500,
-    baseProfit: 180,
-    costMultiplier: 1.18,
-    requires: { type: 'card_and_invites', id: 'aws_cloud', level: 8, invites: 1 }
-  },
-  {
-    id: 'ai_autotap',
-    name: 'Algoritmo AI Auto-Tap',
-    category: 'technology',
-    baseCost: 5000,
-    baseProfit: 650,
-    costMultiplier: 1.18,
-    requires: { type: 'card_and_premium', id: 'foxpay_validator', level: 5 }
-  },
-  {
-    id: 'brand_registration',
-    name: 'Registro de Marca',
-    category: 'business',
-    baseCost: 300,
-    baseProfit: 32,
-    costMultiplier: 1.18,
-    requires: null
-  },
-  {
-    id: 'fintech_license',
-    name: 'Licencia de Operación Fintech',
-    category: 'business',
-    baseCost: 1200,
-    baseProfit: 140,
-    costMultiplier: 1.18,
-    requires: { type: 'card', id: 'brand_registration', level: 5 }
-  },
-  {
-    id: 'smart_contract_audit',
-    name: 'Auditoría de Smart Contract',
-    category: 'business',
-    baseCost: 4000,
-    baseProfit: 500,
-    costMultiplier: 1.18,
-    requires: { type: 'card', id: 'fintech_license', level: 7 }
-  }
+  // --- MARKETING ---
+  { id: 'tg_channel', name: 'Canal de Telegram', category: 'marketing', baseCost: 100, baseProfit: 10, costMultiplier: 1.18, requires: null },
+  { id: 'wa_group', name: 'Grupo de WhatsApp', category: 'marketing', baseCost: 250, baseProfit: 25, costMultiplier: 1.18, requires: { type: 'card', id: 'tg_channel', level: 3 } },
+  { id: 'seo_strategy', name: 'Estrategia SEO Global', category: 'marketing', baseCost: 500, baseProfit: 55, costMultiplier: 1.18, requires: { type: 'card', id: 'wa_group', level: 2 } },
+  { id: 'tiktok_campaign', name: 'Campaña de TikTok', category: 'marketing', baseCost: 800, baseProfit: 85, costMultiplier: 1.18, requires: { type: 'card', id: 'seo_strategy', level: 4 } },
+  { id: 'youtube_ads', name: 'Campaña de YouTube Ads', category: 'marketing', baseCost: 1200, baseProfit: 130, costMultiplier: 1.18, requires: { type: 'card', id: 'tiktok_campaign', level: 5 } },
+  { id: 'community_airdrop', name: 'Airdrops Comunitarios', category: 'marketing', baseCost: 1800, baseProfit: 200, costMultiplier: 1.18, requires: { type: 'card', id: 'youtube_ads', level: 4 } },
+  { id: 'influencer_mkt', name: 'Marketing de Influencers', category: 'marketing', baseCost: 2500, baseProfit: 300, costMultiplier: 1.18, requires: { type: 'invites', count: 2 } },
+  { id: 'metaverse_billboard', name: 'Vallas en el Metaverso', category: 'marketing', baseCost: 4500, baseProfit: 550, costMultiplier: 1.18, requires: { type: 'card', id: 'influencer_mkt', level: 5 } },
+  { id: 'ambassador_program', name: 'Programa de Embajadores', category: 'marketing', baseCost: 8000, baseProfit: 1000, costMultiplier: 1.18, requires: { type: 'invites', count: 5 } },
+  { id: 'esports_sponsor', name: 'Patrocinio eSports', category: 'marketing', baseCost: 15000, baseProfit: 2000, costMultiplier: 1.18, requires: { type: 'card', id: 'ambassador_program', level: 5 } },
+
+  // --- TECNOLOGÍA ---
+  { id: 'local_servers', name: 'Servidores Locales', category: 'technology', baseCost: 150, baseProfit: 15, costMultiplier: 1.18, requires: null },
+  { id: 'smart_contract_audit', name: 'Auditoría de Smart Contract', category: 'technology', baseCost: 350, baseProfit: 35, costMultiplier: 1.18, requires: { type: 'card', id: 'local_servers', level: 3 } },
+  { id: 'aws_cloud', name: 'Servidores Cloud (AWS)', category: 'technology', baseCost: 500, baseProfit: 55, costMultiplier: 1.18, requires: { type: 'card', id: 'local_servers', level: 5 } },
+  { id: 'gpu_mining', name: 'Granjas de Minería GPU', category: 'technology', baseCost: 900, baseProfit: 100, costMultiplier: 1.18, requires: { type: 'card', id: 'aws_cloud', level: 4 } },
+  { id: 'cybersecurity', name: 'Ciberseguridad Avanzada', category: 'technology', baseCost: 1400, baseProfit: 160, costMultiplier: 1.18, requires: { type: 'card', id: 'smart_contract_audit', level: 5 } },
+  { id: 'foxpay_validator', name: 'Nodo Validador FoxPay', category: 'technology', baseCost: 2200, baseProfit: 260, costMultiplier: 1.18, requires: { type: 'card', id: 'gpu_mining', level: 5 } },
+  { id: 'senior_devs', name: 'Desarrolladores Senior Web3', category: 'technology', baseCost: 3800, baseProfit: 450, costMultiplier: 1.18, requires: { type: 'card', id: 'foxpay_validator', level: 4 } },
+  { id: 'ai_autotap', name: 'Algoritmo AI Auto-Tap', category: 'technology', baseCost: 6500, baseProfit: 800, costMultiplier: 1.18, requires: { type: 'card', id: 'senior_devs', level: 5 } },
+  { id: 'quantum_computing', name: 'Computación Cuántica', category: 'technology', baseCost: 12000, baseProfit: 1500, costMultiplier: 1.18, requires: { type: 'card', id: 'ai_autotap', level: 6 } },
+  { id: 'metaverse_core', name: 'Motor del Metaverso', category: 'technology', baseCost: 25000, baseProfit: 3500, costMultiplier: 1.18, requires: { type: 'card', id: 'quantum_computing', level: 5 } },
+
+  // --- NEGOCIOS ---
+  { id: 'brand_registration', name: 'Registro de Marca', category: 'business', baseCost: 300, baseProfit: 32, costMultiplier: 1.18, requires: null },
+  { id: 'fintech_license', name: 'Licencia de Operación Fintech', category: 'business', baseCost: 600, baseProfit: 65, costMultiplier: 1.18, requires: { type: 'card', id: 'brand_registration', level: 4 } },
+  { id: 'local_bank_integration', name: 'Integración con Bancos', category: 'business', baseCost: 1000, baseProfit: 110, costMultiplier: 1.18, requires: { type: 'card', id: 'fintech_license', level: 3 } },
+  { id: 'strategic_partnerships', name: 'Alianzas Estratégicas', category: 'business', baseCost: 1800, baseProfit: 210, costMultiplier: 1.18, requires: { type: 'card', id: 'local_bank_integration', level: 4 } },
+  { id: 'kyc_compliance', name: 'Cumplimiento Legal KYC', category: 'business', baseCost: 2800, baseProfit: 330, costMultiplier: 1.18, requires: { type: 'card', id: 'fintech_license', level: 6 } },
+  { id: 'dubai_office', name: 'Oficinas en Dubai', category: 'business', baseCost: 5000, baseProfit: 600, costMultiplier: 1.18, requires: { type: 'card', id: 'strategic_partnerships', level: 5 } },
+  { id: 'seed_fund', name: 'Fondo de Inversión Semilla', category: 'business', baseCost: 9000, baseProfit: 1100, costMultiplier: 1.18, requires: { type: 'card', id: 'dubai_office', level: 4 } },
+  { id: 'cmc_listing', name: 'Listado en CoinMarketCap', category: 'business', baseCost: 15000, baseProfit: 1900, costMultiplier: 1.18, requires: { type: 'card', id: 'kyc_compliance', level: 8 } },
+  { id: 'tier1_exchange', name: 'Lanzamiento Exchange Tier 1', category: 'business', baseCost: 30000, baseProfit: 4000, costMultiplier: 1.18, requires: { type: 'card', id: 'cmc_listing', level: 5 } },
+  { id: 'global_conglomerate', name: 'Conglomerado Global', category: 'business', baseCost: 60000, baseProfit: 8500, costMultiplier: 1.18, requires: { type: 'card', id: 'tier1_exchange', level: 7 } }
 ];
 
 
