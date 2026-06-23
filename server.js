@@ -9602,12 +9602,17 @@ async function handleFoxPayAdminSkinRemove(request, response, url) {
   }
 }
 
-async function handleFoxPayAdminMatchCreate(request, response) {
+async function handleFoxPayAdminMatchCreate(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'content_edit');
   if (!admin) return;
   try {
-    const body = await parseBody(request);
-    const { teamA, teamB, flagA, flagB, venue, matchDate } = body;
+    const params = await readRequestParams(request, url);
+    const teamA = params.get('teamA');
+    const teamB = params.get('teamB');
+    const flagA = params.get('flagA');
+    const flagB = params.get('flagB');
+    const venue = params.get('venue');
+    const matchDate = params.get('matchDate');
     if (!teamA || !teamB) return sendJson(response, 400, { ok: false, error: 'missing_teams' });
     const id = crypto.randomUUID();
     const match = { 
@@ -9635,12 +9640,12 @@ async function handleFoxPayAdminMatchCreate(request, response) {
   }
 }
 
-async function handleFoxPayAdminMatchClose(request, response) {
+async function handleFoxPayAdminMatchClose(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'content_edit');
   if (!admin) return;
   try {
-    const body = await parseBody(request);
-    const { id } = body;
+    const params = await readRequestParams(request, url);
+    const id = params.get('id');
     if (!id) return sendJson(response, 400, { ok: false, error: 'missing_id' });
     if (pool) {
       await pool.query('update foxpay_matches set status = $1 where id = $2', ['closed', id]);
@@ -9655,12 +9660,13 @@ async function handleFoxPayAdminMatchClose(request, response) {
   }
 }
 
-async function handleFoxPayAdminMatchResolve(request, response) {
+async function handleFoxPayAdminMatchResolve(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'content_edit');
   if (!admin) return;
   try {
-    const body = await parseBody(request);
-    const { id, result } = body; // result can be 'team_a', 'team_b', 'draw'
+    const params = await readRequestParams(request, url);
+    const id = params.get('id');
+    const result = params.get('result'); // result can be 'team_a', 'team_b', 'draw'
     if (!id || !result) return sendJson(response, 400, { ok: false, error: 'missing_params' });
     
     let match;
@@ -11371,13 +11377,13 @@ const server = createServer((request, response) => {
   }
 
   if (url.pathname === '/api/foxpay/admin/match/create') {
-    return handleFoxPayAdminMatchCreate(request, response);
+    return handleFoxPayAdminMatchCreate(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/match/close') {
-    return handleFoxPayAdminMatchClose(request, response);
+    return handleFoxPayAdminMatchClose(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/match/resolve') {
-    return handleFoxPayAdminMatchResolve(request, response);
+    return handleFoxPayAdminMatchResolve(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
