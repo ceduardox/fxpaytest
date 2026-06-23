@@ -9166,6 +9166,8 @@ button.avatar-box {
 
 /* Botón Primario Moderno con Efecto Activo */
 .hud-btn-primary {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(156, 246, 255, 0.98);
   padding: 12px 24px;
   border-radius: 14px;
@@ -9199,6 +9201,17 @@ button.avatar-box {
     0 0 10px rgba(40, 197, 255, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -2px 4px rgba(0, 81, 160, 0.18);
+}
+
+.hud-btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-80%);
+  animation: button-shine 3s infinite;
+  pointer-events: none;
 }
 
 @keyframes lockIconFloat {
