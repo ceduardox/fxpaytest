@@ -1698,6 +1698,7 @@ async function seedFoxPayDefaults() {
       foxpaySettingsMemory.set('video_task_library_seed_20260523_v1', { applied_at: new Date().toISOString() });
     }
     foxpaySettingsFromMemory();
+    await seedWorldCupMatches();
     return;
   }
 
