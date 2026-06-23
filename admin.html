@@ -505,7 +505,8 @@
                 <span class="sync-pill">Solo admin finanzas</span>
               </div>
               <form class="inline-form" id="manualPurchaseForm">
-                <label>Player ID <input name="playerId" type="text" placeholder="fox_..." required /></label>
+                <label>Player ID <input name="playerId" type="text" placeholder="fox_..." list="playersList" required /></label>
+                <datalist id="playersList"></datalist>
                 <label>Pack <select name="packageId" required></select></label>
                 <label>Confirmacion <input name="confirmation" type="text" placeholder="PAGO MANUAL" required /></label>
                 <button class="primary-button" type="submit">Crear pago manual</button>

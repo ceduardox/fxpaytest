@@ -1512,6 +1512,12 @@ function renderPurchases() {
       .map((pack) => `<option value="${pack.id}" ${pack.id === current ? 'selected' : ''}>${pack.name} - ${fmt(pack.price_usdt, 2)} USDT</option>`)
       .join('');
   }
+
+  const playersList = $('#playersList');
+  if (playersList && state.overview.players) {
+    playersList.innerHTML = state.overview.players.map(p => `<option value="${p.player_id}">${p.username || ''} ${p.email ? `(${p.email})` : ''}</option>`).join('');
+  }
+
   const filter = $('#purchaseFilter').value;
   const rows = state.overview.purchases.filter((item) => filter === 'all' || item.status === filter);
   $('#purchasesBody').innerHTML = rows.length
