@@ -1374,9 +1374,8 @@ const foxpayRouletteItemRewards = (package_id, type, ids, start) => ids.map((ite
 
 const foxpayDefaultRouletteRewards = [
   ...foxpayRouletteNoPrizeRewards('free', 1),
-  ...foxpayRouletteTicketRewards('free', [1, 1, 2], 20),
-  ...foxpayRouletteTokenRewards('free', [0.0005, 0.001, 0.002], 40),
-  ...foxpayRouletteItemRewards('free', 'skin', ['basic-ember-03', 'basic-spark-05', 'basic-neon-06'], 60),
+  ...foxpayRouletteTicketRewards('free', [1, 1, 2, 1], 20),
+  ...foxpayRouletteTokenRewards('free', [0.0001, 0.0005, 0.001, 0.002, 0.003], 40),
   ...[
     {
       package_id: 'p30',
@@ -1942,6 +1941,13 @@ async function seedFoxPayDefaults() {
        on conflict (package_id) do nothing`,
       [setting.package_id, setting.ticket_cost],
     );
+  }
+
+  // Migration: Remove skins from free roulette by wiping it so the new defaults without skins re-seed
+  const removeFreeSkinsMigration = await pool.query("select 1 from foxpay_settings where key = 'roulette_free_skins_removed' limit 1");
+  if (!removeFreeSkinsMigration.rowCount) {
+    await pool.query("delete from foxpay_roulette_rewards where package_id = 'free'");
+    await pool.query("insert into foxpay_settings (key, value) values ('roulette_free_skins_removed', 'true') on conflict (key) do nothing");
   }
 
   const roulettePoolMigration = await pool.query("select 1 from foxpay_settings where key = 'roulette_pool_rotation_v2' limit 1");
