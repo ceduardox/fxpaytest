@@ -1,4 +1,4 @@
-const CACHE_NAME = 'foxpay-pwa-v64';
+const CACHE_NAME = 'foxpay-pwa-v65';
 const CACHE_PREFIX = 'foxpay-pwa-';
 const STATIC_ASSETS = [
   '/manifest.webmanifest',
@@ -7,7 +7,13 @@ const STATIC_ASSETS = [
   '/images/fox-optimized.webp',
   '/images/sleeping-optimized.webp',
   '/images/UX/coinfox-optimized.webp',
-  '/images/bakground.jpg'
+  '/images/bakground.jpg',
+  '/images/icons/icons card/iconos_10.png',
+  '/images/icons/icons card/iconos_05.png',
+  '/images/icons/icons card/iconos_07.png',
+  '/images/icons/icons card/iconos_03.png',
+  '/images/icons/icons card/reloj.png',
+  '/images/icons/icons card/exchange.png'
 ];
 
 self.addEventListener('install', (event) => {

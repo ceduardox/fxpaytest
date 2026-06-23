@@ -1793,6 +1793,12 @@ async function preloadCriticalAssets() {
     coinImage,
     avatarUrl,
     './images/bakground.jpg',
+    './images/icons/icons card/iconos_10.png',
+    './images/icons/icons card/iconos_05.png',
+    './images/icons/icons card/iconos_07.png',
+    './images/icons/icons card/iconos_03.png',
+    './images/icons/icons card/reloj.png',
+    './images/icons/icons card/exchange.png',
   ]);
   await Promise.all([...critical].map(preloadImage));
 }
