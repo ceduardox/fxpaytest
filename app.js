@@ -3880,20 +3880,22 @@ function minerViewContent() {
         
         <!-- Interactive Capsule -->
         ${claimablePoints > 0 ? `
-          <button class="miner-stats-capsule active-claim" type="button" data-action="claim-passive-guide">
+          <div class="miner-stats-capsule active-claim" id="miner-swipe-capsule">
+            <div class="miner-swipe-fill"></div>
+            <div class="miner-swipe-shimmer"></div>
             <div class="miner-capsule-left">
-              <div class="miner-pickaxe-circle spinning">
+              <div class="miner-pickaxe-circle spinning" id="miner-swipe-handle">
                 ${icon('ph:pickaxe-fill')}
               </div>
               <div class="miner-capsule-info">
                 <span class="miner-capsule-title">Desliza para Reclamar</span>
-                <span class="miner-capsule-desc">Arrastra el pico a la derecha →</span>
+                <span class="miner-capsule-desc">Arrastra el pico →</span>
               </div>
             </div>
             <div class="miner-capsule-right">
-              ${icon('ph:chevron-right-bold')}
+              ${icon('ph:check-bold')}
             </div>
-          </button>
+          </div>
         ` : `
           <div class="miner-stats-capsule">
             <div class="miner-capsule-left">
@@ -5227,26 +5229,35 @@ function serviceWorkerUpdatePrompt(mode = 'floating') {
 }
 
 function initMinerSwipeToClaim() {
-  const capsule = document.querySelector('.miner-stats-capsule.active-claim');
+  const capsule = document.getElementById('miner-swipe-capsule');
   if (!capsule) return;
-  const handle = capsule.querySelector('.miner-pickaxe-circle');
+  const handle = document.getElementById('miner-swipe-handle');
   if (!handle) return;
+  const fill = capsule.querySelector('.miner-swipe-fill');
+  const shimmer = capsule.querySelector('.miner-swipe-shimmer');
+  const info = capsule.querySelector('.miner-capsule-info');
+  const rightIcon = capsule.querySelector('.miner-capsule-right');
   
   let isDragging = false;
   let startX = 0;
   let maxDistance = 0;
+  let claimed = false;
   
   function getEventX(e) {
     return e.touches ? e.touches[0].clientX : e.clientX;
   }
   
   function onStart(e) {
+    if (claimed) return;
     isDragging = true;
     startX = getEventX(e);
-    const capsuleWidth = capsule.getBoundingClientRect().width;
-    const handleWidth = handle.getBoundingClientRect().width;
-    maxDistance = capsuleWidth - handleWidth - 20; // accounting for padding/borders
+    const capsuleRect = capsule.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+    maxDistance = capsuleRect.width - handleRect.width - 28;
     handle.style.transition = 'none';
+    if (fill) fill.style.transition = 'none';
+    if (shimmer) shimmer.style.opacity = '0';
+    capsule.classList.add('dragging');
     
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
@@ -5262,36 +5273,71 @@ function initMinerSwipeToClaim() {
     if (deltaX < 0) deltaX = 0;
     if (deltaX > maxDistance) deltaX = maxDistance;
     
+    const progress = deltaX / maxDistance;
+    
     handle.style.transform = `translateX(${deltaX}px)`;
     
-    // Shimmer/fade text as you drag
-    const info = capsule.querySelector('.miner-capsule-info');
+    // Fill track follows the handle
+    if (fill) {
+      fill.style.width = `${(deltaX + handle.getBoundingClientRect().width / 2)}px`;
+      fill.style.opacity = '1';
+    }
+    
+    // Fade text as user drags
     if (info) {
-      const opacity = 1 - (deltaX / maxDistance);
-      info.style.opacity = opacity;
+      info.style.opacity = Math.max(0, 1 - progress * 1.8);
+    }
+    
+    // Glow intensity increases with progress
+    if (progress > 0.6) {
+      capsule.classList.add('near-claim');
+    } else {
+      capsule.classList.remove('near-claim');
     }
   }
   
-  async function onEnd(e) {
+  async function onEnd() {
     if (!isDragging) return;
     isDragging = false;
+    capsule.classList.remove('dragging');
     
     window.removeEventListener('mousemove', onMove);
     window.removeEventListener('mouseup', onEnd);
     window.removeEventListener('touchmove', onMove);
     window.removeEventListener('touchend', onEnd);
     
-    // Check if dragged far enough to claim
-    const transformMatrix = window.getComputedStyle(handle).transform;
-    let currentTranslateX = 0;
-    if (transformMatrix && transformMatrix !== 'none') {
-      const values = transformMatrix.split('(')[1].split(')')[0].split(',');
-      currentTranslateX = parseFloat(values[4] || 0);
+    // Get current position
+    const style = window.getComputedStyle(handle);
+    const matrix = style.transform;
+    let currentX = 0;
+    if (matrix && matrix !== 'none') {
+      const vals = matrix.split('(')[1].split(')')[0].split(',');
+      currentX = parseFloat(vals[4] || 0);
     }
     
-    if (currentTranslateX >= maxDistance * 0.82) {
-      handle.style.transition = 'transform 0.15s ease-out';
+    if (currentX >= maxDistance * 0.78) {
+      // SUCCESS — snap to end and claim
+      claimed = true;
+      handle.style.transition = 'transform 0.18s ease-out';
       handle.style.transform = `translateX(${maxDistance}px)`;
+      if (fill) {
+        fill.style.transition = 'width 0.18s ease-out, opacity 0.18s';
+        fill.style.width = '100%';
+      }
+      capsule.classList.remove('near-claim');
+      capsule.classList.add('claimed');
+      
+      // Haptic vibration
+      if (navigator.vibrate) navigator.vibrate(30);
+      
+      // Show success state
+      if (info) {
+        info.style.transition = 'opacity 0.15s';
+        info.style.opacity = '0';
+      }
+      
+      // Small pause to let the user see the success animation
+      await new Promise(r => setTimeout(r, 350));
       
       try {
         const data = await api('/api/foxpay/passive/claim', { player_id: playerId, account_token: accountToken });
@@ -5302,27 +5348,36 @@ function initMinerSwipeToClaim() {
       } catch (err) {
         console.error(err);
         toast("Error al reclamar");
-        handle.style.transition = 'transform 0.25s ease';
-        handle.style.transform = 'translateX(0)';
-        const info = capsule.querySelector('.miner-capsule-info');
-        if (info) info.style.opacity = 1;
+        claimed = false;
+        capsule.classList.remove('claimed');
+        resetSwipe();
       }
     } else {
-      handle.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
-      handle.style.transform = 'translateX(0)';
-      const info = capsule.querySelector('.miner-capsule-info');
-      if (info) {
-        info.style.transition = 'opacity 0.25s ease';
-        info.style.opacity = 1;
-        setTimeout(() => {
-          info.style.transition = '';
-        }, 250);
-      }
+      // SNAP BACK with elastic bounce
+      resetSwipe();
     }
   }
   
+  function resetSwipe() {
+    handle.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    handle.style.transform = 'translateX(0)';
+    if (fill) {
+      fill.style.transition = 'width 0.35s ease, opacity 0.3s ease';
+      fill.style.width = '0';
+      fill.style.opacity = '0';
+    }
+    if (info) {
+      info.style.transition = 'opacity 0.3s ease';
+      info.style.opacity = '1';
+    }
+    if (shimmer) {
+      setTimeout(() => { shimmer.style.opacity = ''; }, 400);
+    }
+    capsule.classList.remove('near-claim');
+  }
+  
   handle.addEventListener('mousedown', onStart);
-  handle.addEventListener('touchstart', onStart, { passive: true });
+  handle.addEventListener('touchstart', onStart, { passive: false });
 }
 
 function render() {
@@ -6282,10 +6337,6 @@ async function doAction(action, button, event) {
     if (action === 'packs-tab') {
       packsTab = button.dataset.tab;
       render();
-      return;
-    }
-    if (action === 'claim-passive-guide') {
-      toast("¡Desliza el pico a la derecha para reclamar!");
       return;
     }
     if (action === 'upgrade-card') {

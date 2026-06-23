@@ -9369,6 +9369,8 @@ button.avatar-box {
 
 /* Cápsula de Minado Oscura */
 .miner-stats-capsule {
+  position: relative;
+  overflow: hidden;
   background: #111111;
   border-radius: 20px;
   padding: 10px 14px;
@@ -9382,27 +9384,91 @@ button.avatar-box {
   width: 100%;
   box-sizing: border-box;
   text-align: left;
-  border: none;
   cursor: default;
 }
 
 .miner-stats-capsule.active-claim {
-  cursor: pointer;
+  cursor: grab;
   background: #151515;
   border: 1.5px solid #ccff00;
   box-shadow: 0 0 15px rgba(204, 255, 0, 0.25), inset 0 1px 2px rgba(255,255,255,0.05);
   animation: capsulePulse 2s infinite ease-in-out;
-  transition: transform 0.1s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.miner-stats-capsule.active-claim:active {
-  transform: scale(0.98);
+.miner-stats-capsule.active-claim.dragging {
+  animation: none;
+  cursor: grabbing;
+}
+
+/* Fill track that grows as user drags */
+.miner-swipe-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: linear-gradient(90deg, rgba(204, 255, 0, 0.15), rgba(204, 255, 0, 0.35));
+  border-radius: 20px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+
+/* Hint shimmer that slides across when idle */
+.miner-swipe-shimmer {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(204, 255, 0, 0.08),
+    rgba(204, 255, 0, 0.15),
+    rgba(204, 255, 0, 0.08),
+    transparent);
+  pointer-events: none;
+  z-index: 2;
+  animation: swipeShimmerHint 3s ease-in-out infinite 1.5s;
+}
+
+@keyframes swipeShimmerHint {
+  0% { left: -60%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 110%; opacity: 0; }
+}
+
+/* Near-claim glow state (user dragged past 60%) */
+.miner-stats-capsule.near-claim {
+  border-color: #e0ff60;
+  box-shadow: 0 0 24px rgba(204, 255, 0, 0.5), inset 0 0 8px rgba(204, 255, 0, 0.1);
+}
+
+/* Claimed success state */
+.miner-stats-capsule.claimed {
+  animation: none;
+  border-color: #ccff00;
+  background: linear-gradient(90deg, rgba(204, 255, 0, 0.15), rgba(204, 255, 0, 0.25));
+  box-shadow: 0 0 30px rgba(204, 255, 0, 0.4);
+}
+
+.miner-stats-capsule.claimed .miner-capsule-right {
+  background: #ccff00;
+  transform: scale(1.15);
+}
+
+.miner-stats-capsule.claimed .miner-capsule-right iconify-icon {
+  color: #111111;
 }
 
 .miner-capsule-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 3;
 }
 
 .miner-pickaxe-circle {
@@ -9444,6 +9510,7 @@ button.avatar-box {
   display: flex;
   flex-direction: column;
   user-select: none;
+  pointer-events: none;
 }
 
 .miner-capsule-title {
@@ -9469,6 +9536,9 @@ button.avatar-box {
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  transition: background 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .miner-stats-capsule.active-claim .miner-capsule-right {
