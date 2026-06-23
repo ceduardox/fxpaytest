@@ -9500,9 +9500,11 @@ button.avatar-box {
   animation: borderGlowPulse 2.5s infinite alternate;
 }
 
-.miner-pickaxe-circle iconify-icon {
-  font-size: 20px;
-  color: #ccff00;
+.miner-pickaxe-circle img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(88%) sepia(47%) saturate(1000%) hue-rotate(25deg) brightness(110%);
   animation: pickaxeSwing 1.8s infinite ease-in-out;
 }
 

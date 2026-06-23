@@ -3885,7 +3885,7 @@ function minerViewContent() {
             <div class="miner-swipe-shimmer"></div>
             <div class="miner-capsule-left">
               <div class="miner-pickaxe-circle spinning" id="miner-swipe-handle">
-                ${icon('ph:pickaxe-fill')}
+                <img src="images/pico.png" alt="Pico" />
               </div>
               <div class="miner-capsule-info">
                 <span class="miner-capsule-title">Desliza para Reclamar</span>
@@ -3900,7 +3900,7 @@ function minerViewContent() {
           <div class="miner-stats-capsule">
             <div class="miner-capsule-left">
               <div class="miner-pickaxe-circle">
-                ${icon('ph:pickaxe-fill')}
+                <img src="images/pico.png" alt="Pico" />
               </div>
               <div class="miner-capsule-info">
                 <span class="miner-capsule-title">Minando...</span>
