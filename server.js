@@ -9348,12 +9348,12 @@ async function handleFoxPayAdminUserAddCoins(request, response, url) {
     if (!pool) {
       const player = foxpayPlayers.get(playerId);
       if (!player) return sendJson(response, 404, { ok: false, error: 'user_not_found' });
-      player.token_balance = Number(player.token_balance || 0) + 1000000;
+      player.game_fox_balance = Number(player.game_fox_balance || 0) + 1000000;
       foxpayPlayers.set(playerId, player);
     } else {
       const result = await pool.query(
         `update foxpay_players
-         set token_balance = token_balance + 1000000,
+         set game_fox_balance = coalesce(game_fox_balance, 0) + 1000000,
              updated_at = now()
          where player_id = $1
          returning *`,
