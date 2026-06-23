@@ -9603,6 +9603,8 @@ async function handleFoxPayAdminSkinRemove(request, response, url) {
 }
 
 async function handleFoxPayAdminMatchCreate(request, response) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
   try {
     const body = await parseBody(request);
     const { teamA, teamB, flagA, flagB, venue, matchDate } = body;
@@ -9634,6 +9636,8 @@ async function handleFoxPayAdminMatchCreate(request, response) {
 }
 
 async function handleFoxPayAdminMatchClose(request, response) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
   try {
     const body = await parseBody(request);
     const { id } = body;
@@ -9652,6 +9656,8 @@ async function handleFoxPayAdminMatchClose(request, response) {
 }
 
 async function handleFoxPayAdminMatchResolve(request, response) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
   try {
     const body = await parseBody(request);
     const { id, result } = body; // result can be 'team_a', 'team_b', 'draw'
@@ -11365,13 +11371,13 @@ const server = createServer((request, response) => {
   }
 
   if (url.pathname === '/api/foxpay/admin/match/create') {
-    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchCreate(request, response));
+    return handleFoxPayAdminMatchCreate(request, response);
   }
   if (url.pathname === '/api/foxpay/admin/match/close') {
-    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchClose(request, response));
+    return handleFoxPayAdminMatchClose(request, response);
   }
   if (url.pathname === '/api/foxpay/admin/match/resolve') {
-    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchResolve(request, response));
+    return handleFoxPayAdminMatchResolve(request, response);
   }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
