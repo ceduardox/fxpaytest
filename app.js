@@ -1367,6 +1367,28 @@ function taskDescriptionText(task) {
   return task.description;
 }
 
+function getCustomTaskIcon(task) {
+  if (task.claimed) return icon('ph:check-circle-fill');
+  
+  const basePath = 'images/icons/icons%20card/';
+  
+  if (task.type === 'youtube') {
+    return `<img src="${basePath}youtube.webp" class="task-custom-icon" alt="YouTube" />`;
+  }
+  if (task.id === 'tap_goal') {
+    return `<img src="${basePath}tap.webp" class="task-custom-icon" alt="Tap" />`;
+  }
+  if (task.id === 'tg_channel' || String(task.title || '').toLowerCase().includes('canal') || String(task.title || '').toLowerCase().includes('suscribirse')) {
+    return `<img src="${basePath}suscription.webp" class="task-custom-icon" alt="Suscription" />`;
+  }
+  
+  if (task.type === 'referral') return icon('ph:users-three-duotone');
+  if (task.type === 'partner') return icon('ph:link-simple-bold');
+  if (task.type === 'social') return icon(socialTaskIcon(task.platform));
+  
+  return icon('ph:play-circle-duotone');
+}
+
 function taskRewardToast(data = {}, task = {}) {
   const tickets = Number(data.earned_tickets || 0);
   const points = Number(data.earned_points || 0);
@@ -4296,7 +4318,7 @@ function shopView() {
             : (task.type === 'youtube' && task.url ? tr('openYoutube', { watch: fmt(task.watch_seconds || 30), delay: fmt(task.reward_delay_seconds ?? 30) }) : taskDescriptionText(task));
           return `
           <button class="task-row ${task.claimed ? 'task-row--done' : ''} ${progressState?.progress ? 'task-row--progress' : ''} ${blockedByActiveTask ? 'task-row--locked' : ''}" type="button" data-action="task" data-task="${task.id}" data-task-row="${task.id}" ${capReached || task.claimed || (task.type !== 'referral' && !task.ready) ? 'disabled' : ''}>
-            <span>${icon(task.claimed ? 'ph:check-circle-fill' : (task.type === 'referral' ? 'ph:users-three-duotone' : (task.type === 'partner' ? 'ph:link-simple-bold' : (task.type === 'social' ? socialTaskIcon(task.platform) : 'ph:play-circle-duotone'))))}</span>
+            <span class="task-icon-wrapper">${getCustomTaskIcon(task)}</span>
             <div>
               <strong>${taskTitleText(task)}</strong>
               <small data-task-progress-description>${description}</small>
