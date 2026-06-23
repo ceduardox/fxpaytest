@@ -3900,17 +3900,41 @@ function minerViewContent() {
 
   function getCardIcon(cardId) {
     const iconsMap = {
+      // Marketing
       tg_channel: 'ph:telegram-logo-fill',
       wa_group: 'ph:whatsapp-logo-fill',
+      seo_strategy: 'ph:magnifying-glass-fill',
       tiktok_campaign: 'ph:tiktok-logo-fill',
+      youtube_ads: 'simple-icons:youtube',
+      community_airdrop: 'ph:parachute-fill',
       influencer_mkt: 'ph:users-three-fill',
+      metaverse_billboard: 'ph:monitor-play-fill',
+      ambassador_program: 'ph:megaphone-fill',
+      esports_sponsor: 'ph:game-controller-fill',
+      
+      // Technology
       local_servers: 'ph:hard-drive-fill',
+      smart_contract_audit: 'ph:shield-star-fill',
       aws_cloud: 'ph:cloud-fill',
+      gpu_mining: 'ph:cpu-fill',
+      cybersecurity: 'ph:lock-key-fill',
       foxpay_validator: 'ph:shield-check-fill',
-      ai_autotap: 'ph:cpu-fill',
+      senior_devs: 'ph:code-fill',
+      ai_autotap: 'ph:robot-fill',
+      quantum_computing: 'ph:atom-fill',
+      metaverse_core: 'ph:cube-fill',
+      
+      // Business
       brand_registration: 'ph:trademark-registered-fill',
-      fintech_license: 'ph:file-text-fill',
-      smart_contract_audit: 'ph:shield-star-fill'
+      fintech_license: 'ph:certificate-fill',
+      local_bank_integration: 'ph:bank-fill',
+      strategic_partnerships: 'ph:handshake-fill',
+      kyc_compliance: 'ph:identification-card-fill',
+      dubai_office: 'ph:buildings-fill',
+      seed_fund: 'ph:money-fill',
+      cmc_listing: 'ph:chart-line-up-fill',
+      tier1_exchange: 'ph:currency-btc-fill',
+      global_conglomerate: 'ph:globe-hemisphere-west-fill'
     };
     return iconsMap[cardId] || 'ph:cards-fill';
   }
