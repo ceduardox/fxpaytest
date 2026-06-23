@@ -7821,22 +7821,47 @@ button.avatar-box {
 }
 
 .roulette-note {
-  width: min(88%, 340px);
+  width: min(90%, 360px);
   margin: clamp(10px, 2.4dvh, 16px) 0 0;
-  padding: 10px 12px;
-  border: 1px solid rgba(126, 232, 255, 0.24);
-  border-radius: 18px;
-  color: rgba(255, 255, 255, 0.86);
-  background: rgba(4, 18, 58, 0.44);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
   text-align: center;
-  font-size: clamp(12px, 3.5vw, 14px);
+  font-size: clamp(11.5px, 3.2vw, 13px);
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .roulette-note--result {
-  border-color: rgba(255, 210, 87, 0.52);
-  background: rgba(74, 48, 5, 0.44);
+  color: #ffd257;
+  border-color: rgba(255, 210, 87, 0.4);
+  background: rgba(74, 48, 5, 0.2);
+}
+
+.roulette-info-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(90%, 360px);
+  margin-top: clamp(10px, 2.2dvh, 14px);
+  padding: 12px 18px;
+  background: rgba(11, 23, 61, 0.6);
+  border-left: 3px solid #52a8ff;
+  border-radius: 6px;
+  color: #cce4ff;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.roulette-info-alert svg {
+  color: #52a8ff;
+  flex-shrink: 0;
+  font-size: 18px;
 }
 
 .roulette-back {
@@ -7868,21 +7893,6 @@ button.avatar-box {
   background: linear-gradient(180deg, #fff19a, #ffd257);
   box-shadow: 0 14px 30px rgba(255, 210, 87, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   font-weight: 500;
-}
-
-.roulette-spin-button:disabled {
-  background: linear-gradient(180deg, rgba(22, 45, 102, 0.9), rgba(11, 23, 61, 0.95));
-  border: 1px solid rgba(91, 177, 255, 0.35);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15);
-  color: #cce4ff;
-  font-weight: 500;
-  backdrop-filter: blur(12px);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-}
-
-.roulette-spin-button:disabled svg {
-  filter: drop-shadow(0 0 6px rgba(91, 177, 255, 0.6));
-  color: #7eceff;
 }
 
 .roulette-cost {

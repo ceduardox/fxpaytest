@@ -5062,7 +5062,12 @@ function rouletteView() {
         ${rouletteWheelMarkup(rewards, capReached || tickets < cost || !rewards.length)}
       </div>
       ${lastRouletteSpin ? `<p class="roulette-note roulette-note--result">${tr('rouletteResult', { reward: rouletteTranslatedLabel(lastRouletteSpin.reward_label) })}</p>` : `<p class="roulette-note">${rewards.length ? rewards.map((reward) => rouletteTranslatedLabel(reward.label)).slice(0, 4).join(' · ') : tr('rouletteNeedTicket')}</p>`}
-      <button class="roulette-spin-button" type="button" data-action="roulette-spin" ${capReached || tickets < cost || !rewards.length ? 'disabled' : ''}>${ticketIcon()} ${capReached ? tr('buyAnotherPack') : (tickets < cost ? tr('rouletteNeedTicket') : tr('rouletteSpin'))}</button>
+      ${capReached || tickets < cost || !rewards.length 
+        ? `<div class="roulette-info-alert">
+             ${ticketIcon()} <span>${capReached ? tr('buyAnotherPack') : tr('rouletteNeedTicket')}</span>
+           </div>`
+        : `<button class="roulette-spin-button" type="button" data-action="roulette-spin">${ticketIcon()} ${tr('rouletteSpin')}</button>`
+      }
       <small class="roulette-cost">${tr('rouletteCost', { count: fmt(cost, 0) })}</small>
       <button class="roulette-back" type="button" data-view="${backTarget}">${icon(backIcon)} ${backLabel}</button>
     </section>
