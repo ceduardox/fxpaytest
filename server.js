@@ -5279,7 +5279,7 @@ async function buildFoxPayDashboard(playerId, payload = {}) {
       referral_link: `https://foxpay.live/?ref=${encodeURIComponent(player.player_id)}`,
       game_fox_balance: toNumber(player.game_fox_balance, 0),
       passive_income_per_hour: toNumber(player.passive_income_per_hour, 0),
-      last_passive_claim_timestamp: player.last_passive_claim_timestamp || new Date().toISOString(),
+      last_passive_claim_timestamp: player.last_passive_claim_timestamp || player.created_at || new Date().toISOString(),
       upgrade_cards_levels: typeof player.upgrade_cards_levels === 'string' ? JSON.parse(player.upgrade_cards_levels) : (player.upgrade_cards_levels || {}),
       free_withdrawal_claimed: Boolean(player.free_withdrawal_claimed),
       free_withdrawal_limit_usd: freeWithdrawalLimitUsd,
@@ -6882,7 +6882,7 @@ async function handleFoxPayPassiveClaim(request, response, url) {
     }
 
     const now = new Date();
-    const lastClaim = new Date(player.last_passive_claim_timestamp || now);
+    const lastClaim = new Date(player.last_passive_claim_timestamp || player.created_at || now);
     const msDiff = now.getTime() - lastClaim.getTime();
     const hoursDiff = Math.max(0, msDiff / (1000 * 60 * 60));
     

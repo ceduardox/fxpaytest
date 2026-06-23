@@ -1595,6 +1595,38 @@ function syncVideoProgressUiTimer() {
   }, 1000);
 }
 
+function syncMinerTickerTimer() {
+  if (minerTickerTimer) {
+    window.clearInterval(minerTickerTimer);
+    minerTickerTimer = null;
+  }
+  if (activeView !== 'miner' || !dashboard || !dashboard.player) return;
+  
+  minerTickerTimer = window.setInterval(() => {
+    if (activeView !== 'miner' || !dashboard || !dashboard.player || document.hidden) return;
+    const player = dashboard.player;
+    const passiveRate = Number(player.passive_income_per_hour || 0);
+    if (passiveRate <= 0) return;
+
+    const now = Date.now();
+    const lastClaim = Date.parse(player.last_passive_claim_timestamp || player.created_at || new Date().toISOString());
+    const msDiff = now - lastClaim;
+    const hoursDiff = Math.max(0, msDiff / (1000 * 60 * 60));
+    const cappedHours = Math.min(3.0, hoursDiff);
+    const claimablePoints = Math.floor(cappedHours * passiveRate);
+
+    const pointsNode = document.getElementById('miner-claimable-points');
+    if (pointsNode) {
+      pointsNode.innerHTML = `+${fmt(claimablePoints)}<small>GFOX</small>`;
+    }
+
+    const capsule = document.getElementById('miner-swipe-capsule');
+    if (!capsule && claimablePoints > 0) {
+      render();
+    }
+  }, 1000);
+}
+
 function youtubeVideoId(url) {
   try {
     const parsed = new URL(String(url || ''));
@@ -1699,6 +1731,7 @@ let busy = false;
 let activeVideoTask = null;
 let videoTimer = null;
 let videoProgressUiTimer = null;
+let minerTickerTimer = null;
 let videoClaimInFlight = false;
 let paymentNetwork = 'bep20';
 let currentPayment = null;
@@ -3806,7 +3839,7 @@ function minerViewContent() {
   
   // Calculate offline claiming details
   const now = Date.now();
-  const lastClaim = Date.parse(player.last_passive_claim_timestamp || new Date().toISOString());
+  const lastClaim = Date.parse(player.last_passive_claim_timestamp || player.created_at || new Date().toISOString());
   const msDiff = now - lastClaim;
   const hoursDiff = Math.max(0, msDiff / (1000 * 60 * 60));
   const cappedHours = Math.min(3.0, hoursDiff);
@@ -3872,7 +3905,7 @@ function minerViewContent() {
                 <span>reclamar</span>
               </div>
             </div>
-            <div class="miner-stats-value">
+            <div class="miner-stats-value" id="miner-claimable-points">
               +${fmt(claimablePoints)}<small>GFOX</small>
             </div>
           </div>
@@ -5411,6 +5444,7 @@ function render() {
   updatePaymentTimerNode();
   syncSeasonCountdownTimer();
   syncVideoProgressUiTimer();
+  syncMinerTickerTimer();
   initMinerSwipeToClaim();
 }
 
