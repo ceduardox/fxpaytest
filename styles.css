@@ -9083,3 +9083,135 @@ button.avatar-box {
   color: rgba(87, 231, 255, 0.4);
   font-size: 9px;
 }
+
+/* Bloqueo de Skins Overlay y Tarjeta */
+.skins-locked-overlay {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(6, 18, 58, 0.45);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+}
+
+.skins-locked-card {
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(87, 231, 255, 0.22), transparent 45%),
+    radial-gradient(circle at 30% 20%, rgba(42, 232, 255, 0.15), transparent 60%),
+    linear-gradient(135deg, rgba(7, 43, 122, 0.94), rgba(4, 15, 56, 0.92) 48%, rgba(4, 20, 76, 0.96));
+  background-clip: padding-box;
+  border: 1.5px solid transparent;
+  padding: 32px 24px;
+  border-radius: 26px;
+  max-width: 90%;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  z-index: 1;
+  animation: skinPreviewIn 240ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.skins-locked-card::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 27.5px;
+  background: linear-gradient(to bottom, rgba(42, 232, 255, 0.9) 0%, rgba(42, 180, 255, 0.3) 40%, transparent 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.skins-locked-card .lock-icon-wrap {
+  display: inline-flex;
+  width: 72px;
+  height: 72px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.45), transparent 45%),
+    linear-gradient(145deg, #7cecff, #1c73ff);
+  box-shadow:
+    0 12px 24px rgba(28, 115, 255, 0.25),
+    0 0 20px rgba(124, 236, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  margin-bottom: 20px;
+  animation: lockIconFloat 3s ease-in-out infinite alternate;
+}
+
+.skins-locked-card .lock-icon-wrap iconify-icon {
+  font-size: 36px;
+  color: #061748;
+}
+
+.skins-locked-card h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.skins-locked-card p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+/* Botón Primario Moderno con Efecto Activo */
+.hud-btn-primary {
+  border: 1px solid rgba(156, 246, 255, 0.98);
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #10205a;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.65), transparent 22%),
+    linear-gradient(180deg, #9cf6ff 0%, #28c5ff 42%, #1577e0 100%);
+  box-shadow:
+    0 0 10px rgba(87, 231, 255, 0.8),
+    0 0 20px rgba(40, 197, 255, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.74),
+    inset 0 -5px 8px rgba(0, 81, 160, 0.28);
+  width: 100%;
+  box-sizing: border-box;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.hud-btn-primary:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 0 4px rgba(87, 231, 255, 0.5),
+    0 0 10px rgba(40, 197, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 4px rgba(0, 81, 160, 0.18);
+}
+
+@keyframes lockIconFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}

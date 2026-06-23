@@ -5084,16 +5084,14 @@ function skinsView() {
         <div class="sheet-head"><span>${tr('skins')}</span><strong>${tr('skins')}</strong></div>
         
         <!-- Locked overlay with blur -->
-        <div style="position: absolute; top: 70px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(6, 18, 58, 0.45); border-radius: 20px; padding: 20px; text-align: center;">
-          <div style="background: rgba(16, 45, 111, 0.75); border: 1px solid rgba(91, 177, 255, 0.28); padding: 30px 20px; border-radius: 24px; max-width: 90%; box-shadow: 0 12px 32px rgba(0,0,0,0.4);">
-            <div style="font-size: 3rem; color: #7cecff; margin-bottom: 15px; display: inline-flex;">
+        <div class="skins-locked-overlay">
+          <div class="skins-locked-card">
+            <div class="lock-icon-wrap">
               ${icon('ph:lock-key-fill')}
             </div>
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 10px;">${tr('skinsLockedTitle')}</h3>
-            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 20px;">
-              ${tr('skinsLockedDesc')}
-            </p>
-            <button type="button" data-view="packs" data-packs-tab="shop" style="border: none; padding: 12px 24px; border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer; color: #10205a; background: linear-gradient(180deg, #57e7ff, #2b8cff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 10px 22px rgba(43, 140, 255, 0.22); width: 100%;">
+            <h3>${tr('skinsLockedTitle')}</h3>
+            <p>${tr('skinsLockedDesc')}</p>
+            <button class="hud-btn-primary" type="button" data-view="packs" data-packs-tab="shop">
               ${tr('skinsLockedBtn')}
             </button>
           </div>
