@@ -894,12 +894,15 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
               <div><span><iconify-icon icon="ph:lock-key-bold"></iconify-icon>Historial guardado</span><strong>${production.historyCount ? `${production.historyCount} dias` : '-'}</strong></div>
             </div>
             ${renderDailyProduction(user, 'mobile')}
-          </div>
-          <div class="user-admin-actions">
             ${canAdmin('users_edit') ? `
-            <button class="${actionClass} compact-button" type="button" data-user-status="${user.player_id}" data-status="${user.account_status === 'disabled' ? 'active' : 'disabled'}">
-              <iconify-icon icon="${actionIcon}"></iconify-icon>${actionLabel}
-            </button>
+            <div class="user-admin-actions">
+              <button class="primary-button compact-button" type="button" data-user-add-coins="${user.player_id}">
+                <iconify-icon icon="ph:coin-bold"></iconify-icon>Test +1M GFOX
+              </button>
+              <button class="${actionClass} compact-button" type="button" data-user-status="${user.player_id}" data-status="${user.account_status === 'disabled' ? 'active' : 'disabled'}">
+                <iconify-icon icon="${actionIcon}"></iconify-icon>${actionLabel}
+              </button>
+            </div>
             ` : ''}
           </div>
         </section>
@@ -1046,6 +1049,9 @@ function renderUsers() {
         <td>${statusPill(user.account_status === 'disabled' ? 'paused' : 'active')}</td>
         <td>${user.created_at || ''}</td>
         <td>${canAdmin('users_edit') ? `
+          <button class="primary-button compact-button" type="button" data-user-add-coins="${user.player_id}">
+            +1M GFOX
+          </button>
           <button class="${user.account_status === 'disabled' ? 'approve-button' : 'danger-button'} compact-button" type="button" data-user-status="${user.player_id}" data-status="${user.account_status === 'disabled' ? 'active' : 'disabled'}">
             <iconify-icon icon="${user.account_status === 'disabled' ? 'ph:play-bold' : 'ph:pause-bold'}"></iconify-icon>${user.account_status === 'disabled' ? 'Reactivar' : 'Desactivar'}
           </button>
@@ -3458,6 +3464,7 @@ document.addEventListener('click', (event) => {
   const removeSkinButton = event.target.closest('[data-remove-skin]');
   const editRoulette = event.target.closest('[data-edit-roulette]');
   const deleteButton = event.target.closest('[data-delete-user]');
+  const userAddCoinsButton = event.target.closest('[data-user-add-coins]');
   const userStatusButton = event.target.closest('[data-user-status]');
   const editAdminButton = event.target.closest('[data-edit-admin]');
   const deleteAdminButton = event.target.closest('[data-delete-admin]');
@@ -3497,6 +3504,7 @@ if (rewardItem) {
   if (removeSkinButton) void removeSkin(removeSkinButton.dataset.removeSkin);
   if (editRoulette) openRouletteRewardModal((state.overview.roulette_rewards || []).find((reward) => reward.id === editRoulette.dataset.editRoulette));
   if (deleteButton) void deleteUser(deleteButton.dataset.deleteUser);
+  if (userAddCoinsButton) void grantTestCoins(userAddCoinsButton.dataset.userAddCoins);
   if (userStatusButton) void updateUserStatus(userStatusButton.dataset.userStatus, userStatusButton.dataset.status);
   if (editAdminButton) editAdminUser(editAdminButton.dataset.editAdmin);
   if (deleteAdminButton) void deleteAdmin(deleteAdminButton.dataset.deleteAdmin);
@@ -3523,4 +3531,17 @@ if (restoreAdminSession()) {
   showDashboard();
 } else {
   showLogin();
+}
+
+async function grantTestCoins(playerId) {
+  if (!confirm('¿Añadir 1,000,000 GFOX de prueba a este usuario?')) return;
+  try {
+    const res = await api('/user/add-coins', { playerId }, 'POST');
+    if (res.ok) {
+      showAlert('1 Millón GFOX añadido para pruebas.', 'success');
+      void loadData();
+    }
+  } catch (err) {
+    showAlert(`Error: ${err.message}`);
+  }
 }

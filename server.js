@@ -9336,6 +9336,38 @@ async function handleFoxPayAdminUserDelete(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminUserAddCoins(request, response, url) {
+  if (!requireFoxPayAdmin(request, response, 'users_edit')) return;
+  const params = await readRequestParams(request, url);
+  const playerId = params.get('playerId') || '';
+  if (!playerId) {
+    return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
+  }
+
+  try {
+    if (!pool) {
+      const player = foxpayPlayers.get(playerId);
+      if (!player) return sendJson(response, 404, { ok: false, error: 'user_not_found' });
+      player.token_balance = Number(player.token_balance || 0) + 1000000;
+      foxpayPlayers.set(playerId, player);
+    } else {
+      const result = await pool.query(
+        `update foxpay_players
+         set token_balance = token_balance + 1000000,
+             updated_at = now()
+         where player_id = $1
+         returning *`,
+        [playerId]
+      );
+      if (!result.rowCount) return sendJson(response, 404, { ok: false, error: 'user_not_found' });
+    }
+    return sendJson(response, 200, { ok: true });
+  } catch (error) {
+    console.error('FoxPay user add coins failed', error);
+    return sendJson(response, 500, { ok: false, error: 'foxpay_user_add_coins_failed' });
+  }
+}
+
 async function handleFoxPayAdminUserStatus(request, response, url) {
   if (!requireFoxPayAdmin(request, response, 'users_edit')) return;
   const params = await readRequestParams(request, url);
@@ -11083,6 +11115,10 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/foxpay/admin/user/delete') {
     return handleFoxPayAdminUserDelete(request, response, url);
+  }
+
+  if (url.pathname === '/api/foxpay/admin/user/add-coins') {
+    return handleFoxPayAdminUserAddCoins(request, response, url);
   }
 
   if (url.pathname === '/api/foxpay/admin/user/status') {
