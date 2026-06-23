@@ -9132,25 +9132,18 @@ button.avatar-box {
 
 .skins-locked-card .lock-icon-wrap {
   display: inline-flex;
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   justify-content: center;
   align-items: center;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.45), transparent 45%),
-    linear-gradient(145deg, #7cecff, #1c73ff);
-  box-shadow:
-    0 12px 24px rgba(28, 115, 255, 0.25),
-    0 0 20px rgba(124, 236, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   animation: lockIconFloat 3s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 12px rgba(87, 231, 255, 0.7)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 .skins-locked-card .lock-icon-wrap img {
-  width: 38px;
-  height: 38px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
 }
 
