@@ -79,6 +79,13 @@ const balanceSizeClass = (value) => {
   if (length >= 7) return 'balance-chip--sm';
   return '';
 };
+const mainBalanceSizeClass = (value) => {
+  const length = fmt(value).length;
+  if (length >= 11) return 'main-balance--xxs';
+  if (length >= 9) return 'main-balance--xs';
+  if (length >= 7) return 'main-balance--sm';
+  return '';
+};
 const networkIcon = (network) => ({
   polygon: icon('simple-icons:polygon'),
   tron: '<svg class="network-inline-svg" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M4 4.8 28 9.2 14.8 28 4 4.8Zm4.3 4.1 5.9 14.2 2.3-9.1-8.2-5.1Zm1.6-1.6 7.5 4.7 5.2-2.7-12.7-2Zm8.6 7.3-2.1 8.3 7.8-11.1-5.7 2.8Z" fill="currentColor"/></svg>',
@@ -2305,6 +2312,15 @@ function patchEarnDom() {
     updateText('[data-main-balance]', fmt(packCycleTokens(player)));
     updateText('[data-cap-value]', `${fmt(player.total_earned_usd, 2)} / ${fmt(player.cap_usd, 2)} USDT`);
   }
+  
+  const mainBalanceEl = document.querySelector('.main-balance');
+  if (mainBalanceEl) {
+    const val = isFree ? (player.game_fox_balance || 0) : packCycleTokens(player);
+    mainBalanceEl.classList.remove('main-balance--sm', 'main-balance--xs', 'main-balance--xxs');
+    const sizeClass = mainBalanceSizeClass(val);
+    if (sizeClass) mainBalanceEl.classList.add(sizeClass);
+  }
+
   updateText('[data-energy-value]', `${fmt(player.energy)} / ${fmt(player.max_energy)}`);
 
   const energyBar = document.querySelector('[data-energy-bar]');
@@ -3163,7 +3179,7 @@ function earnView() {
 
       <div class="main-balance-wrap">
         <small>${balanceLabel}</small>
-        <div class="main-balance"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span></div>
+        <div class="main-balance ${mainBalanceSizeClass(isFree ? (player.game_fox_balance || 0) : cycleTokens)}"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span></div>
       </div>
       <div class="status-pills">
         <button class="status-pill-button" type="button" data-action="toggle-cap-info" aria-expanded="${showCapInfo || capReached ? 'true' : 'false'}">
