@@ -10008,3 +10008,32 @@ button.avatar-box {
     box-shadow: 0 0 20px rgba(204, 255, 0, 0.35), inset 0 1px 2px rgba(255,255,255,0.05);
   }
 }
+
+/* World Cup Betting Button */
+.match-bet-btn {
+  background: var(--surface-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.match-bet-btn:not(:disabled):hover {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(var(--accent-rgb), 0.2);
+}
+
+.match-bet-btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.match-bet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(0,0,0,0.2);
+}

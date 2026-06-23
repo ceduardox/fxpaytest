@@ -5322,7 +5322,7 @@ function worldcupView() {
 
   return `
     <section class="sheet-panel">
-      <div class="sheet-head"><span>Pool Pari-Mutuel</span><strong>World Cup</strong></div>
+      <div class="sheet-head"><span>World Cup 2026</span><strong>Pari-Mutuel</strong></div>
       <p style="padding: 0 16px; margin-bottom: 20px; font-size: 14px; opacity: 0.8;">
         Apuesta contra otros jugadores. La casa quema un 20% del total y reparte el resto entre los ganadores. Si ganas, suma directo a tu CAP.
       </p>
@@ -5334,32 +5334,48 @@ function worldcupView() {
           const myBetTotal = match.myBetTotal || 0;
           const myBetType = match.myBetType;
           return `
-            <article class="surface" style="margin-bottom: 16px; padding: 16px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-                <h3 style="margin:0;">${match.team_a} vs ${match.team_b}</h3>
-                <span class="sync-pill">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
+            <article class="surface" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: var(--surface-color); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+              <div style="text-align:center; margin-bottom: 16px;">
+                <span class="sync-pill" style="margin-bottom: 8px;">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
+                <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">
+                  ${match.match_date ? formatDateTime(match.match_date) : formatDateTime(match.created_at)}
+                  ${match.venue ? ` • ${escapeAttr(match.venue)}` : ''}
+                </div>
               </div>
-              <div style="font-size:12px; margin-bottom: 16px; opacity:0.7;">
-                Pozo Total: <strong>${fmt(stats.total, 0)} FOX</strong>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <div style="text-align:center; flex:1;">
+                  <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">${match.flag_a || '🎌'}</div>
+                  <strong style="font-size: 15px;">${match.team_a}</strong>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; opacity: 0.5; padding: 0 16px;">VS</div>
+                <div style="text-align:center; flex:1;">
+                  <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">${match.flag_b || '🎌'}</div>
+                  <strong style="font-size: 15px;">${match.team_b}</strong>
+                </div>
               </div>
-              ${myBetTotal > 0 ? `<div style="margin-bottom: 16px; padding: 8px; background: rgba(var(--accent-rgb), 0.1); border-radius: 8px; color: var(--accent-color); font-weight: bold; font-size: 13px;">Apostaste ${fmt(myBetTotal, 0)} FOX a ${myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : 'Empate'}</div>` : ''}
+
+              <div style="text-align:center; font-size:13px; margin-bottom: 16px; opacity:0.8; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
+                Pozo Total Acumulado: <strong style="color: var(--accent-color); font-size: 15px;">${fmt(stats.total, 0)} FOX</strong>
+              </div>
+              
+              ${myBetTotal > 0 ? `<div style="margin-bottom: 16px; padding: 12px; background: rgba(var(--accent-rgb), 0.1); border-left: 4px solid var(--accent-color); border-radius: 4px; color: var(--accent-color); font-size: 14px; text-align: center;">
+                Has apostado <strong>${fmt(myBetTotal, 0)} FOX</strong> a <strong>${myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : 'Empate'}</strong>
+              </div>` : ''}
               
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px;">${match.team_a}</strong>
-                  <small style="opacity:0.7;">${fmt(stats.team_a, 0)} FOX</small>
-                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_a}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_a', a);">Apostar</button>` : ''}
-                </div>
-                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px;">Empate</strong>
-                  <small style="opacity:0.7;">${fmt(stats.draw, 0)} FOX</small>
-                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX al Empate:'); if(a) window.handleWorldCupBet('${match.id}', 'draw', a);">Apostar</button>` : ''}
-                </div>
-                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px;">${match.team_b}</strong>
-                  <small style="opacity:0.7;">${fmt(stats.team_b, 0)} FOX</small>
-                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_b}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_b', a);">Apostar</button>` : ''}
-                </div>
+                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_a}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_a', a);">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">${match.team_a}</strong>
+                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.team_a, 0)} FOX</small>
+                </button>
+                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX al Empate:'); if(a) window.handleWorldCupBet('${match.id}', 'draw', a);">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">Empate</strong>
+                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.draw, 0)} FOX</small>
+                </button>
+                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_b}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_b', a);">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">${match.team_b}</strong>
+                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.team_b, 0)} FOX</small>
+                </button>
               </div>
             </article>
           `;

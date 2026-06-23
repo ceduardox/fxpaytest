@@ -712,17 +712,21 @@
             </div>
             <article class="surface">
               <h3>Crear Nuevo Partido</h3>
-              <form class="inline-form" id="createMatchForm">
+              <form class="inline-form" id="createMatchForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <label>Equipo Local <input name="teamA" type="text" placeholder="Ej: Brasil" required /></label>
                 <label>Equipo Visitante <input name="teamB" type="text" placeholder="Ej: Haití" required /></label>
-                <button class="primary-button" type="submit">Crear Partido</button>
+                <label>Bandera Local (Emoji) <input name="flagA" type="text" placeholder="Ej: 🇧🇷" /></label>
+                <label>Bandera Visitante (Emoji) <input name="flagB" type="text" placeholder="Ej: 🇭🇹" /></label>
+                <label>Estadio / Sede <input name="venue" type="text" placeholder="Ej: Maracaná" /></label>
+                <label>Fecha del Partido <input name="matchDate" type="datetime-local" /></label>
+                <button class="primary-button" type="submit" style="grid-column: span 2;">Crear Partido</button>
               </form>
             </article>
             <div class="table-wrap" style="margin-top: 20px;">
               <table>
                 <thead>
                   <tr>
-                    <th>Fecha</th>
+                    <th>Fecha & Sede</th>
                     <th>Partido</th>
                     <th>Estado</th>
                     <th>Resultado</th>

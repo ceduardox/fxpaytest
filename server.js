@@ -821,11 +821,18 @@ async function initDatabase() {
       id text primary key,
       team_a text not null,
       team_b text not null,
+      flag_a text,
+      flag_b text,
+      venue text,
+      match_date timestamptz,
       status text not null default 'open',
       result text,
       created_at timestamptz not null default now()
     )
   `);
+  try {
+    await pool.query('alter table foxpay_matches add column flag_a text, add column flag_b text, add column venue text, add column match_date timestamptz');
+  } catch (err) {}
 
   await pool.query(`
     create table if not exists foxpay_bets (
@@ -1974,6 +1981,44 @@ async function seedFoxPayDefaults() {
        values ('roulette_pool_rotation_v2', $1::jsonb)
        on conflict (key) do nothing`,
       [JSON.stringify({ applied_at: new Date().toISOString(), cycle_days: 3, visible_rewards: 12, rewards: foxpayDefaultRouletteRewards.length })],
+    );
+  }
+
+  await seedWorldCupMatches();
+}
+
+async function seedWorldCupMatches() {
+  const matches = [
+    { id: 'wc_2026_1', team_a: 'England', team_b: 'Ghana', flag_a: '🇬🇧', flag_b: '🇬🇭', venue: 'Boston Stadium', match_date: '2026-06-23T15:00:00Z' },
+    { id: 'wc_2026_2', team_a: 'Panama', team_b: 'Croatia', flag_a: '🇵🇦', flag_b: '🇭🇷', venue: 'Toronto Stadium', match_date: '2026-06-23T18:00:00Z' },
+    { id: 'wc_2026_3', team_a: 'Portugal', team_b: 'Uzbekistan', flag_a: '🇵🇹', flag_b: '🇺🇿', venue: 'Houston Stadium', match_date: '2026-06-23T21:00:00Z' },
+    { id: 'wc_2026_4', team_a: 'Colombia', team_b: 'Congo DR', flag_a: '🇨🇴', flag_b: '🇨🇩', venue: 'Estadio Guadalajara', match_date: '2026-06-23T23:30:00Z' },
+    { id: 'wc_2026_5', team_a: 'Switzerland', team_b: 'Canada', flag_a: '🇨🇭', flag_b: '🇨🇦', venue: 'Vancouver Stadium', match_date: '2026-06-24T15:00:00Z' },
+    { id: 'wc_2026_6', team_a: 'Bosnia', team_b: 'Qatar', flag_a: '🇧🇦', flag_b: '🇶🇦', venue: 'Atlanta Stadium', match_date: '2026-06-24T18:00:00Z' },
+    { id: 'wc_2026_7', team_a: 'Morocco', team_b: 'Haiti', flag_a: '🇲🇦', flag_b: '🇭🇹', venue: 'Miami Stadium', match_date: '2026-06-24T21:00:00Z' },
+    { id: 'wc_2026_8', team_a: 'Scotland', team_b: 'Brazil', flag_a: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', flag_b: '🇧🇷', venue: 'Seattle Stadium', match_date: '2026-06-24T23:30:00Z' },
+    { id: 'wc_2026_9', team_a: 'Japan', team_b: 'Sweden', flag_a: '🇯🇵', flag_b: '🇸🇪', venue: 'Los Angeles Stadium', match_date: '2026-06-25T15:00:00Z' },
+    { id: 'wc_2026_10', team_a: 'Ecuador', team_b: 'Germany', flag_a: '🇪🇨', flag_b: '🇩🇪', venue: 'New York Stadium', match_date: '2026-06-25T18:00:00Z' },
+    { id: 'wc_2026_11', team_a: 'Uruguay', team_b: 'Spain', flag_a: '🇺🇾', flag_b: '🇪🇸', venue: 'Dallas Stadium', match_date: '2026-06-26T21:00:00Z' },
+    { id: 'wc_2026_12', team_a: 'Argentina', team_b: 'Jordan', flag_a: '🇦🇷', flag_b: '🇯🇴', venue: 'San Francisco Stadium', match_date: '2026-06-27T18:00:00Z' }
+  ];
+
+  if (!pool) {
+    for (const match of matches) {
+      if (!foxpayMatchesMemory.has(match.id)) {
+        foxpayMatchesMemory.set(match.id, { ...match, status: 'open', result: null, created_at: new Date().toISOString() });
+      }
+    }
+    return;
+  }
+
+  for (const match of matches) {
+    await pool.query(
+      `insert into foxpay_matches
+       (id, team_a, team_b, flag_a, flag_b, venue, match_date, status)
+       values ($1, $2, $3, $4, $5, $6, $7, 'open')
+       on conflict (id) do nothing`,
+      [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date]
     );
   }
 }
@@ -9559,13 +9604,24 @@ async function handleFoxPayAdminSkinRemove(request, response, url) {
 async function handleFoxPayAdminMatchCreate(request, response) {
   try {
     const body = await parseBody(request);
-    const { teamA, teamB } = body;
+    const { teamA, teamB, flagA, flagB, venue, matchDate } = body;
     if (!teamA || !teamB) return sendJson(response, 400, { ok: false, error: 'missing_teams' });
     const id = crypto.randomUUID();
-    const match = { id, team_a: teamA, team_b: teamB, status: 'open', result: null, created_at: new Date().toISOString() };
+    const match = { 
+      id, 
+      team_a: teamA, 
+      team_b: teamB, 
+      flag_a: flagA || '', 
+      flag_b: flagB || '', 
+      venue: venue || '', 
+      match_date: matchDate || null, 
+      status: 'open', 
+      result: null, 
+      created_at: new Date().toISOString() 
+    };
     if (pool) {
-      await pool.query('insert into foxpay_matches (id, team_a, team_b, status, created_at) values ($1, $2, $3, $4, $5)',
-        [match.id, match.team_a, match.team_b, match.status, match.created_at]);
+      await pool.query('insert into foxpay_matches (id, team_a, team_b, flag_a, flag_b, venue, match_date, status, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date, match.status, match.created_at]);
     } else {
       foxpayMatchesMemory.set(match.id, match);
     }

@@ -1627,8 +1627,13 @@ function renderWorldCup() {
   $('#matchesBody').innerHTML = matches.length
     ? matches.map((item) => `
       <tr>
-        <td>${formatDateTime(item.created_at)}</td>
-        <td><strong>${item.team_a} vs ${item.team_b}</strong></td>
+        <td>
+          <small style="display:block; color:var(--text-color); opacity:0.7;">${item.match_date ? formatDateTime(item.match_date) : formatDateTime(item.created_at)}</small>
+          <strong>${escapeAttr(item.venue || 'Por definir')}</strong>
+        </td>
+        <td>
+          <span style="font-size: 1.2em;">${item.flag_a || ''}</span> <strong>${item.team_a}</strong> vs <strong>${item.team_b}</strong> <span style="font-size: 1.2em;">${item.flag_b || ''}</span>
+        </td>
         <td>${statusPill(item.status)}</td>
         <td>${item.result === 'team_a' ? item.team_a : item.result === 'team_b' ? item.team_b : item.result === 'draw' ? 'Empate' : 'Pendiente'}</td>
         <td>
@@ -3580,8 +3585,14 @@ $('#createMatchForm')?.addEventListener('submit', async (e) => {
   if (!confirm('¿Crear partido pari-mutuel?')) return;
   const teamA = e.target.elements.teamA.value.trim();
   const teamB = e.target.elements.teamB.value.trim();
+  const flagA = e.target.elements.flagA.value.trim();
+  const flagB = e.target.elements.flagB.value.trim();
+  const venue = e.target.elements.venue.value.trim();
+  const matchDateRaw = e.target.elements.matchDate.value;
+  const matchDate = matchDateRaw ? new Date(matchDateRaw).toISOString() : null;
+
   try {
-    const res = await api('/match/create', { teamA, teamB }, 'POST');
+    const res = await api('/match/create', { teamA, teamB, flagA, flagB, venue, matchDate }, 'POST');
     if (res.ok) {
       showAlert('Partido creado.');
       e.target.reset();
