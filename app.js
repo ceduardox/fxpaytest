@@ -4200,7 +4200,7 @@ function dailyStreakCalendarHtml() {
           const isFuture = !isClaimed && !isActive;
           
           const stateClass = isClaimed ? 'streak-claimed' : isActive ? 'streak-active' : 'streak-locked';
-          const span7 = r.day === 7 ? ' streak-day-span' : '';
+          const span7 = r.day === 7 ? ' streak-day-span streak-day-7' : '';
           const ticketText = r.tickets > 0 ? `<span class="streak-ticket">+${r.tickets}🎟️</span>` : '';
 
           return `
