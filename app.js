@@ -1768,7 +1768,7 @@ async function loadWorldCupMatches() {
   isLoadingWorldCup = true;
   render();
   try {
-    const res = await api('/matches', { player_id: dashboard.player.player_id });
+    const res = await api('/api/foxpay/matches', { player_id: dashboard.player.player_id });
     if (res.ok) {
       worldCupMatches = res.matches;
     }
@@ -1791,7 +1791,7 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
   if (!confirm(`¿Apostar ${betAmount} FOX a esta opción?`)) return;
 
   try {
-    const res = await api('/matches/bet', {
+    const res = await api('/api/foxpay/matches/bet', {
       player_id: dashboard.player.player_id,
       matchId,
       betType,

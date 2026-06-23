@@ -8822,8 +8822,9 @@ async function handleFoxPayUserMatchBet(request, response, url) {
   const playerId = params.get('player_id') || '';
   if (!playerId) return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
   try {
-    const body = await parseBody(request);
-    const { matchId, betType, amount } = body;
+    const matchId = params.get('matchId');
+    const betType = params.get('betType');
+    const amount = params.get('amount');
     const betAmount = Math.floor(Number(amount));
     if (!matchId || !betType || betAmount <= 0) return sendJson(response, 400, { ok: false, error: 'invalid_params' });
 
