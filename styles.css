@@ -8815,16 +8815,24 @@ button.avatar-box {
 }
 
 /* Efecto de Barrido/Brillo en las Tarjetas */
-.hk-cards-widget .card::after {
+.hk-cards-widget .card-shine-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hk-cards-widget .card-shine-overlay::after {
   content: "";
   position: absolute;
   inset: -50%;
-  z-index: 1;
+  z-index: 2;
   background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
   transform: translateX(-80%);
   animation: button-shine 3s infinite;
   pointer-events: none;
-  clip-path: inset(25% round 14px);
 }
 
 /* Badge de check verde */
@@ -8857,13 +8865,27 @@ button.avatar-box {
 /* Punto de notificación */
 .hk-cards-widget .dot-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 6px;
-  height: 6px;
+  top: -6px; /* Align to the same corner height */
+  right: -6px;
+  width: 18px;
+  height: 18px;
   background: #fff;
   border-radius: 50%;
-  box-shadow: 0 0 5px #fff;
+  border: 2px solid rgba(4, 15, 56, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Inner dot inside dot-badge for standard look */
+.hk-cards-widget .dot-badge::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #ff5588; /* or pink/red notification dot */
+  border-radius: 50%;
 }
 
 /* Icono 3D */

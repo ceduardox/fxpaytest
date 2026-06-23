@@ -3065,6 +3065,7 @@ function earnView() {
           <div class="cards-grid">
             
             <button class="card ${skinsCompleted ? 'completed' : ''}" type="button" data-view="skins">
+              <div class="card-shine-overlay"></div>
               ${skinsCompleted ? '<div class="check-badge"></div>' : (skinsDot ? '<div class="dot-badge"></div>' : '')}
               <div class="icon-3d-box"><img src="images/icons/icons card/iconos_10.png" alt="Skins" /></div>
               <div class="card-title">${skinsLabel}</div>
@@ -3072,6 +3073,7 @@ function earnView() {
             </button>
 
             <button class="card ${minerCompleted ? 'completed' : ''}" type="button" data-view="packs">
+              <div class="card-shine-overlay"></div>
               ${minerCompleted ? '<div class="check-badge"></div>' : (minerDot ? '<div class="dot-badge"></div>' : '')}
               <div class="icon-3d-box"><img src="images/icons/icons card/iconos_05.png" alt="Minar" /></div>
               <div class="card-title">${minerLabel}</div>
@@ -3079,6 +3081,7 @@ function earnView() {
             </button>
 
             <button class="card ${tasksCompleted ? 'completed' : ''}" type="button" data-view="tasks">
+              <div class="card-shine-overlay"></div>
               ${tasksCompleted ? '<div class="check-badge"></div>' : (tasksDot ? '<div class="dot-badge"></div>' : '')}
               <div class="icon-3d-box"><img src="images/icons/icons card/iconos_07.png" alt="Tareas" /></div>
               <div class="card-title">Tareas</div>
@@ -3086,6 +3089,7 @@ function earnView() {
             </button>
 
             <button class="card ${rouletteCompleted ? 'completed' : ''}" type="button" data-view="roulette">
+              <div class="card-shine-overlay"></div>
               ${rouletteCompleted ? '<div class="check-badge"></div>' : (rouletteDot ? '<div class="dot-badge"></div>' : '')}
               <div class="icon-3d-box"><img src="images/icons/icons card/iconos_03.png" alt="Ruleta" /></div>
               <div class="card-title">${rouletteLabel}</div>
