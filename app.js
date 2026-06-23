@@ -3880,14 +3880,14 @@ function minerViewContent() {
         
         <!-- Interactive Capsule -->
         ${claimablePoints > 0 ? `
-          <button class="miner-stats-capsule active-claim" type="button" data-action="claim-passive">
+          <button class="miner-stats-capsule active-claim" type="button" data-action="claim-passive-guide">
             <div class="miner-capsule-left">
               <div class="miner-pickaxe-circle spinning">
                 ${icon('ph:pickaxe-fill')}
               </div>
               <div class="miner-capsule-info">
-                <span class="miner-capsule-title">Reclamar Ganancias</span>
-                <span class="miner-capsule-desc">¡Haz clic para sumar!</span>
+                <span class="miner-capsule-title">Desliza para Reclamar</span>
+                <span class="miner-capsule-desc">Arrastra el pico a la derecha →</span>
               </div>
             </div>
             <div class="miner-capsule-right">
@@ -5226,6 +5226,105 @@ function serviceWorkerUpdatePrompt(mode = 'floating') {
   `;
 }
 
+function initMinerSwipeToClaim() {
+  const capsule = document.querySelector('.miner-stats-capsule.active-claim');
+  if (!capsule) return;
+  const handle = capsule.querySelector('.miner-pickaxe-circle');
+  if (!handle) return;
+  
+  let isDragging = false;
+  let startX = 0;
+  let maxDistance = 0;
+  
+  function getEventX(e) {
+    return e.touches ? e.touches[0].clientX : e.clientX;
+  }
+  
+  function onStart(e) {
+    isDragging = true;
+    startX = getEventX(e);
+    const capsuleWidth = capsule.getBoundingClientRect().width;
+    const handleWidth = handle.getBoundingClientRect().width;
+    maxDistance = capsuleWidth - handleWidth - 20; // accounting for padding/borders
+    handle.style.transition = 'none';
+    
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  }
+  
+  function onMove(e) {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+    const currentX = getEventX(e);
+    let deltaX = currentX - startX;
+    if (deltaX < 0) deltaX = 0;
+    if (deltaX > maxDistance) deltaX = maxDistance;
+    
+    handle.style.transform = `translateX(${deltaX}px)`;
+    
+    // Shimmer/fade text as you drag
+    const info = capsule.querySelector('.miner-capsule-info');
+    if (info) {
+      const opacity = 1 - (deltaX / maxDistance);
+      info.style.opacity = opacity;
+    }
+  }
+  
+  async function onEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onEnd);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onEnd);
+    
+    // Check if dragged far enough to claim
+    const transformMatrix = window.getComputedStyle(handle).transform;
+    let currentTranslateX = 0;
+    if (transformMatrix && transformMatrix !== 'none') {
+      const values = transformMatrix.split('(')[1].split(')')[0].split(',');
+      currentTranslateX = parseFloat(values[4] || 0);
+    }
+    
+    if (currentTranslateX >= maxDistance * 0.82) {
+      handle.style.transition = 'transform 0.15s ease-out';
+      handle.style.transform = `translateX(${maxDistance}px)`;
+      
+      try {
+        const data = await api('/api/foxpay/passive/claim', { player_id: playerId, account_token: accountToken });
+        updateDashboard(data);
+        if (data.earned > 0) {
+          toast(`+${fmt(data.earned)} GFOX reclamados!`);
+        }
+      } catch (err) {
+        console.error(err);
+        toast("Error al reclamar");
+        handle.style.transition = 'transform 0.25s ease';
+        handle.style.transform = 'translateX(0)';
+        const info = capsule.querySelector('.miner-capsule-info');
+        if (info) info.style.opacity = 1;
+      }
+    } else {
+      handle.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+      handle.style.transform = 'translateX(0)';
+      const info = capsule.querySelector('.miner-capsule-info');
+      if (info) {
+        info.style.transition = 'opacity 0.25s ease';
+        info.style.opacity = 1;
+        setTimeout(() => {
+          info.style.transition = '';
+        }, 250);
+      }
+    }
+  }
+  
+  handle.addEventListener('mousedown', onStart);
+  handle.addEventListener('touchstart', onStart, { passive: true });
+}
+
 function render() {
   if (!dashboard) {
     renderLoading();
@@ -5266,6 +5365,7 @@ function render() {
   updatePaymentTimerNode();
   syncSeasonCountdownTimer();
   syncVideoProgressUiTimer();
+  initMinerSwipeToClaim();
 }
 
 function showPop(clientX, clientY, text) {
@@ -6184,12 +6284,8 @@ async function doAction(action, button, event) {
       render();
       return;
     }
-    if (action === 'claim-passive') {
-      const data = await api('/api/foxpay/passive/claim', { player_id: playerId, account_token: accountToken });
-      updateDashboard(data);
-      if (data.earned > 0) {
-        toast(`+${fmt(data.earned)} GFOX reclamados!`);
-      }
+    if (action === 'claim-passive-guide') {
+      toast("¡Desliza el pico a la derecha para reclamar!");
       return;
     }
     if (action === 'upgrade-card') {

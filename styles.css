@@ -9417,6 +9417,17 @@ button.avatar-box {
   align-items: center;
   position: relative;
   flex-shrink: 0;
+  z-index: 5;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.miner-stats-capsule.active-claim .miner-pickaxe-circle {
+  cursor: grab;
+}
+
+.miner-stats-capsule.active-claim .miner-pickaxe-circle:active {
+  cursor: grabbing;
 }
 
 .miner-pickaxe-circle.spinning {
@@ -9432,6 +9443,7 @@ button.avatar-box {
 .miner-capsule-info {
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
 
 .miner-capsule-title {
