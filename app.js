@@ -5087,7 +5087,7 @@ function skinsView() {
         <div class="skins-locked-overlay">
           <div class="skins-locked-card">
             <div class="lock-icon-wrap">
-              ${icon('ph:lock-key-fill')}
+              <img src="images/bloker.webp" alt="Lock" />
             </div>
             <h3>${tr('skinsLockedTitle')}</h3>
             <p>${tr('skinsLockedDesc')}</p>

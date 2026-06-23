@@ -9148,9 +9148,10 @@ button.avatar-box {
   animation: lockIconFloat 3s ease-in-out infinite alternate;
 }
 
-.skins-locked-card .lock-icon-wrap iconify-icon {
-  font-size: 36px;
-  color: #061748;
+.skins-locked-card .lock-icon-wrap img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
 }
 
 .skins-locked-card h3 {
