@@ -4317,7 +4317,6 @@ function shopView() {
           <h2>${tr('dailyRewardTitle')}</h2>
           <p>${tr('dailyRewardDesc')}</p>
         </div>
-        <img src="images/icons/icons%20card/back4.webp" alt="Daily reward" />
       </div>
       ${dailyStreakCalendarHtml()}
       ${capReached ? `<div class="offline-banner offline-banner--cap">${tr('capTasksBlocked')}</div>` : (tasksDoneToday() ? `<div class="offline-banner">${tr('tasksDone')}</div>` : '')}
