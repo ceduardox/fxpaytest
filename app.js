@@ -1760,6 +1760,55 @@ function viewFromHash() {
 }
 
 let activeView = viewFromHash();
+let worldCupMatches = [];
+let isLoadingWorldCup = false;
+
+async function loadWorldCupMatches() {
+  if (isLoadingWorldCup || !dashboard?.player) return;
+  isLoadingWorldCup = true;
+  render();
+  try {
+    const res = await api('/matches', { player_id: dashboard.player.player_id });
+    if (res.ok) {
+      worldCupMatches = res.matches;
+    }
+  } catch (err) {
+    console.error('Matches fetch fail:', err);
+  } finally {
+    isLoadingWorldCup = false;
+    if (activeView === 'worldcup') render();
+  }
+}
+
+window.handleWorldCupBet = async (matchId, betType, amount) => {
+  if (!dashboard?.player || dashboard.player.active_package_id === 'free') {
+    toast('Debes tener un paquete de pago para apostar.');
+    return;
+  }
+  const betAmount = parseInt(amount, 10);
+  if (!betAmount || betAmount <= 0) return toast('Cantidad inválida.');
+  if (betAmount > dashboard.player.token_balance) return toast('FOX insuficiente.');
+  if (!confirm(`¿Apostar ${betAmount} FOX a esta opción?`)) return;
+
+  try {
+    const res = await api('/matches/bet', {
+      player_id: dashboard.player.player_id,
+      matchId,
+      betType,
+      amount: betAmount
+    }, 'POST');
+
+    if (res.ok) {
+      toast('Apuesta registrada exitosamente.', 'success');
+      dashboard = res.dashboard;
+      loadWorldCupMatches(); // refresh pool stats
+    } else {
+      toast(res.error === 'requires_premium_package' ? 'Requiere paquete de pago' : 'Error al apostar.');
+    }
+  } catch (err) {
+    toast('Error de conexión.');
+  }
+};
 let activeMinerTab = 'marketing';
 let leaderboardMode = 'premium';
 let busy = false;
@@ -5253,7 +5302,71 @@ function mainView() {
   if (activeView === 'withdraw') return earnMoreView();
   if (activeView === 'profile') return profileView();
   if (activeView === 'support') return supportView();
+  if (activeView === 'worldcup') return worldcupView();
   return earnView();
+}
+
+function worldcupView() {
+  if (dashboard.player?.active_package_id === 'free') {
+    return `
+      <section class="sheet-panel" style="text-align: center; padding: 40px 20px;">
+        <iconify-icon icon="ph:lock-key-fill" style="font-size: 80px; color: var(--text-color); opacity: 0.5; margin-bottom: 20px;"></iconify-icon>
+        <h2 style="margin-bottom: 15px;">Solo Usuarios VIP</h2>
+        <p style="color: var(--text-color); opacity: 0.8; margin-bottom: 30px;">
+          El Pool de Liquidez Compartida (Pari-Mutuel) del World Cup es exclusivo para usuarios con un Paquete Activo.
+        </p>
+        <button class="primary-button" onclick="window.location.hash='packs'">Comprar Paquete</button>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="sheet-panel">
+      <div class="sheet-head"><span>Pool Pari-Mutuel</span><strong>World Cup</strong></div>
+      <p style="padding: 0 16px; margin-bottom: 20px; font-size: 14px; opacity: 0.8;">
+        Apuesta contra otros jugadores. La casa quema un 20% del total y reparte el resto entre los ganadores. Si ganas, suma directo a tu CAP.
+      </p>
+      <div class="matches-list" style="padding: 0 16px;">
+        ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center;">Cargando partidos...</p>' : ''}
+        ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6;">No hay partidos programados.</p>' : ''}
+        ${worldCupMatches.map(match => {
+          const stats = match.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 };
+          const myBetTotal = match.myBetTotal || 0;
+          const myBetType = match.myBetType;
+          return `
+            <article class="surface" style="margin-bottom: 16px; padding: 16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                <h3 style="margin:0;">${match.team_a} vs ${match.team_b}</h3>
+                <span class="sync-pill">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
+              </div>
+              <div style="font-size:12px; margin-bottom: 16px; opacity:0.7;">
+                Pozo Total: <strong>${fmt(stats.total, 0)} FOX</strong>
+              </div>
+              ${myBetTotal > 0 ? `<div style="margin-bottom: 16px; padding: 8px; background: rgba(var(--accent-rgb), 0.1); border-radius: 8px; color: var(--accent-color); font-weight: bold; font-size: 13px;">Apostaste ${fmt(myBetTotal, 0)} FOX a ${myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : 'Empate'}</div>` : ''}
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px;">${match.team_a}</strong>
+                  <small style="opacity:0.7;">${fmt(stats.team_a, 0)} FOX</small>
+                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_a}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_a', a);">Apostar</button>` : ''}
+                </div>
+                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px;">Empate</strong>
+                  <small style="opacity:0.7;">${fmt(stats.draw, 0)} FOX</small>
+                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX al Empate:'); if(a) window.handleWorldCupBet('${match.id}', 'draw', a);">Apostar</button>` : ''}
+                </div>
+                <div style="text-align:center; background:var(--background-soft); padding: 8px; border-radius: 8px;">
+                  <strong style="display:block; margin-bottom:4px; font-size:14px;">${match.team_b}</strong>
+                  <small style="opacity:0.7;">${fmt(stats.team_b, 0)} FOX</small>
+                  ${match.status === 'open' && !myBetTotal ? `<button type="button" class="primary-button" style="padding:4px; margin-top:8px; font-size:12px; width:100%; min-height: 28px;" onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_b}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_b', a);">Apostar</button>` : ''}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
 }
 
 function avatarsView() {
@@ -5301,6 +5414,7 @@ function nav() {
     ['packs', isFree ? 'Minar' : tr('navPacks'), isFree ? 'images/pico.png' : 'ph:credit-card-fill'],
     ['tasks', tr('navTasks'), 'ph:clipboard-text-fill'],
     ['leaderboard', tr('navRank'), 'ph:trophy-fill'],
+    ['worldcup', 'World Cup', 'ph:soccer-ball-fill'],
     ['friends', tr('navFriends'), 'ph:users-three-fill'],
     ['withdraw', tr('navCashout'), 'ph:coin-fill'],
   ];
@@ -6893,6 +7007,7 @@ window.addEventListener('hashchange', () => {
   const nextView = viewFromHash();
   if (nextView === activeView) return;
   activeView = nextView;
+  if (activeView === 'worldcup') loadWorldCupMatches();
   if (dashboard) render();
 });
 

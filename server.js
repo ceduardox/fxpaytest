@@ -108,6 +108,8 @@ const foxpaySettingsMemory = new Map();
 const foxpayAdminUsersMemory = new Map();
 const foxpayAdminPushSubscriptionsMemory = new Map();
 const foxpayAdminNotificationEventsMemory = new Set();
+const foxpayMatchesMemory = new Map();
+const foxpayBetsMemory = new Map();
 const foxpayAdminPushLogsMemory = [];
 const foxpayAdminLoginAttempts = new Map();
 const foxpaySupportTicketsMemory = new Map();
@@ -813,6 +815,30 @@ async function initDatabase() {
     )
   `);
   await pool.query('create index if not exists foxpay_roulette_spins_player_idx on foxpay_roulette_spins (player_id, created_at desc)');
+
+  await pool.query(`
+    create table if not exists foxpay_matches (
+      id text primary key,
+      team_a text not null,
+      team_b text not null,
+      status text not null default 'open',
+      result text,
+      created_at timestamptz not null default now()
+    )
+  `);
+
+  await pool.query(`
+    create table if not exists foxpay_bets (
+      id text primary key,
+      match_id text not null references foxpay_matches(id),
+      player_id text not null references foxpay_players(player_id),
+      bet_type text not null,
+      amount numeric not null,
+      created_at timestamptz not null default now()
+    )
+  `);
+  await pool.query('create index if not exists foxpay_bets_match_idx on foxpay_bets (match_id)');
+  await pool.query('create index if not exists foxpay_bets_player_idx on foxpay_bets (player_id)');
 
   await seedFoxPayDefaults();
   await repairFoxPayCapOverages();
@@ -7893,6 +7919,15 @@ async function handleFoxPayAdminOverview(request, response) {
       };
     });
     const supportTickets = await listFoxPayAdminSupportTickets();
+
+    let matches = [];
+    if (pool) {
+      const mRes = await pool.query('select * from foxpay_matches order by created_at desc');
+      matches = mRes.rows;
+    } else {
+      matches = Array.from(foxpayMatchesMemory.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
     return sendJson(response, 200, {
       ok: true,
       persistence: pool ? 'postgres' : 'memory',
@@ -7913,6 +7948,7 @@ async function handleFoxPayAdminOverview(request, response) {
       support_tickets: canSupport ? supportTickets : [],
       roulette_rewards: canContent ? rouletteRewards : [],
       roulette_settings: canContent ? rouletteSettings : {},
+      matches: matches,
       metrics: {
         users: players.length,
         pending_purchases: purchases.filter((row) => row.status === 'pending').length,
@@ -8689,6 +8725,112 @@ async function handleFoxPaySkinFoxPurchase(request, response, url) {
   }
 }
 
+async function handleFoxPayUserMatches(request, response, url) {
+  const params = await readRequestParams(request, url);
+  const playerId = params.get('player_id') || '';
+  if (!playerId) return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
+  try {
+    let matches = [];
+    let bets = [];
+    if (pool) {
+      const mRes = await pool.query('select * from foxpay_matches order by created_at desc');
+      matches = mRes.rows;
+      const bRes = await pool.query('select * from foxpay_bets');
+      bets = bRes.rows;
+    } else {
+      matches = Array.from(foxpayMatchesMemory.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      bets = Array.from(foxpayBetsMemory.values());
+    }
+
+    const matchesWithPool = matches.map(match => {
+      const matchBets = bets.filter(b => b.match_id === match.id);
+      const myBets = matchBets.filter(b => b.player_id === playerId);
+      
+      const poolStats = {
+        team_a: matchBets.filter(b => b.bet_type === 'team_a').reduce((sum, b) => sum + Number(b.amount), 0),
+        draw: matchBets.filter(b => b.bet_type === 'draw').reduce((sum, b) => sum + Number(b.amount), 0),
+        team_b: matchBets.filter(b => b.bet_type === 'team_b').reduce((sum, b) => sum + Number(b.amount), 0),
+      };
+      poolStats.total = poolStats.team_a + poolStats.draw + poolStats.team_b;
+      
+      const myBetTotal = myBets.reduce((sum, b) => sum + Number(b.amount), 0);
+      const myBetType = myBets.length > 0 ? myBets[0].bet_type : null;
+
+      return {
+        ...match,
+        poolStats,
+        myBetTotal,
+        myBetType
+      };
+    });
+
+    return sendJson(response, 200, { ok: true, matches: matchesWithPool });
+  } catch (error) {
+    console.error('User matches fetch failed', error);
+    return sendJson(response, 500, { ok: false, error: 'user_matches_failed' });
+  }
+}
+
+async function handleFoxPayUserMatchBet(request, response, url) {
+  const params = await readRequestParams(request, url);
+  const playerId = params.get('player_id') || '';
+  if (!playerId) return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
+  try {
+    const body = await parseBody(request);
+    const { matchId, betType, amount } = body;
+    const betAmount = Math.floor(Number(amount));
+    if (!matchId || !betType || betAmount <= 0) return sendJson(response, 400, { ok: false, error: 'invalid_params' });
+
+    const player = await ensureFoxPayPlayer(playerId);
+    if (!foxPayAccountEnabled(player)) {
+      return sendJson(response, 403, { ok: false, error: 'account_disabled' });
+    }
+    if (player.active_package_id === 'free') {
+      return sendJson(response, 403, { ok: false, error: 'requires_premium_package' });
+    }
+
+    let match;
+    if (pool) {
+      const mRes = await pool.query('select * from foxpay_matches where id = $1', [matchId]);
+      match = mRes.rows[0];
+    } else {
+      match = foxpayMatchesMemory.get(matchId);
+    }
+
+    if (!match) return sendJson(response, 404, { ok: false, error: 'match_not_found' });
+    if (match.status !== 'open') return sendJson(response, 400, { ok: false, error: 'match_not_open' });
+
+    if (Number(player.token_balance || 0) < betAmount) {
+      return sendJson(response, 400, { ok: false, error: 'insufficient_fox_balance' });
+    }
+
+    // Deduct FOX
+    player.token_balance = Math.max(0, Math.floor(Number(player.token_balance) - betAmount));
+    await saveFoxPayPlayer(player);
+
+    const bet = {
+      id: crypto.randomUUID(),
+      match_id: matchId,
+      player_id: playerId,
+      bet_type: betType,
+      amount: betAmount,
+      created_at: new Date().toISOString()
+    };
+
+    if (pool) {
+      await pool.query('insert into foxpay_bets (id, match_id, player_id, bet_type, amount, created_at) values ($1, $2, $3, $4, $5, $6)',
+        [bet.id, bet.match_id, bet.player_id, bet.bet_type, bet.amount, bet.created_at]);
+    } else {
+      foxpayBetsMemory.set(bet.id, bet);
+    }
+
+    return sendJson(response, 200, { ok: true, bet, dashboard: await buildFoxPayDashboard(playerId) });
+  } catch (error) {
+    console.error('User match bet failed', error);
+    return sendJson(response, 500, { ok: false, error: 'user_bet_failed' });
+  }
+}
+
 async function handleFoxPaySkinSelect(request, response, url) {
   const params = await readRequestParams(request, url);
   const playerId = params.get('player_id') || '';
@@ -9411,6 +9553,103 @@ async function handleFoxPayAdminSkinRemove(request, response, url) {
     console.error('FoxPay skin remove failed', error);
     const status = error.code === 'skin_not_found' ? 404 : 500;
     return sendJson(response, status, { ok: false, error: error.code || 'foxpay_skin_remove_failed' });
+  }
+}
+
+async function handleFoxPayAdminMatchCreate(request, response) {
+  try {
+    const body = await parseBody(request);
+    const { teamA, teamB } = body;
+    if (!teamA || !teamB) return sendJson(response, 400, { ok: false, error: 'missing_teams' });
+    const id = crypto.randomUUID();
+    const match = { id, team_a: teamA, team_b: teamB, status: 'open', result: null, created_at: new Date().toISOString() };
+    if (pool) {
+      await pool.query('insert into foxpay_matches (id, team_a, team_b, status, created_at) values ($1, $2, $3, $4, $5)',
+        [match.id, match.team_a, match.team_b, match.status, match.created_at]);
+    } else {
+      foxpayMatchesMemory.set(match.id, match);
+    }
+    return sendJson(response, 200, { ok: true, match });
+  } catch (error) {
+    console.error('Match create failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_create_failed' });
+  }
+}
+
+async function handleFoxPayAdminMatchClose(request, response) {
+  try {
+    const body = await parseBody(request);
+    const { id } = body;
+    if (!id) return sendJson(response, 400, { ok: false, error: 'missing_id' });
+    if (pool) {
+      await pool.query('update foxpay_matches set status = $1 where id = $2', ['closed', id]);
+    } else {
+      const match = foxpayMatchesMemory.get(id);
+      if (match) { match.status = 'closed'; foxpayMatchesMemory.set(id, match); }
+    }
+    return sendJson(response, 200, { ok: true });
+  } catch (error) {
+    console.error('Match close failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_close_failed' });
+  }
+}
+
+async function handleFoxPayAdminMatchResolve(request, response) {
+  try {
+    const body = await parseBody(request);
+    const { id, result } = body; // result can be 'team_a', 'team_b', 'draw'
+    if (!id || !result) return sendJson(response, 400, { ok: false, error: 'missing_params' });
+    
+    let match;
+    let bets = [];
+    if (pool) {
+      const mRes = await pool.query('select * from foxpay_matches where id = $1', [id]);
+      match = mRes.rows[0];
+      const bRes = await pool.query('select * from foxpay_bets where match_id = $1', [id]);
+      bets = bRes.rows;
+    } else {
+      match = foxpayMatchesMemory.get(id);
+      bets = Array.from(foxpayBetsMemory.values()).filter(b => b.match_id === id);
+    }
+    if (!match || match.status === 'resolved') return sendJson(response, 400, { ok: false, error: 'invalid_match' });
+
+    // Calculate pool
+    const totalPool = bets.reduce((sum, b) => sum + Number(b.amount), 0);
+    const commission = totalPool * 0.20; // 20% burn
+    const payoutPool = totalPool - commission;
+    
+    const winningBets = bets.filter(b => b.bet_type === result);
+    const totalWinningAmount = winningBets.reduce((sum, b) => sum + Number(b.amount), 0);
+
+    // Distribute
+    if (totalWinningAmount > 0) {
+      for (const bet of winningBets) {
+        const playerShare = Number(bet.amount) / totalWinningAmount;
+        const payout = Math.floor(payoutPool * playerShare);
+        if (pool) {
+          await pool.query('update foxpay_players set game_fox_balance = game_fox_balance + $1, cap_used = cap_used + $1 where player_id = $2', [payout, bet.player_id]);
+        } else {
+          const player = foxpayPlayers.get(bet.player_id);
+          if (player) {
+            player.game_fox_balance = (Number(player.game_fox_balance) || 0) + payout;
+            player.cap_used = (Number(player.cap_used) || 0) + payout;
+            foxpayPlayers.set(bet.player_id, player);
+          }
+        }
+      }
+    }
+
+    if (pool) {
+      await pool.query('update foxpay_matches set status = $1, result = $2 where id = $3', ['resolved', result, id]);
+    } else {
+      match.status = 'resolved';
+      match.result = result;
+      foxpayMatchesMemory.set(id, match);
+    }
+    return sendJson(response, 200, { ok: true, totalPool, commission, payoutPool, winnersCount: winningBets.length });
+  } catch (error) {
+    console.error('Match resolve failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_resolve_failed' });
   }
 }
 
@@ -10965,6 +11204,13 @@ const server = createServer((request, response) => {
     return handleFoxPaySkinFoxPurchase(request, response, url);
   }
 
+  if (url.pathname === '/api/foxpay/matches') {
+    return handleFoxPayUserMatches(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/matches/bet') {
+    return handleFoxPayUserMatchBet(request, response, url);
+  }
+
   if (url.pathname === '/api/foxpay/admin/overview') {
     return handleFoxPayAdminOverview(request, response, url);
   }
@@ -11061,6 +11307,15 @@ const server = createServer((request, response) => {
     return handleFoxPayAdminUserStatus(request, response, url);
   }
 
+  if (url.pathname === '/api/foxpay/admin/match/create') {
+    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchCreate(request, response));
+  }
+  if (url.pathname === '/api/foxpay/admin/match/close') {
+    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchClose(request, response));
+  }
+  if (url.pathname === '/api/foxpay/admin/match/resolve') {
+    return runWithAdminAuth(request, response, () => handleFoxPayAdminMatchResolve(request, response));
+  }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
   }

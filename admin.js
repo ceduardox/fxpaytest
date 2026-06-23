@@ -1619,7 +1619,29 @@ function renderWithdrawals() {
       </article>
     `;
     }).join('')
-    : '<div class="empty-state">Sin retiros.</div>';
+    : '<div class="empty-state">Sin retiros pendientes</div>';
+}
+
+function renderWorldCup() {
+  const matches = state.overview.matches || [];
+  $('#matchesBody').innerHTML = matches.length
+    ? matches.map((item) => `
+      <tr>
+        <td>${formatDateTime(item.created_at)}</td>
+        <td><strong>${item.team_a} vs ${item.team_b}</strong></td>
+        <td>${statusPill(item.status)}</td>
+        <td>${item.result === 'team_a' ? item.team_a : item.result === 'team_b' ? item.team_b : item.result === 'draw' ? 'Empate' : 'Pendiente'}</td>
+        <td>
+          ${item.status === 'open' ? `<button type="button" class="approve-button" onclick="handleMatchAction('close', '${item.id}')">Cerrar Apuestas</button>` : ''}
+          ${item.status === 'closed' ? `
+            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_a')">Ganó ${item.team_a}</button>
+            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'draw')">Empate</button>
+            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_b')">Ganó ${item.team_b}</button>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="5" style="text-align: center;">Sin partidos registrados.</td></tr>';
 }
 
 function renderSeason() {
@@ -2056,6 +2078,7 @@ function renderAll() {
   renderSeasonPanel();
   renderPurchases();
   renderWithdrawals();
+  renderWorldCup();
   renderAdminUsers();
   $('#syncStatus').textContent = state.overview.persistence === 'postgres' ? 'Postgres' : 'Memoria';
 }
@@ -3549,5 +3572,41 @@ async function grantTestCoins(playerId) {
     }
   } catch (err) {
     showAlert(`Error: ${err.message}`);
+  }
+}
+
+$('#createMatchForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!confirm('¿Crear partido pari-mutuel?')) return;
+  const teamA = e.target.elements.teamA.value.trim();
+  const teamB = e.target.elements.teamB.value.trim();
+  try {
+    const res = await api('/match/create', { teamA, teamB }, 'POST');
+    if (res.ok) {
+      showAlert('Partido creado.');
+      e.target.reset();
+      void loadData();
+    }
+  } catch (err) {
+    showAlert(err.message);
+  }
+});
+
+async function handleMatchAction(action, id, result) {
+  if (!confirm(`¿Estás seguro de ejecutar la acción: ${action} ${result || ''}?`)) return;
+  try {
+    const endpoint = action === 'close' ? '/match/close' : '/match/resolve';
+    const body = action === 'close' ? { id } : { id, result };
+    const res = await api(endpoint, body, 'POST');
+    if (res.ok) {
+      if (action === 'resolve') {
+        showAlert(`Ganadores pagados. Pozo repartido: ${res.payoutPool} FOX. Comisión casa: ${res.commission} FOX.`);
+      } else {
+        showAlert('Apuestas cerradas.');
+      }
+      void loadData();
+    }
+  } catch (err) {
+    showAlert(err.message);
   }
 }

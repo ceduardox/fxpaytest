@@ -95,6 +95,7 @@
             <button class="nav-link" type="button" data-panel="roulette"><iconify-icon icon="ph:circle-notch-bold"></iconify-icon>Ruleta</button>
             <button class="nav-link" type="button" data-panel="unilevel"><iconify-icon icon="ph:tree-structure-bold"></iconify-icon>Unilevel</button>
             <button class="nav-link" type="button" data-panel="season"><iconify-icon icon="ph:trophy-bold"></iconify-icon>Temporada</button>
+            <button class="nav-link" type="button" data-panel="worldcup"><iconify-icon icon="ph:soccer-ball-bold"></iconify-icon>World Cup</button>
             <button class="nav-link" type="button" data-panel="purchases"><iconify-icon icon="ph:receipt-bold"></iconify-icon>Compras</button>
             <button class="nav-link" type="button" data-panel="withdrawals"><iconify-icon icon="ph:bank-bold"></iconify-icon>Retiros</button>
             <button class="nav-link" type="button" data-panel="hotwallet"><iconify-icon icon="ph:wallet-bold"></iconify-icon>Hot wallet</button>
@@ -698,6 +699,38 @@
                 </div>
                 <div class="admin-user-list" id="adminUserList"></div>
               </article>
+            </div>
+          </section>
+
+          <section class="panel" data-panel-view="worldcup">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Apuestas</p>
+                <h2>World Cup</h2>
+              </div>
+              <span class="sync-pill">Pari-Mutuel</span>
+            </div>
+            <article class="surface">
+              <h3>Crear Nuevo Partido</h3>
+              <form class="inline-form" id="createMatchForm">
+                <label>Equipo Local <input name="teamA" type="text" placeholder="Ej: Brasil" required /></label>
+                <label>Equipo Visitante <input name="teamB" type="text" placeholder="Ej: Haití" required /></label>
+                <button class="primary-button" type="submit">Crear Partido</button>
+              </form>
+            </article>
+            <div class="table-wrap" style="margin-top: 20px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Partido</th>
+                    <th>Estado</th>
+                    <th>Resultado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="matchesBody"></tbody>
+              </table>
             </div>
           </section>
 
