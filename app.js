@@ -3839,77 +3839,81 @@ function minerViewContent() {
   }
 
   return `
-    <style>
-      @keyframes spin-slow {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      @keyframes pulse-soft {
-        0%, 100% { opacity: 0.6; }
-        50% { opacity: 0.95; }
-      }
-      @keyframes ellipsis-dots {
-        0% { content: ""; }
-        25% { content: "."; }
-        50% { content: ".."; }
-        75% { content: "..."; }
-      }
-      .ellipsis-dots::after {
-        content: "";
-        display: inline-block;
-        width: 12px;
-        text-align: left;
-        animation: ellipsis-dots 1.5s steps(4, end) infinite;
-      }
-      @keyframes glowing-pulse {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-        }
-        50% {
-          transform: scale(1.02);
-          box-shadow: 0 4px 25px rgba(16, 185, 129, 0.7), 0 0 10px rgba(16, 185, 129, 0.3);
-        }
-        100% {
-          transform: scale(1);
-          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-        }
-      }
-    </style>
       <!-- Stats Board -->
-      <div class="miner-stats-card" style="background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.05)); border: 1px solid rgba(168,85,247,0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-around; align-items: center; gap: 15px;">
-          <div>
-            <small style="color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Producción por Hora</small>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #a855f7; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px;">
-              ${icon('ph:clock-fill')} +${fmt(passiveRate)} GFOX/h
+      <div class="miner-stats-card">
+        <div class="miner-stats-grid">
+          <!-- Left Column: Production -->
+          <div class="miner-stats-col">
+            <div class="miner-stats-header">
+              <div class="miner-stats-icon">
+                ${icon('ph:lightning-fill')}
+              </div>
+              <div class="miner-stats-label">
+                <span>Producción</span>
+                <span>por hora</span>
+              </div>
+            </div>
+            <div class="miner-stats-value">
+              +${fmt(passiveRate)}<small>GFOX/h</small>
             </div>
           </div>
           
-          <div style="border-left: 1px solid rgba(255,255,255,0.1); height: 40px;"></div>
+          <!-- Divider -->
+          <div class="miner-stats-divider"></div>
           
-          <div>
-            <small style="color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Por reclamar</small>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #10b981; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px;">
-              +${fmt(claimablePoints)} GFOX
+          <!-- Right Column: Claimable -->
+          <div class="miner-stats-col">
+            <div class="miner-stats-header">
+              <div class="miner-stats-icon">
+                <img src="${coinImage}" alt="Coin" />
+              </div>
+              <div class="miner-stats-label">
+                <span>Por</span>
+                <span>reclamar</span>
+              </div>
+            </div>
+            <div class="miner-stats-value">
+              +${fmt(claimablePoints)}<small>GFOX</small>
             </div>
           </div>
         </div>
         
+        <!-- Interactive Capsule -->
         ${claimablePoints > 0 ? `
-          <button class="claim-passive-btn" type="button" data-action="claim-passive" style="margin-top: 15px; width: 100%; background: #10b981; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; animation: glowing-pulse 2s infinite ease-in-out;">
-            Reclamar Ganancias Pasivas
+          <button class="miner-stats-capsule active-claim" type="button" data-action="claim-passive">
+            <div class="miner-capsule-left">
+              <div class="miner-pickaxe-circle spinning">
+                ${icon('ph:pickaxe-fill')}
+              </div>
+              <div class="miner-capsule-info">
+                <span class="miner-capsule-title">Reclamar Ganancias</span>
+                <span class="miner-capsule-desc">¡Haz clic para sumar!</span>
+              </div>
+            </div>
+            <div class="miner-capsule-right">
+              ${icon('ph:chevron-right-bold')}
+            </div>
           </button>
         ` : `
-          <button type="button" disabled style="margin-top: 15px; width: 100%; background: rgba(16, 45, 111, 0.35); color: rgba(255, 255, 255, 0.5); border: 1px solid rgba(91, 177, 255, 0.15); padding: 12px; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; animation: pulse-soft 2.5s ease-in-out infinite;">
-            <span style="display: inline-flex; animation: spin-slow 4s linear infinite; font-size: 1.2rem; color: #7cecff;">
-              ${icon('ph:clock-fill')}
-            </span>
-            <span>Minando<span class="ellipsis-dots"></span> (Reclamar cuando sume)</span>
-          </button>
+          <div class="miner-stats-capsule">
+            <div class="miner-capsule-left">
+              <div class="miner-pickaxe-circle">
+                ${icon('ph:pickaxe-fill')}
+              </div>
+              <div class="miner-capsule-info">
+                <span class="miner-capsule-title">Minando...</span>
+                <span class="miner-capsule-desc">Reclamar cuando sume</span>
+              </div>
+            </div>
+            <div class="miner-capsule-right">
+              ${icon('ph:chevron-right-bold')}
+            </div>
+          </div>
         `}
-        <div style="margin-top: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
-          ${tr('minerMaxOffline')}
+        
+        <!-- Footer Info -->
+        <div class="miner-stats-footer">
+          ${icon('ph:clock-fill')} Acumulación máxima 3 horas fuera del juego
         </div>
       </div>
       
