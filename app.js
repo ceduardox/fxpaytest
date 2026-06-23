@@ -136,6 +136,8 @@ const i18n = {
     skinsLockedTitle: 'Skins Locked',
     skinsLockedDesc: 'Using skins and earning real FOX daily is an exclusive feature for players with an active paid package.',
     skinsLockedBtn: 'Unlock Packages',
+    dailyRewardTitle: 'Daily reward',
+    dailyRewardDesc: 'Get coins, keys and skins for logging into the game daily without skipping',
     generatesUpTo: 'Generates up to',
     packInfoTitle: 'Pack recovery',
     packInfoTotal: 'Total recovery gain',
@@ -607,6 +609,8 @@ const i18n = {
     skinsLockedTitle: 'Skins Bloqueadas',
     skinsLockedDesc: 'El uso de Skins y la generación diaria de FOX real es una característica exclusiva para usuarios con un paquete de minería activo.',
     skinsLockedBtn: 'Adquirir Paquete',
+    dailyRewardTitle: 'Recompensa diaria',
+    dailyRewardDesc: 'Obtén monedas, llaves y skins por iniciar sesión en el juego diariamente sin faltar',
     generatesUpTo: 'Genera hasta',
     packInfoTitle: 'Recuperacion del pack',
     packInfoTotal: 'Ganancia total de recuperacion',
@@ -1068,6 +1072,8 @@ i18n.pt = {
   skinsLockedTitle: 'Skins Bloqueadas',
   skinsLockedDesc: 'O uso de Skins e a geração diária de FOX real é um recurso exclusivo para usuários com um pacote de mineração ativo.',
   skinsLockedBtn: 'Adquirir Pacote',
+  dailyRewardTitle: 'Recompensa diária',
+  dailyRewardDesc: 'Obtenha moedas, chaves e skins por fazer login no jogo diariamente sem pular',
   installTitle: 'Instalar FoxPay',
   installText: 'Acesso rapido e carregamento otimizado.',
   install: 'Instalar',
@@ -4306,6 +4312,13 @@ function shopView() {
   return `
     <section class="sheet-panel">
       <div class="sheet-head"><span>${tr('daily')}</span><strong>${tr('tasks')}</strong></div>
+      <div class="daily-reward-banner">
+        <div class="daily-reward-text">
+          <h2>${tr('dailyRewardTitle')}</h2>
+          <p>${tr('dailyRewardDesc')}</p>
+        </div>
+        <img src="images/icons/icons%20card/back4.webp" alt="Daily reward" />
+      </div>
       ${dailyStreakCalendarHtml()}
       ${capReached ? `<div class="offline-banner offline-banner--cap">${tr('capTasksBlocked')}</div>` : (tasksDoneToday() ? `<div class="offline-banner">${tr('tasksDone')}</div>` : '')}
       <div class="task-list">
