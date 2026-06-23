@@ -8814,6 +8814,19 @@ button.avatar-box {
   transform: scale(0.96);
 }
 
+/* Efecto de Barrido/Brillo en las Tarjetas */
+.hk-cards-widget .card::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: 1;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-80%);
+  animation: button-shine 3s infinite;
+  pointer-events: none;
+  clip-path: inset(25% round 14px);
+}
+
 /* Badge de check verde */
 .hk-cards-widget .check-badge {
   position: absolute;
