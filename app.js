@@ -4180,60 +4180,51 @@ function dailyStreakCalendarHtml() {
     { day: 7, points: 1500, tickets: 5 }
   ];
 
+  const coinImg = 'images/UX/coinfox-optimized.webp';
+
   return `
-    <div class="daily-streak-container" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-      <div class="streak-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <strong style="font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 6px;">
+    <div class="daily-streak-container">
+      <div class="streak-header">
+        <strong class="streak-header-title">
           ${icon('ph:calendar-check-fill')} Racha Diaria
         </strong>
-        <span style="font-size: 0.8rem; background: rgba(168, 85, 247, 0.2); color: #c084fc; padding: 2px 8px; border-radius: 99px; font-weight: 700;">
+        <span class="streak-header-badge">
           Día ${streakDays} total
         </span>
       </div>
       
-      <div class="streak-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
+      <div class="streak-grid">
         ${rewards.map(r => {
           const isClaimed = r.day < currentDay || (r.day === currentDay && claimedToday);
           const isActive = r.day === currentDay && !claimedToday;
+          const isFuture = !isClaimed && !isActive;
           
-          let cardStyle = "background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); opacity: 0.6;";
-          let iconColor = "color: rgba(255,255,255,0.4);";
-          let labelColor = "color: rgba(255,255,255,0.4);";
-          
-          if (isClaimed) {
-            cardStyle = "background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); opacity: 1;";
-            iconColor = "color: #22c55e;";
-            labelColor = "color: #86efac;";
-          } else if (isActive) {
-            cardStyle = "background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); opacity: 1;";
-            iconColor = "color: #c084fc;";
-            labelColor = "color: #fff;";
-          }
-
-          const ticketText = r.tickets > 0 ? ` +${r.tickets}🎟️` : '';
-          const gridColumnSpan = r.day === 7 ? 'grid-column: span 2;' : '';
+          const stateClass = isClaimed ? 'streak-claimed' : isActive ? 'streak-active' : 'streak-locked';
+          const span7 = r.day === 7 ? ' streak-day-span' : '';
+          const ticketText = r.tickets > 0 ? `<span class="streak-ticket">+${r.tickets}🎟️</span>` : '';
 
           return `
-            <div class="streak-day-card" style="border-radius: 12px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; ${cardStyle} ${gridColumnSpan}">
-              <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; ${labelColor}">Día ${r.day}</span>
-              <div style="font-size: 1.1rem; margin: 4px 0; ${iconColor}">
-                ${isClaimed ? icon('ph:check-circle-fill') : (r.tickets > 0 ? icon('ph:ticket-fill') : icon('ph:coin-fill'))}
+            <div class="streak-day-card ${stateClass}${span7}">
+              <span class="streak-day-label">Día ${r.day}</span>
+              <div class="streak-day-icon">
+                ${isClaimed 
+                  ? icon('ph:check-circle-fill') 
+                  : `<img src="${coinImg}" alt="GFOX" class="streak-coin-img" />`}
               </div>
-              <span style="font-size: 0.75rem; font-weight: 800; ${labelColor}">
-                +${fmt(r.points)}${ticketText}
-              </span>
+              <span class="streak-day-reward">+${fmt(r.points)}</span>
+              ${ticketText}
             </div>
           `;
         }).join('')}
       </div>
 
       ${!claimedToday ? `
-        <button class="claim-streak-btn" type="button" data-action="task" data-task="daily_check" style="width: 100%; background: #a855f7; color: #fff; border: none; padding: 10px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: transform 0.2s;">
+        <button class="streak-claim-btn" type="button" data-action="task" data-task="daily_check">
           Hacer Check-in Diario (+${fmt(rewards[currentDay - 1]?.points || 100)} GFOX)
         </button>
       ` : `
-        <button class="claim-streak-btn claim-streak-btn--done" type="button" disabled style="width: 100%; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 12px; font-weight: 800;">
-          Check-in de hoy completado
+        <button class="streak-claim-btn streak-claim-btn--done" type="button" disabled>
+          ${icon('ph:check-circle-fill')} Check-in completado
         </button>
       `}
     </div>
