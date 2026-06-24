@@ -274,12 +274,16 @@ async function readRequestParams(request, url) {
 
   const contentType = request.headers['content-type'] || '';
   if (contentType.includes('application/json')) {
-    const payload = JSON.parse(body);
-    Object.entries(payload).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        params.set(key, String(value));
-      }
-    });
+    try {
+      const payload = JSON.parse(body);
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.set(key, String(value));
+        }
+      });
+    } catch (e) {
+      console.error('[SERVER-ERROR] Failed to parse JSON body:', e.message);
+    }
     return params;
   }
 
