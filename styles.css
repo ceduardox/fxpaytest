@@ -1219,7 +1219,7 @@ button.avatar-box {
   bottom: max(10px, env(safe-area-inset-bottom));
   z-index: 8;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 3px;
   margin: 0;
   padding: 6px;
@@ -1238,7 +1238,7 @@ button.avatar-box {
   color: rgba(255, 255, 255, 0.78);
   border-radius: 16px;
   background: transparent;
-  font-size: clamp(8px, 2.45vw, 10px);
+  font-size: clamp(7px, 2.1vw, 9px);
   font-weight: 400;
 }
 
@@ -8178,10 +8178,25 @@ button.avatar-box {
   white-space: nowrap;
 }
 
+.nav-item iconify-icon,
+.nav-item .nav-icon-img {
+  flex-shrink: 0;
+}
+
 .nav-item.active {
   color: #fff;
   background: linear-gradient(180deg, var(--pink), #8b54ff);
   box-shadow: 0 9px 18px rgba(255, 85, 189, 0.26);
+}
+
+@media (max-width: 420px) {
+  .bottom-nav {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .nav-item--tasks {
+    display: none;
+  }
 }
 
 .home-indicator {
@@ -8490,6 +8505,9 @@ button.avatar-box {
 
   .nav-item {
     min-height: 39px;
+    gap: 2px;
+    padding: 3px 1px;
+    font-size: 7px;
   }
 
   .install-banner {

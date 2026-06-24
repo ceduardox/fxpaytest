@@ -1,4 +1,4 @@
-const CACHE_NAME = 'foxpay-pwa-v66';
+const CACHE_NAME = 'foxpay-pwa-v68';
 const CACHE_PREFIX = 'foxpay-pwa-';
 const STATIC_ASSETS = [
   '/manifest.webmanifest',

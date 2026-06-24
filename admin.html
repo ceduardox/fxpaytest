@@ -506,8 +506,13 @@
                 <span class="sync-pill">Solo admin finanzas</span>
               </div>
               <form class="inline-form" id="manualPurchaseForm">
-                <label>Player ID <input name="playerId" type="text" placeholder="fox_..." list="playersList" required /></label>
-                <datalist id="playersList"></datalist>
+                <label>Player ID
+                  <div class="player-search-wrap" id="playerSearchWrap">
+                    <input name="playerId" type="text" placeholder="Buscar por ID, usuario o email..." autocomplete="off" id="playerSearchInput" required />
+                    <input type="hidden" name="playerIdHidden" id="playerIdHidden" />
+                    <div class="player-search-dropdown" id="playerSearchDropdown"></div>
+                  </div>
+                </label>
                 <label>Pack <select name="packageId" required></select></label>
                 <label>Confirmacion <input name="confirmation" type="text" placeholder="PAGO MANUAL" required /></label>
                 <button class="primary-button" type="submit">Crear pago manual</button>

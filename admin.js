@@ -1517,6 +1517,9 @@ function renderPurchases() {
   if (playersList && state.overview.players) {
     playersList.innerHTML = state.overview.players.map(p => `<option value="${p.player_id}">${p.username || ''} ${p.email ? `(${p.email})` : ''}</option>`).join('');
   }
+  if (state.overview.players) {
+    window._adminPlayersList = state.overview.players;
+  }
 
   const filter = $('#purchaseFilter').value;
   const rows = state.overview.purchases.filter((item) => filter === 'all' || item.status === filter);

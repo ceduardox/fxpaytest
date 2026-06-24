@@ -2024,6 +2024,18 @@ async function seedWorldCupMatches() {
   }
 }
 
+let worldCupSeedPromise = null;
+
+async function ensureWorldCupMatchesSeeded() {
+  if (!worldCupSeedPromise) {
+    worldCupSeedPromise = seedWorldCupMatches().finally(() => {
+      worldCupSeedPromise = null;
+    });
+  }
+
+  return worldCupSeedPromise;
+}
+
 async function getFoxPaySettings() {
   if (!pool) {
     return foxpaySettingsFromMemory();
@@ -7927,6 +7939,7 @@ async function handleFoxPayAdminOverview(request, response) {
   const admin = requireFoxPayAdmin(request, response, 'overview_view');
   if (!admin) return;
   try {
+    await ensureWorldCupMatchesSeeded();
     const canUsers = adminHasPermission(admin, 'users_view');
     const canSupport = adminHasPermission(admin, 'support_view');
     const canFinance = adminHasPermission(admin, 'finance_view');
@@ -8776,6 +8789,7 @@ async function handleFoxPayUserMatches(request, response, url) {
   const playerId = params.get('player_id') || '';
   if (!playerId) return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
   try {
+    await ensureWorldCupMatchesSeeded();
     let matches = [];
     let bets = [];
     if (pool) {
@@ -8810,6 +8824,7 @@ async function handleFoxPayUserMatches(request, response, url) {
       };
     });
 
+    console.log('[MATCHES-DEBUG] player:', playerId, '| matches found:', matchesWithPool.length, '| memory size:', foxpayMatchesMemory.size);
     return sendJson(response, 200, { ok: true, matches: matchesWithPool });
   } catch (error) {
     console.error('User matches fetch failed', error);

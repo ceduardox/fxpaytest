@@ -1755,8 +1755,16 @@ function viewFromHash() {
     leaderboard: 'leaderboard',
     rank: 'leaderboard',
     ranks: 'leaderboard',
+    worldcup: 'worldcup',
   };
-  return hashViews[hash] || 'earn';
+  const view = hashViews[hash] || 'earn';
+    if (view === 'tasks' && dashboard?.player && dashboard.player.active_package_id !== 'free') {
+      return 'earn';
+    }
+    if (view === 'worldcup' && dashboard?.player && dashboard.player.active_package_id === 'free') {
+      return 'earn';
+    }
+    return view;
 }
 
 let activeView = viewFromHash();
@@ -3184,13 +3192,14 @@ function earnView() {
   const rouletteTime = `${ticketsCount} Ticket${ticketsCount !== 1 ? 's' : ''}`;
   const rouletteDot = ticketsCount > 0;
   const rouletteCompleted = ticketsCount === 0 && tasksCompleted;
+  const cardCount = isFree ? 4 : 3;
 
   return `
     <section class="hero-stage">
       <div class="hk-cards-spacer"></div>
       <div class="hk-cards-widget">
         <div class="content-panel">
-          <div class="cards-grid">
+          <div class="cards-grid" style="grid-template-columns: repeat(${cardCount}, 1fr);">
             
             <button class="card ${skinsCompleted ? 'completed' : ''}" type="button" data-view="skins">
               <div class="card-shine-overlay"></div>
@@ -3208,6 +3217,7 @@ function earnView() {
               <div class="card-time">${minerTime}</div>
             </button>
 
+            ${isFree ? `
             <button class="card ${tasksCompleted ? 'completed' : ''}" type="button" data-view="tasks">
               <div class="card-shine-overlay"></div>
               ${tasksCompleted ? '<div class="check-badge"></div>' : (tasksDot ? '<div class="dot-badge"></div>' : '')}
@@ -3215,6 +3225,7 @@ function earnView() {
               <div class="card-title">Tareas</div>
               <div class="card-time">${tasksTime}</div>
             </button>
+            ` : ''}
 
             <button class="card ${rouletteCompleted ? 'completed' : ''}" type="button" data-view="roulette">
               <div class="card-shine-overlay"></div>
@@ -5138,9 +5149,10 @@ function rouletteView() {
   const rewards = dashboard.roulette_rewards || [];
   const cost = Math.max(1, Math.floor(Number(dashboard.player?.roulette_ticket_cost || 1)));
   const capReached = packageCapReached();
-  const backTarget = capReached ? 'packs' : (tickets < cost ? 'tasks' : 'earn');
-  const backLabel = capReached ? tr('buyAnotherPack') : (tickets < cost ? tr('goToTasks') : tr('backToEarn'));
-  const backIcon = capReached ? 'ph:plus-bold' : (tickets < cost ? 'ph:clipboard-text-fill' : 'ph:arrow-left-bold');
+  const isFree = dashboard.player?.active_package_id === 'free';
+  const backTarget = capReached ? 'packs' : (tickets < cost ? (isFree ? 'tasks' : 'earn') : 'earn');
+  const backLabel = capReached ? tr('buyAnotherPack') : (tickets < cost ? (isFree ? tr('goToTasks') : tr('backToEarn')) : tr('backToEarn'));
+  const backIcon = capReached ? 'ph:plus-bold' : (tickets < cost ? (isFree ? 'ph:clipboard-text-fill' : 'ph:arrow-left-bold') : 'ph:arrow-left-bold');
   return `
     <section class="roulette-page">
       <div class="sheet-head">
@@ -5428,18 +5440,22 @@ function avatarsView() {
 function nav() {
   const isFree = dashboard?.player?.active_package_id === 'free';
   const items = [
-    ['earn', tr('navEarn'), 'images/exchange.png'],
-    ['packs', isFree ? 'Minar' : tr('navPacks'), isFree ? 'images/pico.png' : 'ph:credit-card-fill'],
-    ['tasks', tr('navTasks'), 'ph:clipboard-text-fill'],
-    ['leaderboard', tr('navRank'), 'ph:trophy-fill'],
-    ['worldcup', 'World Cup', 'ph:soccer-ball-fill'],
-    ['friends', tr('navFriends'), 'ph:users-three-fill'],
-    ['withdraw', tr('navCashout'), 'ph:coin-fill'],
-  ];
+        ['earn', tr('navEarn'), 'images/exchange.png'],
+        ['packs', isFree ? 'Minar' : tr('navPacks'), isFree ? 'images/pico.png' : 'ph:credit-card-fill'],
+        ['tasks', tr('navTasks'), 'ph:clipboard-text-fill'],
+        ['leaderboard', tr('navRank'), 'ph:trophy-fill'],
+        ['worldcup', 'World Cup', 'ph:soccer-ball-fill'],
+        ['friends', tr('navFriends'), 'ph:users-three-fill'],
+        ['withdraw', tr('navCashout'), 'ph:coin-fill'],
+      ].filter(([view]) => {
+        if (view === 'tasks' && !isFree) return false;
+        if (view === 'worldcup' && isFree) return false;
+        return true;
+      });
   return `
-    <nav class="bottom-nav" aria-label="Navigation">
+    <nav class="bottom-nav" style="grid-template-columns: repeat(${items.length}, minmax(0, 1fr));" aria-label="Navigation">
       ${items.map(([view, label, itemIcon]) => `
-        <button class="nav-item ${activeView === view ? 'active' : ''}" type="button" data-view="${view}">
+        <button class="nav-item ${view === 'tasks' ? 'nav-item--tasks' : ''} ${activeView === view ? 'active' : ''}" type="button" data-view="${view}">
           ${itemIcon.includes('/') ? `<img class="nav-icon-img" src="${itemIcon}" alt="" />` : icon(itemIcon)}${label}
         </button>
       `).join('')}
@@ -6922,11 +6938,18 @@ app.addEventListener('click', (event) => {
     return;
   }
   if (button.dataset.view) {
-    if (button.dataset.view === 'skins') skinsTab = 'shop';
-    if (button.dataset.view === 'packs') {
-      packsTab = button.dataset.packsTab || (dashboard.player?.active_package_id === 'free' ? 'miner' : 'shop');
-    }
-    activeView = button.dataset.view;
+      if (button.dataset.view === 'skins') skinsTab = 'shop';
+      if (button.dataset.view === 'packs') {
+        packsTab = button.dataset.packsTab || (dashboard.player?.active_package_id === 'free' ? 'miner' : 'shop');
+      }
+      let nextView = button.dataset.view;
+            if (nextView === 'tasks' && dashboard?.player && dashboard.player.active_package_id !== 'free') {
+              nextView = 'earn';
+            }
+            if (nextView === 'worldcup' && dashboard?.player && dashboard.player.active_package_id === 'free') {
+              nextView = 'earn';
+            }
+            activeView = nextView;
     render();
     return;
   }
