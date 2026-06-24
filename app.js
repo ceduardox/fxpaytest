@@ -1758,9 +1758,6 @@ function viewFromHash() {
     worldcup: 'worldcup',
   };
   const view = hashViews[hash] || 'earn';
-    if (view === 'tasks' && dashboard?.player && dashboard.player.active_package_id !== 'free') {
-      return 'earn';
-    }
     if (view === 'worldcup' && dashboard?.player && dashboard.player.active_package_id === 'free') {
       return 'earn';
     }
@@ -3192,7 +3189,7 @@ function earnView() {
   const rouletteTime = `${ticketsCount} Ticket${ticketsCount !== 1 ? 's' : ''}`;
   const rouletteDot = ticketsCount > 0;
   const rouletteCompleted = ticketsCount === 0 && tasksCompleted;
-  const cardCount = isFree ? 4 : 3;
+  const cardCount = 4;
 
   return `
     <section class="hero-stage">
@@ -3217,7 +3214,6 @@ function earnView() {
               <div class="card-time">${minerTime}</div>
             </button>
 
-            ${isFree ? `
             <button class="card ${tasksCompleted ? 'completed' : ''}" type="button" data-view="tasks">
               <div class="card-shine-overlay"></div>
               ${tasksCompleted ? '<div class="check-badge"></div>' : (tasksDot ? '<div class="dot-badge"></div>' : '')}
@@ -3225,7 +3221,6 @@ function earnView() {
               <div class="card-title">Tareas</div>
               <div class="card-time">${tasksTime}</div>
             </button>
-            ` : ''}
 
             <button class="card ${rouletteCompleted ? 'completed' : ''}" type="button" data-view="roulette">
               <div class="card-shine-overlay"></div>
@@ -6943,9 +6938,6 @@ app.addEventListener('click', (event) => {
         packsTab = button.dataset.packsTab || (dashboard.player?.active_package_id === 'free' ? 'miner' : 'shop');
       }
       let nextView = button.dataset.view;
-            if (nextView === 'tasks' && dashboard?.player && dashboard.player.active_package_id !== 'free') {
-              nextView = 'earn';
-            }
             if (nextView === 'worldcup' && dashboard?.player && dashboard.player.active_package_id === 'free') {
               nextView = 'earn';
             }
