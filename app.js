@@ -2504,6 +2504,7 @@ function updateLocalDashboard(mutator) {
     total_earned_usd: dashboard.player.total_earned_usd,
     active_package_id: dashboard.player.active_package_id,
   }];
+  if (activeView === 'worldcup') loadWorldCupMatches();
   render();
 }
 
