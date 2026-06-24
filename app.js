@@ -2554,6 +2554,7 @@ async function loadDashboard() {
   await preloadCriticalAssets();
   stopLoading();
   render();
+  if (activeView === 'worldcup') loadWorldCupMatches();
   scheduleAvatarPreload();
   void refreshExpiredPendingPayments();
   scheduleExpiredPendingPaymentsRefresh();
