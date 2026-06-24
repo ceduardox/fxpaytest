@@ -4126,11 +4126,11 @@ function minerViewContent() {
       </div>
       
       <!-- Category Tabs -->
-      <div class="miner-tabs" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 5px; border: 1px solid rgba(91, 177, 255, 0.28); border-radius: 18px; background: rgba(6, 18, 58, 0.72); margin-bottom: 20px;">
+      <div class="miner-tabs">
         ${categories.map(cat => {
           const isActive = activeMinerTab === cat.id;
           return `
-            <button class="miner-tab-btn ${isActive ? 'active' : ''}" type="button" data-action="miner-tab" data-tab="${cat.id}" style="min-height: 42px; border-radius: 14px; cursor: pointer; font-size: 13px; font-weight: 200; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; ${isActive ? 'color: #08205a; border: 1px solid rgba(255, 239, 157, 0.95); background: linear-gradient(180deg, #fff7aa 0%, #ffda5e 48%, #f2ad24 100%); box-shadow: 0 0 8px rgba(255, 226, 92, 0.8), 0 0 20px rgba(255, 188, 42, 0.52), inset 0 2px 0 rgba(255, 255, 255, 0.62), inset 0 -4px 8px rgba(155, 91, 0, 0.32); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);' : 'border: none; color: rgba(255, 255, 255, 0.76); background: rgba(5, 17, 56, 0.72);'}">
+            <button class="miner-tab-btn ${isActive ? 'active' : ''}" type="button" data-action="miner-tab" data-tab="${cat.id}">
               ${icon(cat.icon)} <span>${cat.label}</span>
             </button>
           `;
@@ -4138,7 +4138,7 @@ function minerViewContent() {
       </div>
 
       <!-- Upgrade Cards Grid -->
-      <div class="cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+      <div class="miner-cards-grid">
         ${cards.map(c => {
           const currentLvl = Number(levels[c.id] || 0);
           const nextLvl = currentLvl + 1;
@@ -4189,23 +4189,23 @@ function minerViewContent() {
 
           if (isLocked) {
             return `
-              <article class="card-item locked" style="background: linear-gradient(180deg, rgba(16, 45, 111, 0.25), rgba(10, 22, 70, 0.15)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed rgba(91, 177, 255, 0.15); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; opacity: 0.8; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.25);">
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <div style="background: rgba(255,255,255,0.02); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: rgba(255,255,255,0.25); border: 1px dashed rgba(255,255,255,0.08); flex-shrink: 0;">
+              <article class="miner-card-item locked">
+                <div class="miner-card-header">
+                  <div class="miner-card-icon-wrapper">
                     ${icon('ph:lock-key-fill')}
                   </div>
-                  <div>
-                    <strong style="font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: 700; line-height: 1.2; display: block; margin-bottom: 2px;">${c.name}</strong>
-                    <small style="font-size: 0.62rem; color: rgba(255,255,255,0.25); display: block;">Profit per hour</small>
-                    <div style="display: flex; align-items: center; gap: 4px; margin-top: 1px; opacity: 0.4;">
+                  <div class="miner-card-title-area">
+                    <strong class="miner-card-title">${c.name}</strong>
+                    <small class="miner-card-subtitle">Profit per hour</small>
+                    <div class="miner-card-rate">
                       <span style="width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
-                      <span style="font-size: 0.72rem; color: #fff; font-weight: 700;">+${fmt(profit)}</span>
+                      <span class="miner-card-rate-value">+${fmt(profit)}</span>
                     </div>
                   </div>
                 </div>
                 
-                <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px; text-align: center;">
-                  <span style="font-size: 0.62rem; color: #fb7185; font-weight: 600; line-height: 1.2; background: rgba(244, 63, 94, 0.08); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(244, 63, 94, 0.2); display: inline-block; max-width: 95%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                <div class="miner-lock-reason-wrapper">
+                  <span class="miner-lock-reason-badge">
                     ${lockReason}
                   </span>
                 </div>
@@ -4214,24 +4214,24 @@ function minerViewContent() {
           }
 
           return `
-            <article class="card-item" style="background: linear-gradient(180deg, rgba(16, 45, 111, 0.55), rgba(10, 22, 70, 0.45)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(91, 177, 255, 0.25); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 135px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
-              <div style="display: flex; gap: 10px; align-items: flex-start;">
-                <div style="background: rgba(52, 139, 255, 0.15); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #7cecff; border: 1px solid rgba(52, 139, 255, 0.3); flex-shrink: 0;">
+            <article class="miner-card-item">
+              <div class="miner-card-header">
+                <div class="miner-card-icon-wrapper">
                   ${icon(getCardIcon(c.id))}
                 </div>
-                <div>
-                  <strong style="font-size: 0.8rem; color: #fff; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 2px; word-break: break-word; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${c.name}</strong>
-                  <small style="font-size: 0.62rem; color: rgba(255,255,255,0.55); display: block;">Profit per hour</small>
-                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 1px;">
+                <div class="miner-card-title-area">
+                  <strong class="miner-card-title">${c.name}</strong>
+                  <small class="miner-card-subtitle">Profit per hour</small>
+                  <div class="miner-card-rate">
                     <span style="width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
-                    <span style="font-size: 0.72rem; color: #34d399; font-weight: 800;">+${fmt(profit)}</span>
+                    <span class="miner-card-rate-value">+${fmt(profit)}</span>
                   </div>
                 </div>
               </div>
               
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
-                <span style="font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 700;">lvl ${currentLvl}</span>
-                <button class="upgrade-card-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'} style="border: none; padding: 6px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; ${hasBalance ? 'background: linear-gradient(180deg, #57e7ff, #2b8cff); color: #10205a; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 12px rgba(43, 140, 255, 0.25);' : 'background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255, 255, 255, 0.05);'}">
+              <div class="miner-card-footer">
+                <span class="miner-card-level">lvl ${currentLvl}</span>
+                <button class="miner-upgrade-btn" type="button" data-action="upgrade-card" data-card="${c.id}" ${hasBalance ? '' : 'disabled'}>
                   <span style="width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;">${coinIcon()}</span>
                   <span>${fmt(cost)}</span>
                 </button>
