@@ -5352,7 +5352,7 @@ function worldcupView() {
               <div style="text-align:center; margin-bottom: 16px;">
                 <span class="sync-pill" style="margin-bottom: 8px;">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
                 <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">
-                  ${match.match_date ? formatDateTime(match.match_date) : formatDateTime(match.created_at)}
+                  ${match.match_date ? formatActivityDate(match.match_date) : formatActivityDate(match.created_at)}
                   ${match.venue ? ` • ${escapeAttr(match.venue)}` : ''}
                 </div>
               </div>
