@@ -28,6 +28,25 @@ const leaderboardCountryFlag = (row = {}) => {
   const label = row.countryName || row.country_name || code.toUpperCase();
   return `<img class="leader-country-flag-img" src="https://flagcdn.com/24x18/${code}.png" alt="" title="${escapeAttr(label)}" loading="lazy" decoding="async" />`;
 };
+const matchCountryFlag = (flagEmoji) => {
+  if (!flagEmoji) return '🎌';
+  if (flagEmoji === '🏴󠁧󠁢󠁥󠁮󠁧󠁿') {
+    return `<img class="match-country-flag-img" src="https://flagcdn.com/w80/gb-eng.png" alt="England" loading="lazy" decoding="async" />`;
+  }
+  if (flagEmoji === '🏴󠁧󠁢󠁳󠁣󠁴󠁿') {
+    return `<img class="match-country-flag-img" src="https://flagcdn.com/w80/gb-sct.png" alt="Scotland" loading="lazy" decoding="async" />`;
+  }
+  if (flagEmoji === '🏴󠁧󠁢󠁷󠁬󠁳󠁿') {
+    return `<img class="match-country-flag-img" src="https://flagcdn.com/w80/gb-wls.png" alt="Wales" loading="lazy" decoding="async" />`;
+  }
+  const codePoints = Array.from(flagEmoji).map((char) => char.codePointAt(0));
+  const isFlag = codePoints.length >= 2 && codePoints.every((cp) => cp >= 0x1F1E6 && cp <= 0x1F1FF);
+  if (!isFlag) {
+    return flagEmoji;
+  }
+  const code = codePoints.map((cp) => String.fromCharCode(cp - 0x1F1E6 + 65)).join('').toLowerCase();
+  return `<img class="match-country-flag-img" src="https://flagcdn.com/w80/${code}.png" alt="${code.toUpperCase()}" loading="lazy" decoding="async" onerror="this.outerHTML='🎌'" />`;
+};
 const leaderboardRankBadge = (row = {}) => {
   const rank = row.playerRank || row.player_rank || defaultVisualRank();
   const name = rank?.name || 'Free';
@@ -596,6 +615,12 @@ const i18n = {
     account_login_required: 'Log in again to continue.',
     account_disabled: 'This account was disabled by the administrator.',
     social_wait_required: 'Complete the required social wait before claiming.',
+    wcWinner: 'Winner: {winner}',
+    wcAccumulatedPool: 'Accumulated Total Pool: {amount}',
+    wcWonBet: '🎉 You won! You received {winnings} reward for your bet of {bet} on {choice}.',
+    wcLostBet: 'You lost your bet of {bet} on {choice}.',
+    wcNoBet: 'You did not bet on this match.',
+    draw: 'Draw',
   },
   es: {
     installTitle: 'Instala FoxPay',
@@ -1069,6 +1094,12 @@ const i18n = {
     account_login_required: 'Vuelve a iniciar sesion para continuar.',
     account_disabled: 'Esta cuenta fue desactivada por el administrador.',
     social_wait_required: 'Cumple la espera requerida de la tarea social antes de reclamar.',
+    wcWinner: 'Ganador: {winner}',
+    wcAccumulatedPool: 'Pozo Total Acumulado: {amount}',
+    wcWonBet: '🎉 ¡Ganaste! Recibiste {winnings} de recompensa por tu apuesta de {bet} a {choice}.',
+    wcLostBet: 'Perdiste tu apuesta de {bet} a {choice}.',
+    wcNoBet: 'No apostaste en este partido.',
+    draw: 'Empate',
   },
 };
 
@@ -1341,6 +1372,12 @@ i18n.pt = {
   insufficient_tokens: 'Saldo insuficiente.',
   activePack: 'Ativo',
   lowerPack: 'Pack menor',
+  wcWinner: 'Vencedor: {winner}',
+  wcAccumulatedPool: 'Pool Total Acumulado: {amount}',
+  wcWonBet: '🎉 Você ganhou! Recebeu {winnings} de recompensa por sua aposta de {bet} em {choice}.',
+  wcLostBet: 'Você perdeu sua aposta de {bet} em {choice}.',
+  wcNoBet: 'Você não apostou nesta partida.',
+  draw: 'Empate',
 };
 
 function tr(key, values = {}) {
@@ -1767,6 +1804,18 @@ function viewFromHash() {
 let activeView = viewFromHash();
 let worldCupMatches = [];
 let isLoadingWorldCup = false;
+let activeBetMatch = null;
+let activeBetType = null;
+let activeBetError = '';
+
+window.openWorldCupBetModal = (matchId, betType) => {
+  const match = worldCupMatches.find(m => m.id === matchId);
+  if (!match) return;
+  activeBetMatch = match;
+  activeBetType = betType;
+  activeBetError = '';
+  render();
+};
 
 async function loadWorldCupMatches() {
   if (isLoadingWorldCup || !dashboard?.player) return;
@@ -1793,7 +1842,6 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
   const betAmount = parseInt(amount, 10);
   if (!betAmount || betAmount <= 0) return toast('Cantidad inválida.');
   if (betAmount > dashboard.player.token_balance) return toast('FOX insuficiente.');
-  if (!confirm(`¿Apostar ${betAmount} FOX a esta opción?`)) return;
 
   try {
     const res = await api('/api/foxpay/matches/bet', {
@@ -4315,6 +4363,79 @@ function packInfoOverlay() {
   `;
 }
 
+function worldCupBetOverlay() {
+  if (!activeBetMatch) return '';
+  const match = activeBetMatch;
+  const type = activeBetType;
+  const targetName = type === 'team_a' ? match.team_a : type === 'team_b' ? match.team_b : 'Empate';
+  const playerBalance = Number(dashboard?.player?.token_balance || 0);
+
+  return `
+    <section class="skin-confirm-overlay" role="dialog" aria-modal="true">
+      <article class="skin-confirm-card" style="padding: 18px 16px 14px; gap: 8px !important;">
+        <button class="skin-preview-close" type="button" data-action="worldcup-bet-cancel" aria-label="Cerrar" style="top: 14px; right: 14px;">${icon('ph:x-bold')}</button>
+        
+        <!-- Header row -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 2px;">
+          <img src="./images/ball.webp" alt="" style="width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" />
+          <span style="font-size: 10px; font-weight: 500; color: #4cd8ff; letter-spacing: 0.08em; text-transform: uppercase;">World Cup Pari-Mutuel</span>
+        </div>
+
+        <h2 style="font-weight: 700; margin: 0 0 2px 0; font-size: 24px; text-align: center; color: #fff; font-family: var(--font-sans); line-height: 1.1;">Confirmar Apuesta</h2>
+        
+        <p style="font-weight: 400; margin: 0 0 10px 0; font-size: 13px; line-height: 1.35; text-align: center; color: rgba(235, 244, 255, 0.72);">
+          Vas a realizar una apuesta al resultado de<br>
+          <span style="color: #4cd8ff; font-weight: 500;">${match.team_a} vs ${match.team_b}.</span>
+        </p>
+
+        <!-- Teams Card -->
+        <div class="worldcup-modal-match-card" style="margin: 0 auto 8px;">
+          <div style="display: grid; place-items: center; gap: 4px; text-align: center;">
+            ${matchCountryFlag(match.flag_a)}
+            <span style="font-size: 12px; font-weight: 500; color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">${match.team_a}</span>
+          </div>
+          <div class="vs-divider">VS</div>
+          <div style="display: grid; place-items: center; gap: 4px; text-align: center;">
+            ${matchCountryFlag(match.flag_b)}
+            <span style="font-size: 12px; font-weight: 500; color: #fff; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">${match.team_b}</span>
+          </div>
+        </div>
+
+        <!-- Chosen Option Card -->
+        <div style="display: flex; align-items: center; justify-content: center; padding: 8px 12px; background: rgba(5, 12, 44, 0.45); border: 1px solid rgba(130, 214, 255, 0.16); border-radius: 12px; margin: 0 auto 12px; width: 220px; box-sizing: border-box;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(130, 214, 255, 0.22); background: rgba(5, 17, 61, 0.6); color: #4cd8ff; font-size: 16px;">
+            ${icon('ph:scales-bold')}
+          </span>
+          <span style="font-size: 13px; color: rgba(255, 255, 255, 0.72); margin-left: 8px; font-weight: 400;">
+            Opción elegida: <strong style="color: #4cd8ff; font-size: 14px; font-weight: 600; margin-left: 4px; text-shadow: 0 0 8px rgba(76, 216, 255, 0.4);">${targetName}</strong>
+          </span>
+        </div>
+
+        <!-- Input Section -->
+        <div style="text-align: left; margin-bottom: 2px; width: 100%; box-sizing: border-box; justify-self: stretch;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px; width: 100%;">
+            <span style="color: rgba(255,255,255,0.72); font-weight: 400;">Cantidad de FOX a apostar</span>
+            <span style="color: #4cd8ff; font-weight: 400;">Balance: ${fmt(playerBalance, 0)} FOX</span>
+          </div>
+          <div style="position: relative; display: flex; align-items: center; background: rgba(5, 12, 44, 0.6); border: 1px solid rgba(76, 216, 255, 0.35); border-radius: 12px; box-shadow: 0 0 10px rgba(76, 216, 255, 0.08), inset 0 1px 2px rgba(0,0,0,0.4); overflow: hidden; padding: 0 12px; width: 100%; box-sizing: border-box;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 8px;">
+              ${coinIcon('modal-coin-icon')}
+            </span>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="worldCupBetAmount" placeholder="Ej: 1000" min="1" step="1" style="flex: 1; border: none; background: transparent; padding: 10px 0; color: #fff; font-size: 14px; font-family: var(--font-sans); outline: none; font-weight: 400;" />
+          </div>
+          ${activeBetError ? `<em class="skin-confirm-error" style="color: #ff5b8c; font-size: 12px; display: block; margin-top: 6px; font-weight: 400;">${escapeHtml(activeBetError)}</em>` : ''}
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="skin-confirm-actions" style="margin-top: 14px;">
+          <button class="skin-confirm-secondary" type="button" data-action="worldcup-bet-cancel" style="font-weight: 500;">Cancelar</button>
+          <button class="skin-confirm-primary" type="button" data-action="worldcup-bet-confirm" style="font-weight: 500;">${coinIcon()} Apostar</button>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
 function dailyStreakCalendarHtml() {
   const player = dashboard.player;
   const isFree = player.active_package_id === 'free';
@@ -5330,62 +5451,122 @@ function worldcupView() {
   }
 
   return `
-    <section class="sheet-panel">
+    <section class="sheet-panel worldcup-panel">
       <div class="sheet-head"><span>World Cup 2026</span><strong>Pari-Mutuel</strong></div>
-      <p style="padding: 0 16px; margin-bottom: 20px; font-size: 14px; opacity: 0.8;">
+      <p>
         Apuesta contra otros jugadores. La casa quema un 20% del total y reparte el resto entre los ganadores. Si ganas, suma directo a tu CAP.
       </p>
-      <div class="matches-list" style="padding: 0 16px;">
-        ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center;">Cargando partidos...</p>' : ''}
-        ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6;">No hay partidos programados.</p>' : ''}
-        ${worldCupMatches.map(match => {
+      <div class="worldcup-matches matches-list">
+        ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; padding: 20px;">Cargando partidos...</p>' : ''}
+        ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6; padding: 20px;">No hay partidos programados.</p>' : ''}
+        ${worldCupMatches.map((match, index) => {
           const stats = match.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 };
           const myBetTotal = match.myBetTotal || 0;
           const myBetType = match.myBetType;
+          const isResolved = match.status === 'resolved';
+
+          let resultSection = '';
+          if (isResolved) {
+            const userWon = myBetTotal > 0 && myBetType === match.result;
+            const winningOptionName = match.result === 'team_a' ? match.team_a : match.result === 'team_b' ? match.team_b : tr('draw');
+            
+            let winnings = 0;
+            if (userWon) {
+              const totalPool = stats.total;
+              const payoutPool = totalPool * 0.80; // 20% burn
+              const totalWinningAmount = stats[match.result] || 0;
+              if (totalWinningAmount > 0) {
+                const playerShare = myBetTotal / totalWinningAmount;
+                winnings = Math.floor(payoutPool * playerShare);
+              }
+            }
+
+            let betText = '';
+            if (myBetTotal > 0) {
+              const choiceName = myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : tr('draw');
+              const choiceNameStyled = `<span style="font-weight: 500;">${choiceName}</span>`;
+              if (userWon) {
+                const winningsStyled = `<span style="font-weight: 500;">+${fmt(winnings, 0)} FOX</span>`;
+                const betStyled = `<span style="font-weight: 500;">${fmt(myBetTotal, 0)} FOX</span>`;
+                betText = `
+                  <div style="margin-top: 10px; padding: 12px; border-radius: 14px; background: linear-gradient(90deg, rgba(20, 202, 166, 0.2), rgba(88, 219, 255, 0.15)); border: 1px solid rgba(123, 229, 255, 0.3); color: #9ef7ff; font-size: 13px; text-align: center; font-weight: 400;">
+                    ${tr('wcWonBet', { winnings: winningsStyled, bet: betStyled, choice: choiceNameStyled })}
+                  </div>
+                `;
+              } else {
+                const betStyled = `<span style="font-weight: 500;">${fmt(myBetTotal, 0)} FOX</span>`;
+                betText = `
+                  <div style="margin-top: 10px; padding: 12px; border-radius: 14px; background: rgba(255, 91, 140, 0.1); border: 1px solid rgba(255, 91, 140, 0.2); color: #ff9eb8; font-size: 13px; text-align: center; font-weight: 400;">
+                    ${tr('wcLostBet', { bet: betStyled, choice: choiceNameStyled })}
+                  </div>
+                `;
+              }
+            } else {
+              betText = `
+                <div style="margin-top: 10px; padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255,255,255,0.6); font-size: 13px; text-align: center; font-weight: 400;">
+                  ${tr('wcNoBet')}
+                </div>
+              `;
+            }
+
+            const winningOptionStyled = `<span style="color: #4cd8ff; font-weight: 500;">${winningOptionName}</span>`;
+            const accumulatedPoolStyled = `<span style="font-weight: 500; color: #fff;">${fmt(stats.total, 0)} FOX</span>`;
+
+            resultSection = `
+              <div style="margin-top: 12px; font-size: 13px; color: rgba(231, 243, 255, 0.92); text-align: left; font-weight: 400;">
+                ${tr('wcWinner', { winner: winningOptionStyled })}
+              </div>
+              <div style="margin-top: 4px; font-size: 13px; color: rgba(231, 243, 255, 0.92); text-align: left; margin-bottom: 8px; font-weight: 400;">
+                ${tr('wcAccumulatedPool', { amount: accumulatedPoolStyled })}
+              </div>
+              ${betText}
+            `;
+          }
+
           return `
-            <article class="surface" style="margin-bottom: 24px; padding: 16px; border-radius: 12px; background: var(--surface-color); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-              <div style="text-align:center; margin-bottom: 16px;">
-                <span class="sync-pill" style="margin-bottom: 8px;">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
-                <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">
+            <article class="surface ${index % 2 === 0 ? 'bg-ball2' : 'bg-ball3'}">
+              <div>
+                <span class="sync-pill">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
+                <div>
                   ${match.match_date ? formatActivityDate(match.match_date) : formatActivityDate(match.created_at)}
                   ${match.venue ? ` • ${escapeAttr(match.venue)}` : ''}
                 </div>
               </div>
 
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <div style="text-align:center; flex:1;">
-                  <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">${match.flag_a || '🎌'}</div>
-                  <strong style="font-size: 15px;">${match.team_a}</strong>
+              <div>
+                <div>
+                  <div>${matchCountryFlag(match.flag_a)}</div>
+                  <strong>${match.team_a}</strong>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; opacity: 0.5; padding: 0 16px;">VS</div>
-                <div style="text-align:center; flex:1;">
-                  <div style="font-size: 40px; line-height: 1; margin-bottom: 8px;">${match.flag_b || '🎌'}</div>
-                  <strong style="font-size: 15px;">${match.team_b}</strong>
+                <div>VS</div>
+                <div>
+                  <div>${matchCountryFlag(match.flag_b)}</div>
+                  <strong>${match.team_b}</strong>
                 </div>
               </div>
 
-              <div style="text-align:center; font-size:13px; margin-bottom: 16px; opacity:0.8; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;">
-                Pozo Total Acumulado: <strong style="color: var(--accent-color); font-size: 15px;">${fmt(stats.total, 0)} FOX</strong>
-              </div>
-              
-              ${myBetTotal > 0 ? `<div style="margin-bottom: 16px; padding: 12px; background: rgba(var(--accent-rgb), 0.1); border-left: 4px solid var(--accent-color); border-radius: 4px; color: var(--accent-color); font-size: 14px; text-align: center;">
-                Has apostado <strong>${fmt(myBetTotal, 0)} FOX</strong> a <strong>${myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : 'Empate'}</strong>
-              </div>` : ''}
-              
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_a}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_a', a);">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">${match.team_a}</strong>
-                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.team_a, 0)} FOX</small>
-                </button>
-                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX al Empate:'); if(a) window.handleWorldCupBet('${match.id}', 'draw', a);">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">Empate</strong>
-                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.draw, 0)} FOX</small>
-                </button>
-                <button type="button" class="match-bet-btn" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="const a = prompt('Cantidad FOX a apostar a ${match.team_b}:'); if(a) window.handleWorldCupBet('${match.id}', 'team_b', a);">
-                  <strong style="display:block; margin-bottom:4px; font-size:14px; color:var(--text-color);">${match.team_b}</strong>
-                  <small style="opacity:0.7; color:var(--text-color);">${fmt(stats.team_b, 0)} FOX</small>
-                </button>
-              </div>
+              ${isResolved ? resultSection : `
+                ${myBetTotal > 0 ? `
+                  <div class="worldcup-my-bet" style="margin-top: 12px;">
+                    Has apostado <strong>${fmt(myBetTotal, 0)} FOX</strong> a <strong>${myBetType === 'team_a' ? match.team_a : myBetType === 'team_b' ? match.team_b : 'Empate'}</strong>
+                  </div>
+                ` : ''}
+                
+                <div class="worldcup-bets" style="margin-top: 12px;">
+                  <button type="button" class="match-bet-btn match-bet-btn--team-a" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_a');">
+                    <strong>${match.team_a}</strong>
+                    <small>${fmt(stats.team_a, 0)} FOX</small>
+                  </button>
+                  <button type="button" class="match-bet-btn match-bet-btn--draw" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'draw');">
+                    <strong>Empate</strong>
+                    <small>${fmt(stats.draw, 0)} FOX</small>
+                  </button>
+                  <button type="button" class="match-bet-btn match-bet-btn--team-b" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_b');">
+                    <strong>${match.team_b}</strong>
+                    <small>${fmt(stats.team_b, 0)} FOX</small>
+                  </button>
+                </div>
+              `}
             </article>
           `;
         }).join('')}
@@ -5662,7 +5843,7 @@ function render() {
   app.classList.toggle('is-free-pack', dashboard.player?.active_package_id === 'free');
   app.classList.toggle('has-install-banner', Boolean(!isStandalonePwa && canInstallPwa && !installBannerDismissed));
   app.classList.toggle('has-update-prompt', Boolean(swUpdateReady));
-  app.innerHTML = `${activeView === 'leaderboard' ? '' : topHud()}${mainView()}${nav()}${paymentOverlay()}${rankRulesOverlay()}${rankImagePreviewOverlay()}${taskPromptOverlay()}${dailyTicketRewardOverlay()}${roulettePrizeOverlay()}${skinPreviewOverlay()}${skinFoxConfirmOverlay()}${withdrawalChangeOverlay()}${withdrawalPendingOverlay()}${packageFoxConfirmOverlay()}${packInfoOverlay()}${activeView === 'withdraw' ? '' : serviceWorkerUpdatePrompt()}`;
+  app.innerHTML = `${activeView === 'leaderboard' ? '' : topHud()}${mainView()}${nav()}${paymentOverlay()}${rankRulesOverlay()}${rankImagePreviewOverlay()}${taskPromptOverlay()}${dailyTicketRewardOverlay()}${roulettePrizeOverlay()}${skinPreviewOverlay()}${skinFoxConfirmOverlay()}${withdrawalChangeOverlay()}${withdrawalPendingOverlay()}${packageFoxConfirmOverlay()}${packInfoOverlay()}${worldCupBetOverlay()}${activeView === 'withdraw' ? '' : serviceWorkerUpdatePrompt()}`;
   updatePaymentTimerNode();
   syncSeasonCountdownTimer();
   syncVideoProgressUiTimer();
@@ -6203,6 +6384,42 @@ async function doAction(action, button, event) {
     pendingSkinFoxPurchase = null;
     skinFoxError = '';
     render();
+    return;
+  }
+  if (action === 'worldcup-bet-cancel') {
+    activeBetMatch = null;
+    activeBetType = null;
+    activeBetError = '';
+    render();
+    return;
+  }
+  if (action === 'worldcup-bet-confirm') {
+    const amountInput = document.getElementById('worldCupBetAmount');
+    if (amountInput) {
+      const amount = Number(amountInput.value);
+      const playerBalance = Number(dashboard?.player?.token_balance || 0);
+
+      if (isNaN(amount) || amount <= 0) {
+        activeBetError = 'Ingresa una cantidad válida.';
+        render();
+        return;
+      }
+      if (amount > playerBalance) {
+        activeBetError = 'Balance insuficiente.';
+        render();
+        return;
+      }
+
+      const matchId = activeBetMatch.id;
+      const betType = activeBetType;
+
+      activeBetMatch = null;
+      activeBetType = null;
+      activeBetError = '';
+      render();
+
+      window.handleWorldCupBet(matchId, betType, amount);
+    }
     return;
   }
   if (action === 'withdraw-change-cancel') {
