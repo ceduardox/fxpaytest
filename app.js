@@ -6950,6 +6950,7 @@ app.addEventListener('click', (event) => {
               nextView = 'earn';
             }
             activeView = nextView;
+            if (activeView === 'worldcup') loadWorldCupMatches();
     render();
     return;
   }
