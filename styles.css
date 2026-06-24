@@ -3158,30 +3158,30 @@ button.avatar-box {
 
 .task-modal-steps {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
 .task-modal-steps article {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 9px;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
   align-items: center;
-  padding: 9px;
+  padding: 7px 9px;
   border: 1px solid rgba(126, 232, 255, 0.16);
-  border-radius: 15px;
+  border-radius: 12px;
   background: rgba(3, 12, 43, 0.34);
 }
 
 .task-modal-steps article > span {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 8px;
   color: #10205a;
   background: linear-gradient(180deg, #fff4a8, #ffcd4d);
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .task-modal-steps strong,
@@ -3190,49 +3190,102 @@ button.avatar-box {
 }
 
 .task-modal-steps strong {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .task-modal-steps small {
-  margin-top: 2px;
-  font-size: 11px;
+  margin-top: 1px;
+  font-size: 10.5px;
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .task-modal-reward {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(5, 17, 56, 0.58);
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 218, 94, 0.05);
+  border: 1px solid rgba(255, 218, 94, 0.15);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.task-modal-reward .coin-img {
-  width: 22px;
-  height: 22px;
+.task-modal-reward span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffcd4d;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .task-modal-reward strong {
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffcd4d;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .task-modal-continue {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   width: 100%;
   min-height: 44px;
   border-radius: 15px;
-  color: #fff;
-  background: linear-gradient(180deg, #51e4ff, #267cff);
-  box-shadow: 0 12px 24px rgba(39, 128, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 239, 157, 0.95);
+  color: #08205a;
+  background: linear-gradient(180deg, #fff7aa 0%, #ffda5e 48%, #f2ad24 100%);
+  box-shadow:
+    0 0 8px rgba(255, 226, 92, 0.8),
+    0 0 20px rgba(255, 188, 42, 0.52),
+    inset 0 2px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -4px 8px rgba(155, 91, 0, 0.32);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.task-modal-continue::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  right: 5px;
+  z-index: 0;
+  height: 45%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.04));
+  pointer-events: none;
+}
+
+.task-modal-continue::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-80%);
+  animation: button-shine 3s infinite;
+  pointer-events: none;
 }
 
 .task-modal-continue:disabled {
-  opacity: 0.62;
+  opacity: 0.58;
+  cursor: not-allowed;
+  filter: grayscale(0.25);
+}
+
+.task-modal-continue:disabled::after {
+  animation: none;
+  opacity: 0;
 }
 
 .daily-ticket-overlay {

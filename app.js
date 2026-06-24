@@ -2332,6 +2332,10 @@ function taskPromptOverlay() {
   const modalDescription = capReached
     ? tr('capReached', { cap: fmt(dashboard.player.cap_usd, 2) })
     : (progressState?.progress ? progressState.label : (task.type === 'youtube' ? tr('taskTiming') : (taskDescriptionText(task) || tr('taskCompleteReward'))));
+  
+  const steps = taskInstructionSteps(task);
+  const hasRewardStep = steps.some(step => step[1] === tr('reward'));
+
   return `
     <section class="task-modal-overlay" role="dialog" aria-modal="true">
       <article class="task-modal">
@@ -2343,7 +2347,7 @@ function taskPromptOverlay() {
           <p data-task-modal-description>${modalDescription}</p>
         </div>
         <div class="task-modal-steps">
-          ${taskInstructionSteps(task).map(([stepIcon, title, detail]) => `
+          ${steps.map(([stepIcon, title, detail]) => `
             <article>
               <span>${stepIcon}</span>
               <div>
@@ -2353,10 +2357,12 @@ function taskPromptOverlay() {
             </article>
           `).join('')}
         </div>
-        <div class="task-modal-reward">
-          <span>${ticketIcon()}</span>
-          <strong>${tr('taskTicketHint')}</strong>
-        </div>
+        ${!hasRewardStep ? `
+          <div class="task-modal-reward">
+            <span>${ticketIcon()}</span>
+            <strong>${tr('taskTicketHint')}</strong>
+          </div>
+        ` : ''}
         <button class="task-modal-continue ${progressState?.progress ? 'task-modal-continue--progress' : ''}" type="button" data-action="task-confirm" data-task="${task.id}" data-task-modal-continue ${task.claimed || (task.type !== 'referral' && !task.ready) || progressLocked ? 'disabled' : ''}>${actionLabel}</button>
       </article>
     </section>
