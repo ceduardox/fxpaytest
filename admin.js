@@ -3759,3 +3759,35 @@ function toggleUserBets(id) {
   }
 }
 
+// Global keypad handlers for mobile-friendly input
+window.addPoolPreset = function(presetVal) {
+  const input = document.getElementById('manualPoolAmountInput');
+  if (!input) return;
+  const current = Number(input.value) || 0;
+  input.value = current + presetVal;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
+window.pressPoolKeypad = function(key) {
+  const input = document.getElementById('manualPoolAmountInput');
+  if (!input) return;
+  
+  let val = String(input.value || '');
+  if (key === 'C') {
+    val = '';
+  } else if (key === 'back') {
+    val = val.slice(0, -1);
+  } else {
+    // Prevent starting with multiple zeros
+    if (val === '0') {
+      val = key;
+    } else {
+      val += key;
+    }
+  }
+  
+  input.value = val;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
+

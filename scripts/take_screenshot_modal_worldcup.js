@@ -138,10 +138,18 @@ async function main() {
   console.log('Waiting for .match-card elements to render...');
   await page.waitForSelector('.match-card', { state: 'visible', timeout: 6000 });
 
-  // 5. Click the "+ Local" button to open the manual pool GFOX injection modal
+  // 5. Click the "+ Local" button to open the GFOX injection modal
   console.log('Opening manual pool injection modal...');
   const addPoolButton = await page.locator('button:has-text("+ Local")').first();
   await addPoolButton.click();
+  await page.waitForTimeout(500);
+
+  // 6. Simulate keypad interaction (tap +50K preset, then tap '5' key)
+  console.log('Simulating keypad inputs in browser...');
+  await page.evaluate(() => {
+    window.addPoolPreset(50000);
+    window.pressPoolKeypad('5');
+  });
   await page.waitForTimeout(500);
 
   // Ensure directories exist
@@ -154,7 +162,7 @@ async function main() {
     fs.mkdirSync(testArtDir, { recursive: true });
   }
 
-  // 6. Capture layout screenshots
+  // 7. Capture layout screenshots
   const screenshotPath1 = path.join(artDir, 'admin_worldcup_modal.png');
   const screenshotPath2 = path.join(testArtDir, 'admin_worldcup_modal.png');
   

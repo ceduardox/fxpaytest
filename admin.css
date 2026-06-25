@@ -3632,3 +3632,55 @@ tr:last-child td {
   }
 }
 
+/* Custom Numeric Keypad styling for manual pool additions */
+.pool-preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.pool-preset-btn:hover,
+.pool-preset-btn:active {
+  background: rgba(33, 214, 166, 0.15);
+  border-color: rgba(33, 214, 166, 0.4);
+}
+
+.pool-keypad-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-radius: 10px;
+  padding: 14px 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+}
+
+.pool-keypad-btn:hover,
+.pool-keypad-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.97);
+}
+
+.pool-keypad-btn.action-btn {
+  color: var(--accent);
+}
+
+.pool-keypad-btn.danger-btn {
+  color: var(--danger);
+}
+
+

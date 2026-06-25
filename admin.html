@@ -1092,7 +1092,7 @@
       </dialog>
 
       <dialog class="modal" id="manualPoolModal">
-        <form class="modal-card" id="manualPoolForm">
+        <form class="modal-card" id="manualPoolForm" style="max-width: 360px;">
           <div class="section-head">
             <div>
               <p class="eyebrow" id="manualPoolTeamLabel">Inyección Manual</p>
@@ -1104,10 +1104,35 @@
           </div>
           <input type="hidden" name="matchId" />
           <input type="hidden" name="team" />
+          
           <label>Monto a inyectar (GFOX)
-            <input name="amount" type="number" min="1" step="1" placeholder="Ej: 50000" required />
+            <input name="amount" id="manualPoolAmountInput" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="0" required style="font-size: 1.6rem; text-align: center; font-weight: 700; color: var(--accent); background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;" />
           </label>
-          <button class="primary-button" type="submit">Confirmar Inyección GFOX</button>
+
+          <!-- Quick Presets -->
+          <div class="pool-presets-row" style="display: flex; gap: 8px; margin-top: 10px;">
+            <button type="button" class="pool-preset-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer;" onclick="addPoolPreset(1000)">+1K</button>
+            <button type="button" class="pool-preset-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer;" onclick="addPoolPreset(10000)">+10K</button>
+            <button type="button" class="pool-preset-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer;" onclick="addPoolPreset(50000)">+50K</button>
+          </div>
+
+          <!-- HTML Keypad -->
+          <div class="pool-keypad-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px;">
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('1')">1</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('2')">2</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('3')">3</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('4')">4</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('5')">5</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('6')">6</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('7')">7</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('8')">8</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('9')">9</button>
+            <button type="button" class="pool-keypad-btn danger-btn" style="color:var(--danger);" onclick="pressPoolKeypad('C')">C</button>
+            <button type="button" class="pool-keypad-btn" onclick="pressPoolKeypad('0')">0</button>
+            <button type="button" class="pool-keypad-btn action-btn" style="color:var(--accent);" onclick="pressPoolKeypad('back')">⌫</button>
+          </div>
+
+          <button class="primary-button" type="submit" style="margin-top: 18px; width: 100%;">Confirmar Inyección GFOX</button>
         </form>
       </dialog>
     </div>
