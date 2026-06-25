@@ -3096,6 +3096,7 @@ function topHud() {
   const player = dashboard.player;
   const avatarUrl = player.avatar_url || './images/fox-optimized.webp';
   const rank = player.rank || defaultVisualRank();
+  const isFree = player.active_package_id === 'free';
   const wallet = walletTokens(player);
   
   const ranks = rankList();
@@ -3112,7 +3113,7 @@ function topHud() {
           <strong>${player.username || 'Wuffies'}</strong>
           <button class="profile-rank-line" type="button" data-action="open-rank-rules" aria-label="${tr('rankRulesTitle')}">
             ${rank.image_url ? `<img src="${escapeAttr(rank.image_url)}" alt="" />` : icon('ph:medal-bold')}
-            <b>${escapeHtml(rank.name || 'Free')}</b>
+            <b>${escapeHtml(isFree ? 'FREE' : (player.package?.name || player.active_package_id || 'Pack'))}</b>
           </button>
         </div>
         <div class="balance-chip ${balanceSizeClass(wallet)}">
@@ -3123,6 +3124,7 @@ function topHud() {
       </div>
       
       <!-- Fila de estadísticas modernas debajo de profile-row -->
+      ${isFree ? `
       <div class="hud-stats-row">
         <!-- Rango y progreso a la izquierda -->
         <button class="hud-rank-box" type="button" data-action="open-rank-rules" aria-label="${tr('rankRulesTitle')}">
@@ -3143,15 +3145,16 @@ function topHud() {
             <img src="images/icons/icons card/exchange.png" alt="" />
           </button>
           
-          <!-- Profit per hour -->
-          <div class="hud-profit-box">
-            <span class="hud-profit-title">Profit per hour</span>
-            <div class="hud-profit-values">
-              <span class="hud-profit-coin">${coinIcon()}</span>
-              <strong class="hud-profit-amount">+${fmt(player.passive_income_per_hour || 0)}</strong>
-              <span class="hud-profit-info">${icon('ph:info-bold')}</span>
+          ${isFree ? `
+            <div class="hud-profit-box">
+              <span class="hud-profit-title">Profit per hour</span>
+              <div class="hud-profit-values">
+                <span class="hud-profit-coin">${coinIcon()}</span>
+                <strong class="hud-profit-amount">+${fmt(player.passive_income_per_hour || 0)}</strong>
+                <span class="hud-profit-info">${icon('ph:info-bold')}</span>
+              </div>
             </div>
-          </div>
+          ` : ''}
 
           <!-- Botón de configuración/perfil -->
           <button class="hud-pill-circle-btn settings-btn" type="button" data-view="profile" aria-label="Profile">
@@ -3159,6 +3162,7 @@ function topHud() {
           </button>
         </div>
       </div>
+      ` : ''}
       
       ${pwaInstallBanner()}
     </header>
