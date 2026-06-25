@@ -1627,29 +1627,120 @@ function renderWithdrawals() {
 
 function renderWorldCup() {
   const matches = state.overview.matches || [];
-  $('#matchesBody').innerHTML = matches.length
-    ? matches.map((item) => `
-      <tr>
-        <td>
-          <small style="display:block; color:var(--text-color); opacity:0.7;">${item.match_date ? formatDateTime(item.match_date) : formatDateTime(item.created_at)}</small>
-          <strong>${escapeAttr(item.venue || 'Por definir')}</strong>
-        </td>
-        <td>
-          <span style="font-size: 1.2em;">${item.flag_a || ''}</span> <strong>${item.team_a}</strong> vs <strong>${item.team_b}</strong> <span style="font-size: 1.2em;">${item.flag_b || ''}</span>
-        </td>
-        <td>${statusPill(item.status)}</td>
-        <td>${item.result === 'team_a' ? item.team_a : item.result === 'team_b' ? item.team_b : item.result === 'draw' ? 'Empate' : 'Pendiente'}</td>
-        <td>
-          ${item.status === 'open' ? `<button type="button" class="approve-button" onclick="handleMatchAction('close', '${item.id}')">Cerrar Apuestas</button>` : ''}
-          ${item.status === 'closed' ? `
-            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_a')">Ganó ${item.team_a}</button>
-            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'draw')">Empate</button>
-            <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_b')">Ganó ${item.team_b}</button>
-          ` : ''}
-        </td>
-      </tr>
-    `).join('')
-    : '<tr><td colspan="5" style="text-align: center;">Sin partidos registrados.</td></tr>';
+  const container = $('#matchesContainer');
+  if (!container) return;
+
+  container.innerHTML = matches.length
+    ? matches.map((item) => {
+      const stats = item.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 };
+      const betsCount = item.userBets ? item.userBets.length : 0;
+      
+      // Calculate percentages for the progress bar
+      const total = stats.total || 1;
+      const pctA = Math.max(0, Math.min(100, (stats.team_a / total) * 100));
+      const pctDraw = Math.max(0, Math.min(100, (stats.draw / total) * 100));
+      const pctB = Math.max(0, Math.min(100, (stats.team_b / total) * 100));
+
+      return `
+        <article class="match-card">
+          <div class="match-card-header">
+            <span class="match-card-venue">
+              <iconify-icon icon="ph:soccer-ball-bold" style="color:var(--accent);"></iconify-icon>
+              ${escapeAttr(item.venue || 'Por definir')}
+            </span>
+            <span class="match-card-date">${item.match_date ? formatDateTime(item.match_date) : formatDateTime(item.created_at)}</span>
+          </div>
+
+          <div class="match-teams-display">
+            <div class="match-team-side">
+              <span class="match-team-flag">${item.flag_a || '⚽'}</span>
+              <span class="match-team-name">${item.team_a}</span>
+            </div>
+            
+            <div class="match-vs-divider">
+              <span class="match-vs-label">VS</span>
+              ${statusPill(item.status)}
+              ${item.status === 'resolved' ? `<small style="color:var(--accent); font-weight:700; margin-top:2px;">Ganó: ${item.result === 'team_a' ? item.team_a : item.result === 'team_b' ? item.team_b : 'Empate'}</small>` : ''}
+            </div>
+
+            <div class="match-team-side">
+              <span class="match-team-flag">${item.flag_b || '⚽'}</span>
+              <span class="match-team-name">${item.team_b}</span>
+            </div>
+          </div>
+
+          <!-- Pool Visual Segments Bar -->
+          <div class="match-pool-visualizer">
+            <div class="match-pool-seg local" style="width: ${pctA}%;" title="Local: ${pctA.toFixed(1)}%"></div>
+            <div class="match-pool-seg draw" style="width: ${pctDraw}%;" title="Empate: ${pctDraw.toFixed(1)}%"></div>
+            <div class="match-pool-seg visitor" style="width: ${pctB}%;" title="Visita: ${pctB.toFixed(1)}%"></div>
+          </div>
+
+          <div class="match-pool-labels">
+            <div class="match-pool-label-item local">
+              <span class="match-pool-title">Local (${item.team_a})</span>
+              <span class="match-pool-value">${fmt(stats.team_a, 0)} FOX</span>
+              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_a || 0, 0)}</span>
+            </div>
+            <div class="match-pool-label-item draw">
+              <span class="match-pool-title">Empate</span>
+              <span class="match-pool-value">${fmt(stats.draw, 0)} FOX</span>
+              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_draw || 0, 0)}</span>
+            </div>
+            <div class="match-pool-label-item visitor">
+              <span class="match-pool-title">Visita (${item.team_b})</span>
+              <span class="match-pool-value">${fmt(stats.team_b, 0)} FOX</span>
+              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_b || 0, 0)}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: right; font-size: 0.85rem; font-weight:700; color: #fff; margin-top: -4px;">
+            Total Pool: <span style="color:var(--accent);">${fmt(stats.total, 0)} FOX</span>
+          </div>
+
+          <!-- User Bets Expandable List -->
+          <div class="match-bets-count-section">
+            <button type="button" class="match-toggle-bets-btn" onclick="toggleUserBets('${item.id}')">
+              <span><strong>${betsCount}</strong> Apuestas de Usuarios</span>
+              <iconify-icon icon="ph:caret-down-bold"></iconify-icon>
+            </button>
+            
+            <div id="bets-detail-${item.id}" class="match-bets-details-list" style="display: none;">
+              ${betsCount > 0 ? item.userBets.map(b => `
+                <div class="match-bet-detail-row">
+                  <span><strong>${escapeAttr(b.username)}</strong></span>
+                  <span style="color: var(--accent);">${b.bet_type === 'team_a' ? item.team_a : b.bet_type === 'team_b' ? item.team_b : 'Empate'} (${fmt(b.amount, 0)} FOX)</span>
+                </div>
+              `).join('') : '<div style="text-align:center; color:var(--muted); padding: 4px;">Sin apuestas registradas</div>'}
+            </div>
+          </div>
+
+          <!-- Admin actions section -->
+          <div class="match-actions-section">
+            ${item.status === 'open' ? `
+              <div style="font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-bottom: -4px;">INYECTAR POOL MANUAL:</div>
+              <div class="match-pool-injection-row">
+                <button type="button" class="match-action-btn inject-local" onclick="handleAddManualPool('${item.id}', 'team_a', '${escapeAttr(item.team_a)}')">+ Local</button>
+                <button type="button" class="match-action-btn inject-draw" onclick="handleAddManualPool('${item.id}', 'draw', 'Empate')">+ Empate</button>
+                <button type="button" class="match-action-btn inject-visitor" onclick="handleAddManualPool('${item.id}', 'team_b', '${escapeAttr(item.team_b)}')">+ Visita</button>
+              </div>
+            ` : ''}
+
+            <div class="match-control-row">
+              ${item.status === 'open' ? `
+                <button type="button" class="approve-button" style="width:100%;" onclick="handleMatchAction('close', '${item.id}')">Cerrar Apuestas</button>
+              ` : ''}
+              ${item.status === 'closed' ? `
+                <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_a')">Ganó ${item.team_a}</button>
+                <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'draw')">Empate</button>
+                <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_b')">Ganó ${item.team_b}</button>
+              ` : ''}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('')
+    : '<div class="empty-state" style="grid-column: 1 / -1;">Sin partidos registrados.</div>';
 }
 
 function renderSeason() {
@@ -3622,5 +3713,31 @@ async function handleMatchAction(action, id, result) {
     }
   } catch (err) {
     showAlert(err.message);
+  }
+}
+
+async function handleAddManualPool(id, team, teamName) {
+  const amountStr = prompt(`Ingresa el monto (FOX) para agregar al pool de ${teamName}:`);
+  if (!amountStr) return;
+  const amount = Math.floor(Number(amountStr));
+  if (Number.isNaN(amount) || amount <= 0) {
+    showAlert('Monto inválido.');
+    return;
+  }
+  try {
+    const res = await api('/match/add-pool', { id, team, amount });
+    if (res.ok) {
+      showAlert(`Pool de ${teamName} incrementado en ${amount} FOX.`);
+      void loadData();
+    }
+  } catch (err) {
+    showAlert(err.message);
+  }
+}
+
+function toggleUserBets(id) {
+  const el = document.getElementById(`bets-detail-${id}`);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
   }
 }

@@ -3310,3 +3310,325 @@ tr:last-child td {
   padding: 0 4px;
   line-height: 1;
 }
+
+/* World Cup Responsive Card UI Grid & Cards */
+.matches-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.match-card {
+  border: 1px solid rgba(141, 178, 225, 0.16);
+  border-radius: 14px;
+  padding: 20px;
+  background: radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.08), transparent 35%),
+              linear-gradient(145deg, rgba(18, 29, 50, 0.9), rgba(10, 15, 27, 0.88));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.match-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(33, 214, 166, 0.3);
+}
+
+.match-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+.match-card-venue {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 550;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-card-date {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.match-teams-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.match-team-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.match-team-flag {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.match-team-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.match-vs-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.match-vs-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.match-pool-visualizer {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 6px 0;
+}
+
+.match-pool-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.match-pool-seg.local { background: #f59e0b; }
+.match-pool-seg.draw { background: #6b7280; }
+.match-pool-seg.visitor { background: #3b82f6; }
+
+.match-pool-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.match-pool-label-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.match-pool-label-item.local { border-left: 3px solid #f59e0b; }
+.match-pool-label-item.draw { border-left: 3px solid #6b7280; }
+.match-pool-label-item.visitor { border-left: 3px solid #3b82f6; }
+
+.match-pool-title {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.match-pool-value {
+  font-weight: 700;
+  color: #fff;
+}
+
+.match-pool-manual {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.match-bets-count-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.match-toggle-bets-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.match-toggle-bets-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.match-bets-details-list {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.match-bet-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.match-bet-detail-row:last-child {
+  border-bottom: none;
+}
+
+.match-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.match-pool-injection-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.match-action-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.match-action-btn.inject-local { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.match-action-btn.inject-draw { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.2); }
+.match-action-btn.inject-visitor { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+.match-action-btn.inject-local:hover { background: #f59e0b; color: #fff; }
+.match-action-btn.inject-draw:hover { background: #6b7280; color: #fff; }
+.match-action-btn.inject-visitor:hover { background: #3b82f6; color: #fff; }
+
+.match-control-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.match-control-row .approve-button,
+.match-control-row .primary-button {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .matches-list-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Make table columns into vertical rows on mobile */
+  .table-wrap table {
+    min-width: 100% !important;
+    display: block;
+  }
+  
+  .table-wrap thead {
+    display: none; /* Hide header columns */
+  }
+  
+  .table-wrap tbody,
+  .table-wrap tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .table-wrap tr {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 14px;
+  }
+  
+  .table-wrap td {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    width: 100% !important;
+  }
+  
+  .table-wrap td:last-child {
+    border-bottom: none;
+  }
+  
+  /* Add label prefix to cells */
+  .table-wrap td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  
+  /* Ensure the table wrapper does not scroll horizontally since it fits vertically now */
+  .table-wrap {
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+}
+

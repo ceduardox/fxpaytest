@@ -831,11 +831,17 @@ async function initDatabase() {
       match_date timestamptz,
       status text not null default 'open',
       result text,
-      created_at timestamptz not null default now()
+      created_at timestamptz not null default now(),
+      manual_pool_a numeric not null default 0,
+      manual_pool_b numeric not null default 0,
+      manual_pool_draw numeric not null default 0
     )
   `);
   try {
     await pool.query('alter table foxpay_matches add column flag_a text, add column flag_b text, add column venue text, add column match_date timestamptz');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column manual_pool_a numeric not null default 0, add column manual_pool_b numeric not null default 0, add column manual_pool_draw numeric not null default 0');
   } catch (err) {}
 
   await pool.query(`
@@ -7984,12 +7990,45 @@ async function handleFoxPayAdminOverview(request, response) {
     const supportTickets = await listFoxPayAdminSupportTickets();
 
     let matches = [];
+    let bets = [];
+    let playersMap = new Map();
     if (pool) {
       const mRes = await pool.query('select * from foxpay_matches order by created_at desc');
       matches = mRes.rows;
+      const bRes = await pool.query('select * from foxpay_bets');
+      bets = bRes.rows;
+      const pRes = await pool.query('select player_id, username from foxpay_players');
+      pRes.rows.forEach(p => playersMap.set(p.player_id, p.username));
     } else {
       matches = Array.from(foxpayMatchesMemory.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      bets = Array.from(foxpayBetsMemory.values());
+      Array.from(foxpayPlayers.values()).forEach(p => playersMap.set(p.player_id, p.username));
     }
+
+    const matchesWithAdminDetails = matches.map(match => {
+      const matchBets = bets.filter(b => b.match_id === match.id);
+      
+      const poolStats = {
+        team_a: matchBets.filter(b => b.bet_type === 'team_a').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_a || 0),
+        draw: matchBets.filter(b => b.bet_type === 'draw').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_draw || 0),
+        team_b: matchBets.filter(b => b.bet_type === 'team_b').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_b || 0),
+      };
+      poolStats.total = poolStats.team_a + poolStats.draw + poolStats.team_b;
+      
+      const userBets = matchBets.map(b => ({
+        player_id: b.player_id,
+        username: playersMap.get(b.player_id) || b.player_id,
+        bet_type: b.bet_type,
+        amount: Number(b.amount),
+        created_at: b.created_at
+      }));
+
+      return {
+        ...match,
+        poolStats,
+        userBets
+      };
+    });
 
     return sendJson(response, 200, {
       ok: true,
@@ -8011,7 +8050,7 @@ async function handleFoxPayAdminOverview(request, response) {
       support_tickets: canSupport ? supportTickets : [],
       roulette_rewards: canContent ? rouletteRewards : [],
       roulette_settings: canContent ? rouletteSettings : {},
-      matches: matches,
+      matches: matchesWithAdminDetails,
       metrics: {
         users: players.length,
         pending_purchases: purchases.filter((row) => row.status === 'pending').length,
@@ -9622,6 +9661,41 @@ async function handleFoxPayAdminSkinRemove(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminMatchAddPool(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
+  try {
+    const params = await readRequestParams(request, url);
+    const id = params.get('id');
+    const team = params.get('team');
+    const amount = Number(params.get('amount') || 0);
+    if (!id || !team || amount < 0) return sendJson(response, 400, { ok: false, error: 'invalid_params' });
+    
+    if (pool) {
+      let query = '';
+      if (team === 'team_a') query = 'update foxpay_matches set manual_pool_a = manual_pool_a + $1 where id = $2';
+      else if (team === 'team_b') query = 'update foxpay_matches set manual_pool_b = manual_pool_b + $1 where id = $2';
+      else if (team === 'draw') query = 'update foxpay_matches set manual_pool_draw = manual_pool_draw + $1 where id = $2';
+      else return sendJson(response, 400, { ok: false, error: 'invalid_team' });
+      
+      await pool.query(query, [amount, id]);
+    } else {
+      const match = foxpayMatchesMemory.get(id);
+      if (!match) return sendJson(response, 404, { ok: false, error: 'match_not_found' });
+      if (team === 'team_a') match.manual_pool_a = (Number(match.manual_pool_a) || 0) + amount;
+      else if (team === 'team_b') match.manual_pool_b = (Number(match.manual_pool_b) || 0) + amount;
+      else if (team === 'draw') match.manual_pool_draw = (Number(match.manual_pool_draw) || 0) + amount;
+      else return sendJson(response, 400, { ok: false, error: 'invalid_team' });
+      
+      foxpayMatchesMemory.set(id, match);
+    }
+    return sendJson(response, 200, { ok: true });
+  } catch (error) {
+    console.error('Match manual pool addition failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_add_pool_failed' });
+  }
+}
+
 async function handleFoxPayAdminMatchCreate(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'content_edit');
   if (!admin) return;
@@ -9703,7 +9777,10 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
     if (!match || match.status === 'resolved') return sendJson(response, 400, { ok: false, error: 'invalid_match' });
 
     // Calculate pool
-    const totalPool = bets.reduce((sum, b) => sum + Number(b.amount), 0);
+    const totalPool = bets.reduce((sum, b) => sum + Number(b.amount), 0)
+      + Number(match.manual_pool_a || 0)
+      + Number(match.manual_pool_b || 0)
+      + Number(match.manual_pool_draw || 0);
     const commission = totalPool * 0.20; // 20% burn
     const payoutPool = totalPool - commission;
     
@@ -11394,6 +11471,10 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/foxpay/admin/user/status') {
     return handleFoxPayAdminUserStatus(request, response, url);
+  }
+
+  if (url.pathname === '/api/foxpay/admin/match/add-pool') {
+    return handleFoxPayAdminMatchAddPool(request, response, url);
   }
 
   if (url.pathname === '/api/foxpay/admin/match/create') {
