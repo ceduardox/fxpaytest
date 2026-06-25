@@ -10467,6 +10467,141 @@ button.avatar-box {
   display: block;
 }
 
+.manual-pool-modal-card {
+  max-width: 420px;
+}
+
+.manual-pool-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(130, 214, 255, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(8, 20, 62, 0.9), rgba(5, 12, 34, 0.96));
+}
+
+.manual-pool-summary span {
+  color: rgba(214, 231, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.manual-pool-summary strong {
+  color: #f5fbff;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.manual-pool-input-wrap {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+  color: #dfeeff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.manual-pool-input-wrap input {
+  width: 100%;
+  padding: 14px 16px !important;
+  border: 1px solid rgba(130, 214, 255, 0.16) !important;
+  border-radius: 16px !important;
+  background: rgba(2, 10, 31, 0.84) !important;
+  color: #ffffff !important;
+  font-size: 1.75rem !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.manual-pool-input-wrap input:focus {
+  outline: none;
+  border-color: rgba(76, 216, 255, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(76, 216, 255, 0.12);
+}
+
+.pool-presets-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.pool-preset-btn {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid rgba(130, 214, 255, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(11, 31, 80, 0.9), rgba(7, 16, 48, 0.96));
+  color: #dff8ff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pool-preset-btn:active {
+  transform: translateY(1px);
+}
+
+.pool-keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pool-keypad-btn {
+  min-height: 56px;
+  border: 1px solid rgba(130, 214, 255, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(11, 31, 80, 0.88), rgba(6, 14, 44, 0.94));
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.pool-keypad-btn:active {
+  transform: translateY(1px);
+}
+
+.pool-keypad-btn.danger-btn {
+  color: #ff9eb8 !important;
+}
+
+.pool-keypad-btn.action-btn {
+  color: #4cd8ff !important;
+}
+
+.pool-keypad-spacer {
+  min-height: 56px;
+}
+
+.manual-pool-footer {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.manual-pool-footer p {
+  margin: 0;
+  color: rgba(214, 231, 255, 0.7);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.manual-pool-footer .primary-button {
+  width: 100%;
+}
+
 @media (max-width: 390px) {
   .pack-card {
     grid-template-columns: 74px 1fr !important;
@@ -10496,6 +10631,19 @@ button.avatar-box {
     grid-column: 1 / span 2 !important;
     grid-row: 2 !important;
     width: 100% !important;
+  }
+
+  .manual-pool-summary {
+    align-items: center;
+  }
+
+  .manual-pool-summary strong {
+    font-size: 22px;
+  }
+
+  .pool-keypad-btn {
+    min-height: 52px;
+    font-size: 19px;
   }
 }
 
@@ -10858,4 +11006,3 @@ button.avatar-box {
     padding: 2px 4px;
   }
 }
-

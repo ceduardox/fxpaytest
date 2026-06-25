@@ -838,10 +838,25 @@ async function initDatabase() {
     )
   `);
   try {
-    await pool.query('alter table foxpay_matches add column flag_a text, add column flag_b text, add column venue text, add column match_date timestamptz');
+    await pool.query('alter table foxpay_matches add column if not exists flag_a text');
   } catch (err) {}
   try {
-    await pool.query('alter table foxpay_matches add column manual_pool_a numeric not null default 0, add column manual_pool_b numeric not null default 0, add column manual_pool_draw numeric not null default 0');
+    await pool.query('alter table foxpay_matches add column if not exists flag_b text');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists venue text');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists match_date timestamptz');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists manual_pool_a numeric not null default 0');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists manual_pool_b numeric not null default 0');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists manual_pool_draw numeric not null default 0');
   } catch (err) {}
 
   await pool.query(`
@@ -2017,7 +2032,15 @@ async function seedWorldCupMatches() {
   if (!pool) {
     for (const match of matches) {
       if (!foxpayMatchesMemory.has(match.id)) {
-        foxpayMatchesMemory.set(match.id, { ...match, status: 'open', result: null, created_at: new Date().toISOString() });
+        foxpayMatchesMemory.set(match.id, { 
+          ...match, 
+          status: 'open', 
+          result: null, 
+          created_at: new Date().toISOString(),
+          manual_pool_a: 0,
+          manual_pool_b: 0,
+          manual_pool_draw: 0
+        });
       }
     }
     return;
@@ -8850,9 +8873,9 @@ async function handleFoxPayUserMatches(request, response, url) {
       const myBets = matchBets.filter(b => b.player_id === playerId);
       
       const poolStats = {
-        team_a: matchBets.filter(b => b.bet_type === 'team_a').reduce((sum, b) => sum + Number(b.amount), 0),
-        draw: matchBets.filter(b => b.bet_type === 'draw').reduce((sum, b) => sum + Number(b.amount), 0),
-        team_b: matchBets.filter(b => b.bet_type === 'team_b').reduce((sum, b) => sum + Number(b.amount), 0),
+        team_a: matchBets.filter(b => b.bet_type === 'team_a').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_a || 0),
+        draw: matchBets.filter(b => b.bet_type === 'draw').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_draw || 0),
+        team_b: matchBets.filter(b => b.bet_type === 'team_b').reduce((sum, b) => sum + Number(b.amount), 0) + Number(match.manual_pool_b || 0),
       };
       poolStats.total = poolStats.team_a + poolStats.draw + poolStats.team_b;
       
@@ -9719,11 +9742,14 @@ async function handleFoxPayAdminMatchCreate(request, response, url) {
       match_date: matchDate || null, 
       status: 'open', 
       result: null, 
-      created_at: new Date().toISOString() 
+      created_at: new Date().toISOString(),
+      manual_pool_a: 0,
+      manual_pool_b: 0,
+      manual_pool_draw: 0
     };
     if (pool) {
-      await pool.query('insert into foxpay_matches (id, team_a, team_b, flag_a, flag_b, venue, match_date, status, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date, match.status, match.created_at]);
+      await pool.query('insert into foxpay_matches (id, team_a, team_b, flag_a, flag_b, venue, match_date, status, created_at, manual_pool_a, manual_pool_b, manual_pool_draw) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+        [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date, match.status, match.created_at, match.manual_pool_a, match.manual_pool_b, match.manual_pool_draw]);
     } else {
       foxpayMatchesMemory.set(match.id, match);
     }

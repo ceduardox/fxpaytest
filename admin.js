@@ -3726,6 +3726,38 @@ function handleAddManualPool(id, team, teamName) {
   form.elements.amount.value = '';
   $('#manualPoolTeamLabel').textContent = `Inyección Manual: ${teamName}`;
   modal.showModal();
+  requestAnimationFrame(() => {
+    form.elements.amount?.focus?.();
+  });
+}
+
+function applyManualPoolUpdate(matchId, team, amount) {
+  const match = state.overview?.matches?.find((item) => item.id === matchId);
+  if (!match) return;
+
+  const poolField = team === 'team_a'
+    ? 'manual_pool_a'
+    : team === 'team_b'
+      ? 'manual_pool_b'
+      : team === 'draw'
+        ? 'manual_pool_draw'
+        : '';
+  const statsField = team === 'team_a'
+    ? 'team_a'
+    : team === 'team_b'
+      ? 'team_b'
+      : team === 'draw'
+        ? 'draw'
+        : '';
+
+  if (!poolField || !statsField) return;
+
+  match[poolField] = Number(match[poolField] || 0) + amount;
+  match.poolStats = {
+    ...(match.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 }),
+    [statsField]: Number(match.poolStats?.[statsField] || 0) + amount,
+    total: Number(match.poolStats?.total || 0) + amount,
+  };
 }
 
 $('#manualPoolForm')?.addEventListener('submit', async (e) => {
@@ -3743,8 +3775,10 @@ $('#manualPoolForm')?.addEventListener('submit', async (e) => {
   try {
     const res = await api('/match/add-pool', { id, team, amount });
     if (res.ok) {
+      applyManualPoolUpdate(id, team, amount);
       $('#manualPoolModal').close();
       showAlert(`Pool incrementado en ${fmt(amount, 0)} GFOX.`, 'success');
+      renderAll();
       void loadData();
     }
   } catch (err) {
@@ -3762,14 +3796,17 @@ function toggleUserBets(id) {
 // Global keypad handlers for mobile-friendly input
 window.addPoolPreset = function(presetVal) {
   const input = document.getElementById('manualPoolAmountInput');
+  const preview = document.getElementById('manualPoolAmountPreview');
   if (!input) return;
   const current = Number(input.value) || 0;
   input.value = current + presetVal;
+  if (preview) preview.textContent = fmt(input.value || 0, 0);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
 window.pressPoolKeypad = function(key) {
   const input = document.getElementById('manualPoolAmountInput');
+  const preview = document.getElementById('manualPoolAmountPreview');
   if (!input) return;
   
   let val = String(input.value || '');
@@ -3787,7 +3824,16 @@ window.pressPoolKeypad = function(key) {
   }
   
   input.value = val;
+  if (preview) preview.textContent = fmt(val || 0, 0);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
+function syncManualPoolPreview(value) {
+  const preview = document.getElementById('manualPoolAmountPreview');
+  if (!preview) return;
+  preview.textContent = fmt(value || 0, 0);
+}
 
+$('#manualPoolAmountInput')?.addEventListener('input', (event) => {
+  syncManualPoolPreview(event.target.value);
+});

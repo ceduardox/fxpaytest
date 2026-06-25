@@ -62,6 +62,10 @@
             Entrar
           </button>
           <p class="login-note">Usa el usuario y la contrasena del super admin.</p>
+          <div class="manual-pool-footer">
+            <p>El monto se suma al pozo manual del partido y se refleja al guardar.</p>
+            <button class="primary-button" type="submit">Confirmar Inyeccion GFOX</button>
+          </div>
         </form>
       </section>
 
@@ -1092,7 +1096,7 @@
       </dialog>
 
       <dialog class="modal" id="manualPoolModal">
-        <form class="modal-card" id="manualPoolForm" style="max-width: 360px;">
+        <form class="modal-card manual-pool-modal-card" id="manualPoolForm">
           <div class="section-head">
             <div>
               <p class="eyebrow" id="manualPoolTeamLabel">Inyección Manual</p>
@@ -1104,10 +1108,14 @@
           </div>
           <input type="hidden" name="matchId" />
           <input type="hidden" name="team" />
+          <div class="manual-pool-summary">
+            <span>Monto actual</span>
+            <strong><span id="manualPoolAmountPreview">0</span> GFOX</strong>
+          </div>
           
-          <label>Monto a inyectar (GFOX)
-            <input name="amount" id="manualPoolAmountInput" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="0" required style="font-size: 1.6rem; text-align: center; font-weight: 700; color: var(--accent); background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;" />
-          </label>
+           <label class="manual-pool-input-wrap">Monto a inyectar (GFOX)
+             <input name="amount" id="manualPoolAmountInput" class="manual-pool-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="0" required />
+           </label>
 
           <!-- Quick Presets -->
           <div class="pool-presets-row" style="display: flex; gap: 8px; margin-top: 10px;">
