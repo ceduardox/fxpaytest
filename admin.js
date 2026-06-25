@@ -1635,11 +1635,11 @@ function renderWorldCup() {
       const stats = item.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 };
       const betsCount = item.userBets ? item.userBets.length : 0;
       
-      // Calculate percentages for the progress bar
-      const total = stats.total || 1;
-      const pctA = Math.max(0, Math.min(100, (stats.team_a / total) * 100));
-      const pctDraw = Math.max(0, Math.min(100, (stats.draw / total) * 100));
-      const pctB = Math.max(0, Math.min(100, (stats.team_b / total) * 100));
+      const odds = {
+        team_a: Math.max(1, Number(item.odds_team_a || 1.10)),
+        draw: Math.max(1, Number(item.odds_draw || 3.00)),
+        team_b: Math.max(1, Number(item.odds_team_b || 2.00)),
+      };
 
       return `
         <article class="match-card">
@@ -1659,6 +1659,7 @@ function renderWorldCup() {
             
             <div class="match-vs-divider">
               <span class="match-vs-label">VS</span>
+              <span class="sync-pill">Cuotas fijas</span>
               ${statusPill(item.status)}
               ${item.status === 'resolved' ? `<small style="color:var(--accent); font-weight:700; margin-top:2px;">Ganó: ${item.result === 'team_a' ? item.team_a : item.result === 'team_b' ? item.team_b : 'Empate'}</small>` : ''}
             </div>
@@ -1669,33 +1670,26 @@ function renderWorldCup() {
             </div>
           </div>
 
-          <!-- Pool Visual Segments Bar -->
-          <div class="match-pool-visualizer">
-            <div class="match-pool-seg local" style="width: ${pctA}%;" title="Local: ${pctA.toFixed(1)}%"></div>
-            <div class="match-pool-seg draw" style="width: ${pctDraw}%;" title="Empate: ${pctDraw.toFixed(1)}%"></div>
-            <div class="match-pool-seg visitor" style="width: ${pctB}%;" title="Visita: ${pctB.toFixed(1)}%"></div>
-          </div>
-
           <div class="match-pool-labels">
             <div class="match-pool-label-item local">
               <span class="match-pool-title">Local (${item.team_a})</span>
-              <span class="match-pool-value">${fmt(stats.team_a, 0)} FOX</span>
-              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_a || 0, 0)}</span>
+              <span class="match-pool-value">x${odds.team_a.toFixed(2)}</span>
+              <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
             <div class="match-pool-label-item draw">
               <span class="match-pool-title">Empate</span>
-              <span class="match-pool-value">${fmt(stats.draw, 0)} FOX</span>
-              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_draw || 0, 0)}</span>
+              <span class="match-pool-value">x${odds.draw.toFixed(2)}</span>
+              <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
             <div class="match-pool-label-item visitor">
               <span class="match-pool-title">Visita (${item.team_b})</span>
-              <span class="match-pool-value">${fmt(stats.team_b, 0)} FOX</span>
-              <span class="match-pool-manual">Man: ${fmt(item.manual_pool_b || 0, 0)}</span>
+              <span class="match-pool-value">x${odds.team_b.toFixed(2)}</span>
+              <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
           </div>
           
           <div style="text-align: right; font-size: 0.85rem; font-weight:700; color: #fff; margin-top: -4px;">
-            Total Pool: <span style="color:var(--accent);">${fmt(stats.total, 0)} FOX</span>
+            Apuestas registradas: <span style="color:var(--accent);">${fmt(stats.total, 0)} FOX</span>
           </div>
 
           <!-- User Bets Expandable List -->
@@ -1717,15 +1711,6 @@ function renderWorldCup() {
 
           <!-- Admin actions section -->
           <div class="match-actions-section">
-            ${item.status === 'open' ? `
-              <div style="font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-bottom: -4px;">INYECTAR POOL MANUAL:</div>
-              <div class="match-pool-injection-row">
-                <button type="button" class="match-action-btn inject-local" onclick="handleAddManualPool('${item.id}', 'team_a', '${escapeAttr(item.team_a)}')">+ Local</button>
-                <button type="button" class="match-action-btn inject-draw" onclick="handleAddManualPool('${item.id}', 'draw', 'Empate')">+ Empate</button>
-                <button type="button" class="match-action-btn inject-visitor" onclick="handleAddManualPool('${item.id}', 'team_b', '${escapeAttr(item.team_b)}')">+ Visita</button>
-              </div>
-            ` : ''}
-
             <div class="match-control-row">
               ${item.status === 'open' ? `
                 <button type="button" class="approve-button" style="width:100%;" onclick="handleMatchAction('close', '${item.id}')">Cerrar Apuestas</button>
@@ -3676,7 +3661,7 @@ async function grantTestCoins(playerId) {
 
 $('#createMatchForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!confirm('¿Crear partido pari-mutuel?')) return;
+  if (!confirm('¿Crear partido con cuotas fijas?')) return;
   const teamA = e.target.elements.teamA.value.trim();
   const teamB = e.target.elements.teamB.value.trim();
   const flagA = e.target.elements.flagA.value.trim();
@@ -3705,7 +3690,10 @@ async function handleMatchAction(action, id, result) {
     const res = await api(endpoint, body, 'POST');
     if (res.ok) {
       if (action === 'resolve') {
-        showAlert(`Ganadores pagados. Pozo repartido: ${res.payoutPool} FOX. Comisión casa: ${res.commission} FOX.`);
+        const oddsText = res.odds
+          ? ` Cuotas: L ${Number(res.odds.team_a || 0).toFixed(2)} | E ${Number(res.odds.draw || 0).toFixed(2)} | V ${Number(res.odds.team_b || 0).toFixed(2)}.`
+          : '';
+        showAlert(`Ganadores pagados.${oddsText} Apuestas cobradas: ${res.winnersCount || 0}.`);
       } else {
         showAlert('Apuestas cerradas.');
       }
@@ -3724,7 +3712,7 @@ function handleAddManualPool(id, team, teamName) {
   form.elements.matchId.value = id;
   form.elements.team.value = team;
   form.elements.amount.value = '';
-  $('#manualPoolTeamLabel').textContent = `Inyección Manual: ${teamName}`;
+  $('#manualPoolTeamLabel').textContent = `Ajuste manual: ${teamName}`;
   modal.showModal();
   requestAnimationFrame(() => {
     form.elements.amount?.focus?.();

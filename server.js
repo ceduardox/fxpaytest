@@ -834,7 +834,10 @@ async function initDatabase() {
       created_at timestamptz not null default now(),
       manual_pool_a numeric not null default 0,
       manual_pool_b numeric not null default 0,
-      manual_pool_draw numeric not null default 0
+      manual_pool_draw numeric not null default 0,
+      odds_team_a numeric not null default 1.10,
+      odds_draw numeric not null default 3.00,
+      odds_team_b numeric not null default 2.00
     )
   `);
   try {
@@ -857,6 +860,15 @@ async function initDatabase() {
   } catch (err) {}
   try {
     await pool.query('alter table foxpay_matches add column if not exists manual_pool_draw numeric not null default 0');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists odds_team_a numeric not null default 1.10');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists odds_draw numeric not null default 3.00');
+  } catch (err) {}
+  try {
+    await pool.query('alter table foxpay_matches add column if not exists odds_team_b numeric not null default 2.00');
   } catch (err) {}
 
   await pool.query(`
@@ -8868,6 +8880,7 @@ async function handleFoxPayUserMatches(request, response, url) {
       bets = Array.from(foxpayBetsMemory.values());
     }
 
+    const now = Date.now();
     const matchesWithPool = matches.map(match => {
       const matchBets = bets.filter(b => b.match_id === match.id);
       const myBets = matchBets.filter(b => b.player_id === playerId);
@@ -8888,6 +8901,11 @@ async function handleFoxPayUserMatches(request, response, url) {
         myBetTotal,
         myBetType
       };
+    }).filter((match) => {
+      if (match.status !== 'open') return true;
+      if (!match.match_date) return true;
+      const matchTime = new Date(match.match_date).getTime();
+      return Number.isNaN(matchTime) ? true : matchTime > now;
     });
 
     console.log('[MATCHES-DEBUG] player:', playerId, '| matches found:', matchesWithPool.length, '| memory size:', foxpayMatchesMemory.size);
@@ -9802,31 +9820,24 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
     }
     if (!match || match.status === 'resolved') return sendJson(response, 400, { ok: false, error: 'invalid_match' });
 
-    // Calculate pool
-    const totalPool = bets.reduce((sum, b) => sum + Number(b.amount), 0)
-      + Number(match.manual_pool_a || 0)
-      + Number(match.manual_pool_b || 0)
-      + Number(match.manual_pool_draw || 0);
-    const commission = totalPool * 0.20; // 20% burn
-    const payoutPool = totalPool - commission;
-    
-    const winningBets = bets.filter(b => b.bet_type === result);
-    const totalWinningAmount = winningBets.reduce((sum, b) => sum + Number(b.amount), 0);
+    const odds = {
+      team_a: Math.max(1, Number(match.odds_team_a || 1.10)),
+      draw: Math.max(1, Number(match.odds_draw || 3.00)),
+      team_b: Math.max(1, Number(match.odds_team_b || 2.00)),
+    };
+    const winningBets = bets.filter((bet) => bet.bet_type === result);
 
-    // Distribute
-    if (totalWinningAmount > 0) {
-      for (const bet of winningBets) {
-        const playerShare = Number(bet.amount) / totalWinningAmount;
-        const payout = Math.floor(payoutPool * playerShare);
-        if (pool) {
-          await pool.query('update foxpay_players set game_fox_balance = game_fox_balance + $1, cap_used = cap_used + $1 where player_id = $2', [payout, bet.player_id]);
-        } else {
-          const player = foxpayPlayers.get(bet.player_id);
-          if (player) {
-            player.game_fox_balance = (Number(player.game_fox_balance) || 0) + payout;
-            player.cap_used = (Number(player.cap_used) || 0) + payout;
-            foxpayPlayers.set(bet.player_id, player);
-          }
+    for (const bet of winningBets) {
+      const payout = Math.floor(Number(bet.amount) * odds[result]);
+      if (payout <= 0) continue;
+      if (pool) {
+        await pool.query('update foxpay_players set game_fox_balance = game_fox_balance + $1, cap_used = cap_used + $1 where player_id = $2', [payout, bet.player_id]);
+      } else {
+        const player = foxpayPlayers.get(bet.player_id);
+        if (player) {
+          player.game_fox_balance = (Number(player.game_fox_balance) || 0) + payout;
+          player.cap_used = (Number(player.cap_used) || 0) + payout;
+          foxpayPlayers.set(bet.player_id, player);
         }
       }
     }
@@ -9838,7 +9849,7 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
       match.result = result;
       foxpayMatchesMemory.set(id, match);
     }
-    return sendJson(response, 200, { ok: true, totalPool, commission, payoutPool, winnersCount: winningBets.length });
+    return sendJson(response, 200, { ok: true, winnersCount: winningBets.length, odds });
   } catch (error) {
     console.error('Match resolve failed', error);
     return sendJson(response, 500, { ok: false, error: 'match_resolve_failed' });

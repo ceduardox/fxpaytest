@@ -1815,6 +1815,7 @@ window.openWorldCupBetModal = (matchId, betType) => {
   activeBetType = betType;
   activeBetError = '';
   render();
+  requestAnimationFrame(updateWorldCupBetEstimate);
 };
 
 async function loadWorldCupMatches() {
@@ -1854,7 +1855,7 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
     if (res.ok) {
       toast('Apuesta registrada exitosamente.', 'success');
       dashboard = res.dashboard;
-      loadWorldCupMatches(); // refresh pool stats
+      loadWorldCupMatches(); // refresh match odds and bets
     } else {
       toast(res.error === 'requires_premium_package' ? 'Requiere paquete de pago' : 'Error al apostar.');
     }
@@ -4380,6 +4381,12 @@ function worldCupBetOverlay() {
   const match = activeBetMatch;
   const type = activeBetType;
   const targetName = type === 'team_a' ? match.team_a : type === 'team_b' ? match.team_b : 'Empate';
+  const odds = {
+    team_a: Math.max(1, Number(match.odds_team_a || 1.10)),
+    draw: Math.max(1, Number(match.odds_draw || 3.00)),
+    team_b: Math.max(1, Number(match.odds_team_b || 2.00)),
+  };
+  const selectedOdds = odds[type] || 1;
   const playerBalance = Number(dashboard?.player?.token_balance || 0);
 
   return `
@@ -4390,7 +4397,7 @@ function worldCupBetOverlay() {
         <!-- Header row -->
         <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 2px;">
           <img src="./images/ball.webp" alt="" style="width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" />
-          <span style="font-size: 10px; font-weight: 500; color: #4cd8ff; letter-spacing: 0.08em; text-transform: uppercase;">World Cup Pari-Mutuel</span>
+          <span style="font-size: 10px; font-weight: 500; color: #4cd8ff; letter-spacing: 0.08em; text-transform: uppercase;">World Cup Cuotas Fijas</span>
         </div>
 
         <h2 style="font-weight: 700; margin: 0 0 2px 0; font-size: 24px; text-align: center; color: #fff; font-family: var(--font-sans); line-height: 1.1;">Confirmar Apuesta</h2>
@@ -4423,6 +4430,11 @@ function worldCupBetOverlay() {
           </span>
         </div>
 
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: rgba(5, 12, 44, 0.42); border: 1px solid rgba(130, 214, 255, 0.12); border-radius: 12px; margin: 0 auto 12px; width: 220px; box-sizing: border-box;">
+          <span style="font-size: 12px; color: rgba(255,255,255,0.72); font-weight: 400;">Cuota fija</span>
+          <strong style="font-size: 14px; color: #fff; font-weight: 700;">x${selectedOdds.toFixed(2)}</strong>
+        </div>
+
         <!-- Input Section -->
         <div style="text-align: left; margin-bottom: 2px; width: 100%; box-sizing: border-box; justify-self: stretch;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px; width: 100%;">
@@ -4435,6 +4447,9 @@ function worldCupBetOverlay() {
             </span>
             <input type="number" inputmode="numeric" pattern="[0-9]*" id="worldCupBetAmount" placeholder="Ej: 1000" min="1" step="1" style="flex: 1; border: none; background: transparent; padding: 10px 0; color: #fff; font-size: 14px; font-family: var(--font-sans); outline: none; font-weight: 400;" />
           </div>
+          <div id="worldCupBetEstimate" style="margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12); color: rgba(235,244,255,0.82); font-size: 12px; line-height: 1.35;">
+            Escribe un monto para ver tu pago estimado.
+          </div>
           ${activeBetError ? `<em class="skin-confirm-error" style="color: #ff5b8c; font-size: 12px; display: block; margin-top: 6px; font-weight: 400;">${escapeHtml(activeBetError)}</em>` : ''}
         </div>
 
@@ -4446,6 +4461,26 @@ function worldCupBetOverlay() {
       </article>
     </section>
   `;
+}
+
+function updateWorldCupBetEstimate() {
+  const input = document.getElementById('worldCupBetAmount');
+  const output = document.getElementById('worldCupBetEstimate');
+  if (!input || !output || !activeBetMatch || !activeBetType) return;
+  const amount = Math.floor(Number(input.value));
+  const odds = {
+    team_a: Math.max(1, Number(activeBetMatch.odds_team_a || 1.10)),
+    draw: Math.max(1, Number(activeBetMatch.odds_draw || 3.00)),
+    team_b: Math.max(1, Number(activeBetMatch.odds_team_b || 2.00)),
+  };
+  const selectedOdds = odds[activeBetType] || 1;
+  if (!amount || amount <= 0) {
+    output.textContent = `Cuota fija: x${selectedOdds.toFixed(2)}. Escribe un monto para ver tu pago estimado.`;
+    return;
+  }
+  const payout = Math.floor(amount * selectedOdds);
+  const profit = Math.max(0, payout - amount);
+  output.innerHTML = `Si apuestas <strong>${fmt(amount, 0)} FOX</strong>, el pago estimado sería <strong>${fmt(payout, 0)} FOX</strong> y tu ganancia neta <strong>${fmt(profit, 0)} FOX</strong>.`;
 }
 
 function dailyStreakCalendarHtml() {
@@ -5453,10 +5488,24 @@ function worldcupView() {
     return `
       <section class="sheet-panel" style="text-align: center; padding: 40px 20px;">
         <iconify-icon icon="ph:lock-key-fill" style="font-size: 80px; color: var(--text-color); opacity: 0.5; margin-bottom: 20px;"></iconify-icon>
-        <h2 style="margin-bottom: 15px;">Solo Usuarios VIP</h2>
-        <p style="color: var(--text-color); opacity: 0.8; margin-bottom: 30px;">
-          El Pool de Liquidez Compartida (Pari-Mutuel) del World Cup es exclusivo para usuarios con un Paquete Activo.
+        <h2 style="margin-bottom: 12px;">World Cup disponible con pack</h2>
+        <p style="color: var(--text-color); opacity: 0.82; margin: 0 auto 12px; max-width: 320px; line-height: 1.45;">
+          Esta sección es para usuarios con pack activo. Allí puedes elegir un resultado, ver la cuota antes de apostar y recibir FOX directamente si aciertas.
         </p>
+        <div style="display: grid; gap: 8px; margin: 0 auto 28px; max-width: 320px; text-align: left;">
+          <div style="padding: 10px 12px; border-radius: 12px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.14);">
+            <strong style="display:block; color: #fff; margin-bottom: 2px;">1. Elige un resultado</strong>
+            <span style="color: rgba(235,244,255,0.72); font-size: 13px;">Local, empate o visita.</span>
+          </div>
+          <div style="padding: 10px 12px; border-radius: 12px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.14);">
+            <strong style="display:block; color: #fff; margin-bottom: 2px;">2. Revisa la cuota</strong>
+            <span style="color: rgba(235,244,255,0.72); font-size: 13px;">Ves el pago estimado antes de confirmar.</span>
+          </div>
+          <div style="padding: 10px 12px; border-radius: 12px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.14);">
+            <strong style="display:block; color: #fff; margin-bottom: 2px;">3. Si ganas, cobras FOX</strong>
+            <span style="color: rgba(235,244,255,0.72); font-size: 13px;">Los partidos vencidos ya no aparecen para evitar confusión.</span>
+          </div>
+        </div>
         <button class="primary-button" onclick="window.location.hash='packs'">Comprar Paquete</button>
       </section>
     `;
@@ -5464,15 +5513,33 @@ function worldcupView() {
 
   return `
     <section class="sheet-panel worldcup-panel">
-      <div class="sheet-head"><span>World Cup 2026</span><strong>Pari-Mutuel</strong></div>
+      <div class="sheet-head"><span>World Cup 2026</span><strong>Cuotas fijas</strong></div>
       <p>
-        Apuesta contra otros jugadores. La casa quema un 20% del total y reparte el resto entre los ganadores. Si ganas, suma directo a tu CAP.
+        Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX. Los partidos vencidos ya no se muestran.
       </p>
+      <div style="display:grid; gap:8px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 14px;">
+        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
+          <strong style="display:block; color:#fff; font-size:13px;">1. Elige</strong>
+          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Local, empate o visita</span>
+        </div>
+        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
+          <strong style="display:block; color:#fff; font-size:13px;">2. Revisa</strong>
+          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Cuota y pago estimado</span>
+        </div>
+        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
+          <strong style="display:block; color:#fff; font-size:13px;">3. Cobra</strong>
+          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Si aciertas, se acredita FOX</span>
+        </div>
+      </div>
       <div class="worldcup-matches matches-list">
         ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; padding: 20px;">Cargando partidos...</p>' : ''}
         ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6; padding: 20px;">No hay partidos programados.</p>' : ''}
         ${worldCupMatches.map((match, index) => {
-          const stats = match.poolStats || { team_a: 0, draw: 0, team_b: 0, total: 0 };
+          const odds = {
+            team_a: Math.max(1, Number(match.odds_team_a || 1.10)),
+            draw: Math.max(1, Number(match.odds_draw || 3.00)),
+            team_b: Math.max(1, Number(match.odds_team_b || 2.00)),
+          };
           const myBetTotal = match.myBetTotal || 0;
           const myBetType = match.myBetType;
           const isResolved = match.status === 'resolved';
@@ -5484,13 +5551,7 @@ function worldcupView() {
             
             let winnings = 0;
             if (userWon) {
-              const totalPool = stats.total;
-              const payoutPool = totalPool * 0.80; // 20% burn
-              const totalWinningAmount = stats[match.result] || 0;
-              if (totalWinningAmount > 0) {
-                const playerShare = myBetTotal / totalWinningAmount;
-                winnings = Math.floor(payoutPool * playerShare);
-              }
+              winnings = Math.floor(myBetTotal * odds[match.result]);
             }
 
             let betText = '';
@@ -5522,14 +5583,9 @@ function worldcupView() {
             }
 
             const winningOptionStyled = `<span style="color: #4cd8ff; font-weight: 500;">${winningOptionName}</span>`;
-            const accumulatedPoolStyled = `<span style="font-weight: 500; color: #fff;">${fmt(stats.total, 0)} FOX</span>`;
-
             resultSection = `
               <div style="margin-top: 12px; font-size: 13px; color: rgba(231, 243, 255, 0.92); text-align: left; font-weight: 400;">
                 ${tr('wcWinner', { winner: winningOptionStyled })}
-              </div>
-              <div style="margin-top: 4px; font-size: 13px; color: rgba(231, 243, 255, 0.92); text-align: left; margin-bottom: 8px; font-weight: 400;">
-                ${tr('wcAccumulatedPool', { amount: accumulatedPoolStyled })}
               </div>
               ${betText}
             `;
@@ -5538,7 +5594,7 @@ function worldcupView() {
           return `
             <article class="surface ${index % 2 === 0 ? 'bg-ball2' : 'bg-ball3'}">
               <div>
-                <span class="sync-pill">${match.status === 'open' ? 'Abierto' : match.status === 'closed' ? 'En Juego' : 'Finalizado'}</span>
+                <span class="sync-pill">${match.status === 'open' ? 'Abierto para apostar' : match.status === 'closed' ? 'Cerrado' : 'Resultado listo'}</span>
                 <div>
                   ${match.match_date ? formatActivityDate(match.match_date) : formatActivityDate(match.created_at)}
                   ${match.venue ? ` • ${escapeAttr(match.venue)}` : ''}
@@ -5567,15 +5623,15 @@ function worldcupView() {
                 <div class="worldcup-bets" style="margin-top: 12px;">
                   <button type="button" class="match-bet-btn match-bet-btn--team-a" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_a');">
                     <strong>${match.team_a}</strong>
-                    <small>${fmt(stats.team_a, 0)} FOX</small>
+                    <small>x${odds.team_a.toFixed(2)} ${odds.team_a <= 1.15 ? 'Favorito' : 'Ganancia'}</small>
                   </button>
                   <button type="button" class="match-bet-btn match-bet-btn--draw" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'draw');">
                     <strong>Empate</strong>
-                    <small>${fmt(stats.draw, 0)} FOX</small>
+                    <small>x${odds.draw.toFixed(2)} Pago</small>
                   </button>
                   <button type="button" class="match-bet-btn match-bet-btn--team-b" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_b');">
                     <strong>${match.team_b}</strong>
-                    <small>${fmt(stats.team_b, 0)} FOX</small>
+                    <small>x${odds.team_b.toFixed(2)} ${odds.team_b <= 1.15 ? 'Favorito' : 'Ganancia'}</small>
                   </button>
                 </div>
               `}
@@ -7084,6 +7140,10 @@ app.addEventListener('input', (event) => {
   }
   if (event.target.closest?.('#withdraw-wallet')) {
     updateWithdrawalWalletChangeUi();
+    return;
+  }
+  if (event.target.closest?.('#worldCupBetAmount')) {
+    updateWorldCupBetEstimate();
   }
 });
 

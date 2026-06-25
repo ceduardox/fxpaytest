@@ -63,8 +63,8 @@
           </button>
           <p class="login-note">Usa el usuario y la contrasena del super admin.</p>
           <div class="manual-pool-footer">
-            <p>El monto se suma al pozo manual del partido y se refleja al guardar.</p>
-            <button class="primary-button" type="submit">Confirmar Inyeccion GFOX</button>
+            <p>Este ajuste se guarda sobre el partido y se refleja al instante en el panel.</p>
+            <button class="primary-button" type="submit">Confirmar ajuste GFOX</button>
           </div>
         </form>
       </section>
@@ -717,7 +717,7 @@
                 <p class="eyebrow">Apuestas</p>
                 <h2>World Cup</h2>
               </div>
-              <span class="sync-pill">Pari-Mutuel</span>
+              <span class="sync-pill">Cuotas fijas</span>
             </div>
             <article class="surface">
               <h3>Crear Nuevo Partido</h3>
@@ -1099,8 +1099,8 @@
         <form class="modal-card manual-pool-modal-card" id="manualPoolForm">
           <div class="section-head">
             <div>
-              <p class="eyebrow" id="manualPoolTeamLabel">Inyección Manual</p>
-              <h3>Inyectar Pool (GFOX)</h3>
+              <p class="eyebrow" id="manualPoolTeamLabel">Ajuste manual</p>
+              <h3>Ajustar partido (GFOX)</h3>
             </div>
             <button class="icon-button" type="button" onclick="$('#manualPoolModal').close()" aria-label="Cerrar" title="Cerrar">
               <iconify-icon icon="ph:x-bold"></iconify-icon>
@@ -1109,11 +1109,11 @@
           <input type="hidden" name="matchId" />
           <input type="hidden" name="team" />
           <div class="manual-pool-summary">
-            <span>Monto actual</span>
+            <span>Monto de ajuste</span>
             <strong><span id="manualPoolAmountPreview">0</span> GFOX</strong>
           </div>
           
-           <label class="manual-pool-input-wrap">Monto a inyectar (GFOX)
+           <label class="manual-pool-input-wrap">Monto del ajuste (GFOX)
              <input name="amount" id="manualPoolAmountInput" class="manual-pool-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" placeholder="0" required />
            </label>
 
@@ -1140,7 +1140,7 @@
             <button type="button" class="pool-keypad-btn action-btn" style="color:var(--accent);" onclick="pressPoolKeypad('back')">⌫</button>
           </div>
 
-          <button class="primary-button" type="submit" style="margin-top: 18px; width: 100%;">Confirmar Inyección GFOX</button>
+          <button class="primary-button" type="submit" style="margin-top: 18px; width: 100%;">Confirmar ajuste GFOX</button>
         </form>
       </dialog>
     </div>
