@@ -2415,9 +2415,11 @@ function patchEarnDom() {
   
   if (isFree) {
     updateText('[data-main-balance]', fmt(player.game_fox_balance || 0));
+    updateText('[data-main-balance-unit]', 'GFOX');
     updateText('[data-cap-value]', `Retiro: ${fmt(player.total_earned_usd, 2)} / ${fmt(capLimitUsd, 2)} USDT`);
   } else {
     updateText('[data-main-balance]', fmt(packCycleTokens(player)));
+    updateText('[data-main-balance-unit]', 'FOX');
     updateText('[data-cap-value]', `${fmt(player.total_earned_usd, 2)} / ${fmt(player.cap_usd, 2)} USDT`);
   }
   
@@ -3113,7 +3115,7 @@ function topHud() {
           <strong>${player.username || 'Wuffies'}</strong>
           <button class="profile-rank-line" type="button" data-action="open-rank-rules" aria-label="${tr('rankRulesTitle')}">
             ${rank.image_url ? `<img src="${escapeAttr(rank.image_url)}" alt="" />` : icon('ph:medal-bold')}
-            <b>${escapeHtml(isFree ? 'FREE' : (player.package?.name || player.active_package_id || 'Pack'))}</b>
+            <b>${escapeHtml(rank.name || 'Free')}</b>
           </button>
         </div>
         <div class="balance-chip ${balanceSizeClass(wallet)}">
@@ -3294,7 +3296,7 @@ function earnView() {
 
       <div class="main-balance-wrap">
         <small>${balanceLabel}</small>
-        <div class="main-balance ${mainBalanceSizeClass(isFree ? (player.game_fox_balance || 0) : cycleTokens)}"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span></div>
+        <div class="main-balance ${mainBalanceSizeClass(isFree ? (player.game_fox_balance || 0) : cycleTokens)}"><span class="coin-icon">${coinIcon()}</span><span data-main-balance>${balanceValue}</span><span class="main-balance-unit" data-main-balance-unit>${isFree ? 'GFOX' : 'FOX'}</span></div>
       </div>
       <div class="status-pills">
         <button class="status-pill-button" type="button" data-action="toggle-cap-info" aria-expanded="${showCapInfo || capReached ? 'true' : 'false'}">
