@@ -3716,24 +3716,41 @@ async function handleMatchAction(action, id, result) {
   }
 }
 
-async function handleAddManualPool(id, team, teamName) {
-  const amountStr = prompt(`Ingresa el monto (FOX) para agregar al pool de ${teamName}:`);
-  if (!amountStr) return;
-  const amount = Math.floor(Number(amountStr));
+function handleAddManualPool(id, team, teamName) {
+  const modal = $('#manualPoolModal');
+  const form = $('#manualPoolForm');
+  if (!modal || !form) return;
+  
+  form.elements.matchId.value = id;
+  form.elements.team.value = team;
+  form.elements.amount.value = '';
+  $('#manualPoolTeamLabel').textContent = `Inyección Manual: ${teamName}`;
+  modal.showModal();
+}
+
+$('#manualPoolForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const id = form.elements.matchId.value;
+  const team = form.elements.team.value;
+  const amount = Math.floor(Number(form.elements.amount.value));
+  
   if (Number.isNaN(amount) || amount <= 0) {
     showAlert('Monto inválido.');
     return;
   }
+  
   try {
     const res = await api('/match/add-pool', { id, team, amount });
     if (res.ok) {
-      showAlert(`Pool de ${teamName} incrementado en ${amount} FOX.`);
+      $('#manualPoolModal').close();
+      showAlert(`Pool incrementado en ${fmt(amount, 0)} GFOX.`, 'success');
       void loadData();
     }
   } catch (err) {
     showAlert(err.message);
   }
-}
+});
 
 function toggleUserBets(id) {
   const el = document.getElementById(`bets-detail-${id}`);
@@ -3741,3 +3758,4 @@ function toggleUserBets(id) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
   }
 }
+

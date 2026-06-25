@@ -1090,6 +1090,26 @@
           <button class="primary-button" id="avatarSaveButton" type="submit">Guardar avatar</button>
         </form>
       </dialog>
+
+      <dialog class="modal" id="manualPoolModal">
+        <form class="modal-card" id="manualPoolForm">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="manualPoolTeamLabel">Inyección Manual</p>
+              <h3>Inyectar Pool (GFOX)</h3>
+            </div>
+            <button class="icon-button" type="button" onclick="$('#manualPoolModal').close()" aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <input type="hidden" name="matchId" />
+          <input type="hidden" name="team" />
+          <label>Monto a inyectar (GFOX)
+            <input name="amount" type="number" min="1" step="1" placeholder="Ej: 50000" required />
+          </label>
+          <button class="primary-button" type="submit">Confirmar Inyección GFOX</button>
+        </form>
+      </dialog>
     </div>
 
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
