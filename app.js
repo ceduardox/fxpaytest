@@ -5342,7 +5342,6 @@ function rouletteView() {
         : `<button class="roulette-spin-button" type="button" data-action="roulette-spin">${ticketIcon()} ${tr('rouletteSpin')}</button>`
       }
       <small class="roulette-cost">${tr('rouletteCost', { count: fmt(cost, 0) })}</small>
-      <button class="roulette-back" type="button" data-view="${backTarget}">${icon(backIcon)} ${backLabel}</button>
     </section>
   `;
 }
