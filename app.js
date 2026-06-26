@@ -5517,20 +5517,9 @@ function worldcupView() {
       <p>
         Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX. Los partidos vencidos ya no se muestran.
       </p>
-      <div style="display:grid; gap:8px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 14px;">
-        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
-          <strong style="display:block; color:#fff; font-size:13px;">1. Elige</strong>
-          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Local, empate o visita</span>
-        </div>
-        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
-          <strong style="display:block; color:#fff; font-size:13px;">2. Revisa</strong>
-          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Cuota y pago estimado</span>
-        </div>
-        <div style="padding: 10px 12px; border-radius: 14px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12);">
-          <strong style="display:block; color:#fff; font-size:13px;">3. Cobra</strong>
-          <span style="color: rgba(235,244,255,0.72); font-size:12px;">Si aciertas, se acredita FOX</span>
-        </div>
-      </div>
+      <figure class="worldcup-steps-image">
+        <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto;">
+      </figure>
       <div class="worldcup-matches matches-list">
         ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; padding: 20px;">Cargando partidos...</p>' : ''}
         ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6; padding: 20px;">No hay partidos programados.</p>' : ''}

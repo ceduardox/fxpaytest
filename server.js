@@ -2038,7 +2038,13 @@ async function seedWorldCupMatches() {
     { id: 'wc_2026_9', team_a: 'Japan', team_b: 'Sweden', flag_a: '🇯🇵', flag_b: '🇸🇪', venue: 'Los Angeles Stadium', match_date: '2026-06-25T15:00:00Z' },
     { id: 'wc_2026_10', team_a: 'Ecuador', team_b: 'Germany', flag_a: '🇪🇨', flag_b: '🇩🇪', venue: 'New York Stadium', match_date: '2026-06-25T18:00:00Z' },
     { id: 'wc_2026_11', team_a: 'Uruguay', team_b: 'Spain', flag_a: '🇺🇾', flag_b: '🇪🇸', venue: 'Dallas Stadium', match_date: '2026-06-26T21:00:00Z' },
-    { id: 'wc_2026_12', team_a: 'Argentina', team_b: 'Jordan', flag_a: '🇦🇷', flag_b: '🇯🇴', venue: 'San Francisco Stadium', match_date: '2026-06-27T18:00:00Z' }
+    { id: 'wc_2026_12', team_a: 'Argentina', team_b: 'Jordan', flag_a: '🇦🇷', flag_b: '🇯🇴', venue: 'San Francisco Stadium', match_date: '2026-06-27T18:00:00Z' },
+    { id: 'wc_2026_13', team_a: 'France', team_b: 'Mexico', flag_a: '🇫🇷', flag_b: '🇲🇽', venue: 'Houston Stadium', match_date: '2026-06-28T15:00:00Z' },
+    { id: 'wc_2026_14', team_a: 'Netherlands', team_b: 'Nigeria', flag_a: '🇳🇱', flag_b: '🇳🇬', venue: 'Atlanta Stadium', match_date: '2026-06-28T18:00:00Z' },
+    { id: 'wc_2026_15', team_a: 'USA', team_b: 'Serbia', flag_a: '🇺🇸', flag_b: '🇷🇸', venue: 'Seattle Stadium', match_date: '2026-06-28T21:00:00Z' },
+    { id: 'wc_2026_16', team_a: 'Italy', team_b: 'Chile', flag_a: '🇮🇹', flag_b: '🇨🇱', venue: 'Vancouver Stadium', match_date: '2026-06-28T23:30:00Z' },
+    { id: 'wc_2026_17', team_a: 'Belgium', team_b: 'Peru', flag_a: '🇧🇪', flag_b: '🇵🇪', venue: 'Boston Stadium', match_date: '2026-06-29T18:00:00Z' },
+    { id: 'wc_2026_18', team_a: 'Denmark', team_b: 'South Korea', flag_a: '🇩🇰', flag_b: '🇰🇷', venue: 'Toronto Stadium', match_date: '2026-06-29T21:00:00Z' }
   ];
 
   if (!pool) {
