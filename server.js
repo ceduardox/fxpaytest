@@ -9913,6 +9913,8 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
     purchases: 0,
     payments: 0,
     players: 0,
+    bets: 0,
+    matches: 0,
   };
 
   try {
@@ -9924,12 +9926,17 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
       deleted.purchases = foxpayPurchases.size;
       deleted.payments = foxpayPayments.size;
       deleted.players = foxpayPlayers.size;
+      deleted.bets = foxpayBetsMemory.size;
+      deleted.matches = foxpayMatchesMemory.size;
       foxpayRouletteSpinsMemory.clear();
       if (typeof foxpayCommissions?.clear === 'function') foxpayCommissions.clear();
       foxpayWithdrawals.clear();
       foxpayPurchases.clear();
       foxpayPayments.clear();
       foxpayPlayers.clear();
+      foxpayBetsMemory.clear();
+      foxpayMatchesMemory.clear();
+      await seedWorldCupMatches();
       foxpaySettingsMemory.set('maintenance_reset', maintenanceReset);
       return sendJson(response, 200, { ok: true, deleted, persistence: 'memory', maintenance_reset: maintenanceReset });
     }
@@ -9942,12 +9949,15 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
       deleted.withdrawals = (await client.query('delete from foxpay_withdrawals')).rowCount;
       deleted.purchases = (await client.query('delete from foxpay_purchases')).rowCount;
       deleted.payments = (await client.query('delete from foxpay_payments')).rowCount;
+      deleted.bets = (await client.query('delete from foxpay_bets')).rowCount;
+      deleted.matches = (await client.query('delete from foxpay_matches')).rowCount;
       deleted.players = (await client.query('delete from foxpay_players')).rowCount;
+      await seedWorldCupMatches();
       await client.query(
         `insert into foxpay_settings (key, value, updated_at)
          values ('maintenance_reset', $1::jsonb, now())
          on conflict (key) do update set value = excluded.value, updated_at = now()`,
-        [JSON.stringify(maintenanceReset)],
+         [JSON.stringify(maintenanceReset)],
       );
       await client.query('commit');
     } catch (error) {
