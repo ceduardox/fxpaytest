@@ -7358,3 +7358,24 @@ if ('serviceWorker' in navigator) {
 startLoading();
 void loadDashboard();
 startDashboardRefreshTimer();
+
+// Intercept Enter key on login/registration inputs for custom keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
+    const id = e.target.id;
+    if (id === 'register-username') {
+      document.getElementById('register-email')?.focus();
+      e.preventDefault();
+    } else if (id === 'register-email') {
+      document.getElementById('register-password')?.focus();
+      e.preventDefault();
+    } else if (id === 'register-password' || id === 'login-password') {
+      e.preventDefault(); 
+      e.target.blur(); // Dismiss soft keyboard cleanly
+    } else if (id === 'login-username') {
+      document.getElementById('login-password')?.focus();
+      e.preventDefault();
+    }
+  }
+});
+
