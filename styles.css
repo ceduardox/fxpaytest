@@ -2634,8 +2634,8 @@ button.avatar-box {
 
 .wallet-history-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
   padding: 6px;
   border: 1px solid rgba(107, 183, 255, 0.22);
   border-radius: 16px;
