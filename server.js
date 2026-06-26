@@ -9928,12 +9928,14 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
       deleted.players = foxpayPlayers.size;
       deleted.bets = foxpayBetsMemory.size;
       deleted.matches = foxpayMatchesMemory.size;
+      deleted.daily_stats = foxpayPlayerDailyStatsMemory.size;
       foxpayRouletteSpinsMemory.clear();
       if (typeof foxpayCommissions?.clear === 'function') foxpayCommissions.clear();
       foxpayWithdrawals.clear();
       foxpayPurchases.clear();
       foxpayPayments.clear();
       foxpayPlayers.clear();
+      foxpayPlayerDailyStatsMemory.clear();
       foxpayBetsMemory.clear();
       foxpayMatchesMemory.clear();
       await seedWorldCupMatches();
@@ -9951,6 +9953,7 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
       deleted.payments = (await client.query('delete from foxpay_payments')).rowCount;
       deleted.bets = (await client.query('delete from foxpay_bets')).rowCount;
       deleted.matches = (await client.query('delete from foxpay_matches')).rowCount;
+      deleted.daily_stats = (await client.query('delete from foxpay_player_daily_stats')).rowCount;
       deleted.players = (await client.query('delete from foxpay_players')).rowCount;
       await seedWorldCupMatches();
       await client.query(
