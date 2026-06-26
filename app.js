@@ -3232,7 +3232,7 @@ function earnView() {
 
   // Miner Card
   const packName = isFree ? 'Gratis' : (pack.name || 'Premium');
-  const minerLabel = isFree ? 'Minar' : 'Mineradoras';
+  const minerLabel = isFree ? 'Minar' : 'Packs';
   const minerTime = packName;
   const minerCompleted = !isFree;
   const minerDot = isFree && Number(player.energy || 0) > 0;
@@ -4257,6 +4257,11 @@ function minerViewContent() {
 }
 
 function packsView() {
+  const isFree = dashboard.player?.active_package_id === 'free';
+  if (!isFree) {
+    packsTab = 'shop';
+  }
+
   return `
     <section class="sheet-panel packs-view">
       <div class="sheet-head">
@@ -4264,6 +4269,7 @@ function packsView() {
         <strong>${packsTab === 'miner' ? 'Mineradora' : tr('navPacks')}</strong>
       </div>
       
+      ${isFree ? `
       <div class="skin-tabs" role="tablist" aria-label="${tr('packages')}">
         <button class="${packsTab === 'miner' ? 'active' : ''}" type="button" data-action="packs-tab" data-tab="miner" role="tab" aria-selected="${packsTab === 'miner'}">
           <img class="tab-pico-img" src="./images/pico.png" alt="" /> Mineradora
@@ -4272,6 +4278,7 @@ function packsView() {
           ${coinIcon('tab-coin-img')} Paquetes
         </button>
       </div>
+      ` : ''}
       
       <div style="margin-top: 15px; width: 100%;">
         ${packsTab === 'miner' ? minerViewContent() : cardsViewContent()}
