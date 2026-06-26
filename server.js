@@ -9784,6 +9784,39 @@ async function handleFoxPayAdminMatchCreate(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminMatchUpdateOdds(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
+  try {
+    const params = await readRequestParams(request, url);
+    const id = params.get('id');
+    const type = params.get('type'); // 'team_a', 'draw', 'team_b'
+    const value = Number(params.get('value') || 0);
+    if (!id || !type || value < 1.0) {
+      return sendJson(response, 400, { ok: false, error: 'invalid_params' });
+    }
+
+    let field = '';
+    if (type === 'team_a') field = 'odds_team_a';
+    else if (type === 'draw') field = 'odds_draw';
+    else if (type === 'team_b') field = 'odds_team_b';
+    else return sendJson(response, 400, { ok: false, error: 'invalid_type' });
+
+    if (pool) {
+      await pool.query(`update foxpay_matches set ${field} = $1 where id = $2`, [value, id]);
+    } else {
+      const match = foxpayMatchesMemory.get(id);
+      if (!match) return sendJson(response, 404, { ok: false, error: 'match_not_found' });
+      match[field] = value;
+      foxpayMatchesMemory.set(id, match);
+    }
+    return sendJson(response, 200, { ok: true });
+  } catch (error) {
+    console.error('Match odds update failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_update_odds_failed' });
+  }
+}
+
 async function handleFoxPayAdminMatchClose(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'content_edit');
   if (!admin) return;
@@ -11522,6 +11555,9 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/foxpay/admin/match/create') {
     return handleFoxPayAdminMatchCreate(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/match/update-odds') {
+    return handleFoxPayAdminMatchUpdateOdds(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/match/close') {
     return handleFoxPayAdminMatchClose(request, response, url);

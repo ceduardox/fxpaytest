@@ -1673,17 +1673,23 @@ function renderWorldCup() {
           <div class="match-pool-labels">
             <div class="match-pool-label-item local">
               <span class="match-pool-title">Local (${item.team_a})</span>
-              <span class="match-pool-value">x${odds.team_a.toFixed(2)}</span>
+              <span class="match-pool-value" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                x<input type="number" step="0.05" min="1.0" class="odds-inline-input" data-id="${item.id}" data-type="team_a" value="${odds.team_a.toFixed(2)}" style="width: 65px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; padding: 2px; font-weight: 700; text-align: center; font-size: 0.95rem; outline: none; transition: all 0.2s ease;">
+              </span>
               <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
             <div class="match-pool-label-item draw">
               <span class="match-pool-title">Empate</span>
-              <span class="match-pool-value">x${odds.draw.toFixed(2)}</span>
+              <span class="match-pool-value" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                x<input type="number" step="0.05" min="1.0" class="odds-inline-input" data-id="${item.id}" data-type="draw" value="${odds.draw.toFixed(2)}" style="width: 65px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; padding: 2px; font-weight: 700; text-align: center; font-size: 0.95rem; outline: none; transition: all 0.2s ease;">
+              </span>
               <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
             <div class="match-pool-label-item visitor">
               <span class="match-pool-title">Visita (${item.team_b})</span>
-              <span class="match-pool-value">x${odds.team_b.toFixed(2)}</span>
+              <span class="match-pool-value" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                x<input type="number" step="0.05" min="1.0" class="odds-inline-input" data-id="${item.id}" data-type="team_b" value="${odds.team_b.toFixed(2)}" style="width: 65px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; padding: 2px; font-weight: 700; text-align: center; font-size: 0.95rem; outline: none; transition: all 0.2s ease;">
+              </span>
               <span class="match-pool-manual">Pago estimado por FOX apostado</span>
             </div>
           </div>
@@ -3683,25 +3689,65 @@ $('#createMatchForm')?.addEventListener('submit', async (e) => {
 });
 
 async function handleMatchAction(action, id, result) {
-  if (!confirm(`¿Estás seguro de ejecutar la acción: ${action} ${result || ''}?`)) return;
-  try {
-    const endpoint = action === 'close' ? '/match/close' : '/match/resolve';
-    const body = action === 'close' ? { id } : { id, result };
-    const res = await api(endpoint, body, 'POST');
-    if (res.ok) {
-      if (action === 'resolve') {
-        const oddsText = res.odds
-          ? ` Cuotas: L ${Number(res.odds.team_a || 0).toFixed(2)} | E ${Number(res.odds.draw || 0).toFixed(2)} | V ${Number(res.odds.team_b || 0).toFixed(2)}.`
-          : '';
-        showAlert(`Ganadores pagados.${oddsText} Apuestas cobradas: ${res.winnersCount || 0}.`);
-      } else {
-        showAlert('Apuestas cerradas.');
-      }
-      void loadData();
-    }
-  } catch (err) {
-    showAlert(err.message);
+  const modal = $('#confirmMatchActionModal');
+  const titleEl = $('#confirmMatchActionTitle');
+  const msgEl = $('#confirmMatchActionMessage');
+  const confirmBtn = $('#confirmMatchActionButton');
+  
+  if (!modal || !titleEl || !msgEl || !confirmBtn) return;
+  
+  // Find match info for descriptive prompt
+  const match = (state.overview?.matches || []).find(m => m.id === id);
+  const matchText = match ? `(${match.team_a} vs ${match.team_b})` : '';
+  
+  let title = '';
+  let message = '';
+  
+  if (action === 'close') {
+    title = 'Cerrar Apuestas';
+    message = `¿Estás seguro de que deseas cerrar las apuestas para el partido ${matchText}? Ya no se permitirán nuevas apuestas.`;
+  } else if (action === 'resolve') {
+    title = 'Resolver Partido';
+    let resultText = '';
+    if (result === 'team_a') resultText = `Ganó ${match ? match.team_a : 'Local'}`;
+    else if (result === 'team_b') resultText = `Ganó ${match ? match.team_b : 'Visitante'}`;
+    else if (result === 'draw') resultText = 'Empate';
+    
+    message = `¿Estás seguro de que deseas resolver el partido ${matchText} con el resultado: <strong>${resultText}</strong>? Esto pagará a los ganadores automáticamente según las cuotas fijas y cerrará el partido permanentemente.`;
   }
+  
+  titleEl.innerHTML = title;
+  msgEl.innerHTML = message;
+  
+  // Setup the action button handler
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Procesando...';
+    try {
+      const endpoint = action === 'close' ? '/match/close' : '/match/resolve';
+      const body = action === 'close' ? { id } : { id, result };
+      const res = await api(endpoint, body, 'POST');
+      if (res.ok) {
+        if (action === 'resolve') {
+          const oddsText = res.odds
+            ? ` Cuotas: L ${Number(res.odds.team_a || 0).toFixed(2)} | E ${Number(res.odds.draw || 0).toFixed(2)} | V ${Number(res.odds.team_b || 0).toFixed(2)}.`
+            : '';
+          showAlert(`Partido resuelto. Ganadores pagados.${oddsText} Apuestas cobradas: ${res.winnersCount || 0}.`, 'success');
+        } else {
+          showAlert('Apuestas cerradas con éxito.', 'success');
+        }
+        modal.close();
+        void loadData();
+      }
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Confirmar';
+    }
+  };
+  
+  modal.showModal();
 }
 
 function handleAddManualPool(id, team, teamName) {
@@ -3825,3 +3871,58 @@ function syncManualPoolPreview(value) {
 $('#manualPoolAmountInput')?.addEventListener('input', (event) => {
   syncManualPoolPreview(event.target.value);
 });
+
+// Delegated event listener for inline odds edits
+document.addEventListener('change', async (e) => {
+  if (e.target.classList.contains('odds-inline-input')) {
+    const input = e.target;
+    const matchId = input.dataset.id;
+    const type = input.dataset.type; // 'team_a', 'draw', 'team_b'
+    const value = parseFloat(input.value);
+
+    if (isNaN(value) || value < 1.0) {
+      showAlert('La cuota debe ser un número válido y mayor o igual a 1.0.');
+      // Restore previous value
+      const match = (state.overview.matches || []).find(m => m.id === matchId);
+      if (match) {
+        const origVal = type === 'team_a' ? match.odds_team_a : type === 'draw' ? match.odds_draw : match.odds_team_b;
+        input.value = Number(origVal || 1.0).toFixed(2);
+      }
+      return;
+    }
+
+    try {
+      input.style.boxShadow = '0 0 5px #ffaa00'; // Indicador de guardando (naranja)
+      const res = await api('/match/update-odds', { id: matchId, type, value });
+      if (res.ok) {
+        input.style.boxShadow = '0 0 5px #00ff00'; // Éxito (verde)
+        setTimeout(() => {
+          input.style.boxShadow = '';
+        }, 1500);
+
+        // Update local state so it stays consistent without full reload
+        const match = (state.overview.matches || []).find(m => m.id === matchId);
+        if (match) {
+          if (type === 'team_a') match.odds_team_a = value;
+          else if (type === 'draw') match.odds_draw = value;
+          else if (type === 'team_b') match.odds_team_b = value;
+        }
+      } else {
+        throw new Error(res.error || 'Error al actualizar cuota');
+      }
+    } catch (err) {
+      input.style.boxShadow = '0 0 5px #ff0000'; // Error (rojo)
+      showAlert(err.message);
+      // Restore previous value
+      const match = (state.overview.matches || []).find(m => m.id === matchId);
+      if (match) {
+        const origVal = type === 'team_a' ? match.odds_team_a : type === 'draw' ? match.odds_draw : match.odds_team_b;
+        input.value = Number(origVal || 1.0).toFixed(2);
+      }
+      setTimeout(() => {
+        input.style.boxShadow = '';
+      }, 1500);
+    }
+  }
+});
+

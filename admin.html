@@ -1140,8 +1140,29 @@
             <button type="button" class="pool-keypad-btn action-btn" style="color:var(--accent);" onclick="pressPoolKeypad('back')">⌫</button>
           </div>
 
-          <button class="primary-button" type="submit" style="margin-top: 18px; width: 100%;">Confirmar ajuste GFOX</button>
+           <button class="primary-button" type="submit" style="margin-top: 18px; width: 100%;">Confirmar ajuste GFOX</button>
         </form>
+      </dialog>
+
+      <dialog class="modal" id="confirmMatchActionModal" style="max-width: 400px;">
+        <div class="modal-card" style="padding: 20px;">
+          <div class="section-head" style="margin-bottom: 12px;">
+            <div>
+              <p class="eyebrow">Confirmar decisión</p>
+              <h3 id="confirmMatchActionTitle">Ajustar partido</h3>
+            </div>
+            <button class="icon-button" type="button" onclick="$('#confirmMatchActionModal').close()" aria-label="Cerrar" title="Cerrar">
+              <iconify-icon icon="ph:x-bold"></iconify-icon>
+            </button>
+          </div>
+          <div class="modal-body" style="padding: 16px 0; color: rgba(255,255,255,0.85); font-size: 0.95rem; line-height: 1.5;">
+            <p id="confirmMatchActionMessage">¿Estás seguro de que deseas realizar esta acción?</p>
+          </div>
+          <div class="modal-actions" style="display: flex; gap: 12px; margin-top: 14px;">
+            <button type="button" class="secondary-button" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="$('#confirmMatchActionModal').close()">Cancelar</button>
+            <button type="button" class="primary-button" id="confirmMatchActionButton" style="flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">Confirmar</button>
+          </div>
+        </div>
       </dialog>
     </div>
 
