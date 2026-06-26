@@ -9929,16 +9929,37 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
       deleted.bets = foxpayBetsMemory.size;
       deleted.matches = foxpayMatchesMemory.size;
       deleted.daily_stats = foxpayPlayerDailyStatsMemory.size;
+
+      // Soft reset player balances and progress in memory
+      for (const [pid, player] of foxpayPlayers.entries()) {
+        player.token_balance = 0;
+        player.game_fox_balance = 0;
+        player.lifetime_earned_usd = 0;
+        player.season_earned_tokens = 0;
+        player.streak_days = 0;
+        player.roulette_tickets = 0;
+        player.passive_income_per_hour = 0;
+        player.last_passive_claim_timestamp = new Date().toISOString();
+        foxpayPlayers.set(pid, player);
+      }
+
+      // Soft reset matches in memory (reopen and clear pools)
+      for (const [mid, match] of foxpayMatchesMemory.entries()) {
+        match.status = 'open';
+        match.result = null;
+        match.manual_pool_a = 0;
+        match.manual_pool_b = 0;
+        match.manual_pool_draw = 0;
+        foxpayMatchesMemory.set(mid, match);
+      }
+
       foxpayRouletteSpinsMemory.clear();
       if (typeof foxpayCommissions?.clear === 'function') foxpayCommissions.clear();
       foxpayWithdrawals.clear();
       foxpayPurchases.clear();
       foxpayPayments.clear();
-      foxpayPlayers.clear();
       foxpayPlayerDailyStatsMemory.clear();
       foxpayBetsMemory.clear();
-      foxpayMatchesMemory.clear();
-      await seedWorldCupMatches();
       foxpaySettingsMemory.set('maintenance_reset', maintenanceReset);
       return sendJson(response, 200, { ok: true, deleted, persistence: 'memory', maintenance_reset: maintenanceReset });
     }
@@ -9946,16 +9967,43 @@ async function handleFoxPayAdminMaintenanceReset(request, response, url) {
     const client = await pool.connect();
     try {
       await client.query('begin');
+
+      // Update players: reset balances, tickets, passive income and streak, but keep accounts, levels, and packages!
+      await client.query(`
+        update foxpay_players 
+        set token_balance = 0, 
+            game_fox_balance = 0, 
+            lifetime_earned_usd = 0, 
+            season_earned_tokens = 0, 
+            streak_days = 0, 
+            roulette_tickets = 0, 
+            passive_income_per_hour = 0, 
+            last_passive_claim_timestamp = now()
+      `);
+
+      // Reset matches: reopen and clear manual pools
+      await client.query(`
+        update foxpay_matches 
+        set status = 'open', 
+            result = null, 
+            manual_pool_a = 0, 
+            manual_pool_b = 0, 
+            manual_pool_draw = 0
+      `);
+
+      // Clear child logs and match bets
+      deleted.bets = (await client.query('delete from foxpay_bets')).rowCount;
+      deleted.daily_stats = (await client.query('delete from foxpay_player_daily_stats')).rowCount;
       deleted.roulette_spins = (await client.query('delete from foxpay_roulette_spins')).rowCount;
       deleted.commissions = (await client.query('delete from foxpay_commissions')).rowCount;
       deleted.withdrawals = (await client.query('delete from foxpay_withdrawals')).rowCount;
       deleted.purchases = (await client.query('delete from foxpay_purchases')).rowCount;
       deleted.payments = (await client.query('delete from foxpay_payments')).rowCount;
-      deleted.bets = (await client.query('delete from foxpay_bets')).rowCount;
-      deleted.matches = (await client.query('delete from foxpay_matches')).rowCount;
-      deleted.daily_stats = (await client.query('delete from foxpay_player_daily_stats')).rowCount;
-      deleted.players = (await client.query('delete from foxpay_players')).rowCount;
-      await seedWorldCupMatches();
+
+      // Keep count of players updated
+      const pRes = await client.query('select count(*) as count from foxpay_players');
+      deleted.players = Number(pRes.rows[0].count);
+
       await client.query(
         `insert into foxpay_settings (key, value, updated_at)
          values ('maintenance_reset', $1::jsonb, now())
