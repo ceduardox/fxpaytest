@@ -5296,6 +5296,7 @@ async function buildFoxPayDashboard(playerId, payload = {}) {
     withdrawals: await listFoxPayWithdrawals(player.player_id),
     purchases: await listFoxPayPurchases(player.player_id),
     payments: await listFoxPayPayments(player.player_id),
+    bets: await listFoxPayBets(player.player_id),
     support,
     upgrade_cards: FOXPAY_UPGRADE_CARDS,
     roulette_rewards: rouletteRewards,
@@ -6873,6 +6874,39 @@ async function listFoxPayWithdrawals(playerId = '') {
     playerId ? [playerId] : [],
   );
   return withLinks(result.rows);
+}
+
+async function listFoxPayBets(playerId = '') {
+  if (!pool) {
+    return Array.from(foxpayBetsMemory.values())
+      .filter((row) => !playerId || row.player_id === playerId)
+      .map((row) => {
+        const match = foxpayMatchesMemory.get(row.match_id) || {};
+        return {
+          ...row,
+          team_a: match.team_a || 'Equipo A',
+          team_b: match.team_b || 'Equipo B',
+          flag_a: match.flag_a || '⚽',
+          flag_b: match.flag_b || '⚽',
+          match_status: match.status || 'open',
+          match_result: match.result || null,
+          odds_team_a: match.odds_team_a || 1.10,
+          odds_draw: match.odds_draw || 3.00,
+          odds_team_b: match.odds_team_b || 2.00,
+        };
+      })
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  }
+  const result = await pool.query(
+    `select b.*, m.team_a, m.team_b, m.flag_a, m.flag_b, m.status as match_status, m.result as match_result, 
+            m.odds_team_a, m.odds_draw, m.odds_team_b
+     from foxpay_bets b
+     join foxpay_matches m on b.match_id = m.id
+     ${playerId ? 'where b.player_id = $1' : ''}
+     order by b.created_at desc limit 500`,
+    playerId ? [playerId] : [],
+  );
+  return result.rows;
 }
 
 async function listFoxPayPayments(playerId = '') {

@@ -3434,7 +3434,58 @@ function walletActivities() {
     date: item.created_at || '',
     icon: 'ph:users-three-fill',
   }));
-  return [...purchases, ...withdrawals, ...payments, ...commissions]
+  const bets = (dashboard.bets || []).map((item) => {
+    const betAmount = Math.max(0, Math.floor(Number(item.amount || 0)));
+    const isResolved = item.match_status === 'resolved';
+    const isClosed = item.match_status === 'closed';
+    const isWin = isResolved && item.match_result === item.bet_type;
+    const isLoss = isResolved && item.match_result !== item.bet_type;
+
+    const oddsField = item.bet_type === 'team_a' ? 'odds_team_a' : (item.bet_type === 'team_b' ? 'odds_team_b' : 'odds_draw');
+    const matchOdds = Number(item[oddsField] || 1.0);
+    const payout = Math.floor(betAmount * matchOdds);
+
+    let typeText = '';
+    let titleText = '';
+    let metaText = '';
+    let amountText = '';
+    let tone = 'neutral';
+
+    const chosenOptionName = item.bet_type === 'team_a' ? item.team_a : (item.bet_type === 'team_b' ? item.team_b : 'Empate');
+
+    if (!isResolved) {
+      typeText = 'Apuesta abierta';
+      titleText = `${item.team_a} vs ${item.team_b}`;
+      metaText = `Opción: ${chosenOptionName} (x${matchOdds.toFixed(2)}) · ${isClosed ? 'Cerrado' : 'Abierto'}`;
+      amountText = `-${fmt(betAmount, 0)} FOX`;
+      tone = 'neutral';
+    } else if (isWin) {
+      typeText = 'Apuesta ganada';
+      titleText = `${item.team_a} vs ${item.team_b}`;
+      metaText = `Opción: ${chosenOptionName} (x${matchOdds.toFixed(2)}) · Ganó`;
+      amountText = `+${fmt(payout, 0)} FOX`;
+      tone = 'positive';
+    } else {
+      typeText = 'Apuesta perdida';
+      titleText = `${item.team_a} vs ${item.team_b}`;
+      metaText = `Opción: ${chosenOptionName} (x${matchOdds.toFixed(2)}) · Perdió`;
+      amountText = `-${fmt(betAmount, 0)} FOX`;
+      tone = 'negative';
+    }
+
+    return {
+      category: 'bets',
+      type: typeText,
+      title: titleText,
+      meta: metaText,
+      amount: amountText,
+      tone: tone,
+      date: item.created_at || '',
+      icon: 'ph:scales-bold',
+    };
+  });
+
+  return [...purchases, ...withdrawals, ...payments, ...commissions, ...bets]
     .filter((item) => walletHistoryFilter === 'all' || item.category === walletHistoryFilter)
     .sort((left, right) => String(right.date || '').localeCompare(String(left.date || '')))
     .slice(0, 24);
@@ -3457,6 +3508,7 @@ function walletView() {
     ['purchases', tr('walletPurchases')],
     ['commissions', tr('walletCommissions')],
     ['withdrawals', tr('walletWithdrawals')],
+    ['bets', 'Apuestas'],
   ];
   return `
     <section class="sheet-panel wallet-view">
