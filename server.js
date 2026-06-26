@@ -9870,12 +9870,11 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
       const payout = Math.floor(Number(bet.amount) * odds[result]);
       if (payout <= 0) continue;
       if (pool) {
-        await pool.query('update foxpay_players set game_fox_balance = game_fox_balance + $1, cap_used = cap_used + $1 where player_id = $2', [payout, bet.player_id]);
+        await pool.query('update foxpay_players set game_fox_balance = game_fox_balance + $1 where player_id = $2', [payout, bet.player_id]);
       } else {
         const player = foxpayPlayers.get(bet.player_id);
         if (player) {
           player.game_fox_balance = (Number(player.game_fox_balance) || 0) + payout;
-          player.cap_used = (Number(player.cap_used) || 0) + payout;
           foxpayPlayers.set(bet.player_id, player);
         }
       }
