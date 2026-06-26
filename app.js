@@ -5515,7 +5515,7 @@ function worldcupView() {
     <section class="sheet-panel worldcup-panel">
       <div class="sheet-head"><span>World Cup 2026</span><strong>Cuotas fijas</strong></div>
       <p>
-        Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX. Los partidos vencidos ya no se muestran.
+        Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX.
       </p>
       <figure class="worldcup-steps-image">
         <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto;">
