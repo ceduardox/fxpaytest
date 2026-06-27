@@ -1863,7 +1863,7 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
     toast('Error de conexión.');
   }
 };
-let activeMinerTab = 'marketing';
+let activeMinerTab = 'technology';
 let leaderboardMode = 'premium';
 let busy = false;
 let activeVideoTask = null;
@@ -4060,9 +4060,9 @@ function minerViewContent() {
   const claimablePoints = Math.floor(cappedHours * passiveRate);
 
   const categories = [
-    { id: 'marketing', label: 'Marketing', icon: 'ph:megaphone-fill' },
-    { id: 'technology', label: 'Tecnología', icon: 'ph:cpu-fill' },
-    { id: 'business', label: 'Negocios', icon: 'ph:briefcase-fill' }
+    { id: 'technology', label: 'Hardware', icon: 'ph:cpu-fill' },
+    { id: 'support', label: 'Soporte', icon: 'ph:wrench-fill' },
+    { id: 'business', label: 'Red', icon: 'ph:globe-fill' }
   ];
 
   const cards = (dashboard.upgrade_cards || []).filter(c => c.category === activeMinerTab);
@@ -4070,41 +4070,41 @@ function minerViewContent() {
 
   function getCardIcon(cardId) {
     const iconsMap = {
-      // Marketing
-      tg_channel: 'ph:telegram-logo-fill',
-      wa_group: 'ph:whatsapp-logo-fill',
-      seo_strategy: 'ph:magnifying-glass-fill',
-      tiktok_campaign: 'ph:tiktok-logo-fill',
-      youtube_ads: 'simple-icons:youtube',
-      community_airdrop: 'ph:parachute-fill',
-      influencer_mkt: 'ph:users-three-fill',
-      metaverse_billboard: 'ph:monitor-play-fill',
-      ambassador_program: 'ph:megaphone-fill',
-      esports_sponsor: 'ph:game-controller-fill',
+      // Support (Antes Marketing)
+      tg_channel: 'ph:house-fill',
+      wa_group: 'ph:fan-fill',
+      seo_strategy: 'ph:lightning-fill',
+      tiktok_campaign: 'ph:wind-fill',
+      youtube_ads: 'ph:lightning-charge-fill',
+      community_airdrop: 'ph:thermometer-cold-fill',
+      influencer_mkt: 'ph:drop-fill',
+      metaverse_billboard: 'ph:shield-warning-fill',
+      ambassador_program: 'ph:waves-fill',
+      esports_sponsor: 'ph:sun-fill',
       
-      // Technology
-      local_servers: 'ph:hard-drive-fill',
-      smart_contract_audit: 'ph:shield-star-fill',
-      aws_cloud: 'ph:cloud-fill',
-      gpu_mining: 'ph:cpu-fill',
-      cybersecurity: 'ph:lock-key-fill',
-      foxpay_validator: 'ph:shield-check-fill',
-      senior_devs: 'ph:code-fill',
-      ai_autotap: 'ph:robot-fill',
-      quantum_computing: 'ph:atom-fill',
-      metaverse_core: 'ph:cube-fill',
+      // Technology (Hardware)
+      local_servers: 'ph:cpu-fill',
+      smart_contract_audit: 'ph:layout-fill',
+      aws_cloud: 'ph:microchip-fill',
+      gpu_mining: 'ph:cards-fill',
+      cybersecurity: 'ph:database-fill',
+      foxpay_validator: 'ph:server-fill',
+      senior_devs: 'ph:circuit-fill',
+      ai_autotap: 'ph:stack-fill',
+      quantum_computing: 'ph:terminal-window-fill',
+      metaverse_core: 'ph:factory-fill',
       
-      // Business
-      brand_registration: 'ph:trademark-registered-fill',
-      fintech_license: 'ph:certificate-fill',
-      local_bank_integration: 'ph:bank-fill',
-      strategic_partnerships: 'ph:handshake-fill',
-      kyc_compliance: 'ph:identification-card-fill',
-      dubai_office: 'ph:buildings-fill',
-      seed_fund: 'ph:money-fill',
-      cmc_listing: 'ph:chart-line-up-fill',
-      tier1_exchange: 'ph:currency-btc-fill',
-      global_conglomerate: 'ph:globe-hemisphere-west-fill'
+      // Business (Red)
+      brand_registration: 'ph:router-fill',
+      fintech_license: 'ph:plugs-fill',
+      local_bank_integration: 'ph:broadcast-fill',
+      strategic_partnerships: 'ph:link-fill',
+      kyc_compliance: 'ph:git-fork-fill',
+      dubai_office: 'ph:fingerprint-fill',
+      seed_fund: 'ph:users-three-fill',
+      cmc_listing: 'ph:globe-simple-fill',
+      tier1_exchange: 'ph:activity-fill',
+      global_conglomerate: 'ph:cloud-check-fill'
     };
     return iconsMap[cardId] || 'ph:cards-fill';
   }
