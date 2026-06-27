@@ -2028,12 +2028,12 @@ async function seedFoxPayDefaults() {
 async function seedWorldCupMatches() {
   const matches = [
     { id: 'wc_2026_27_1', team_a: 'Croatia', team_b: 'Ghana', flag_a: '🇭🇷', flag_b: '🇬🇭', venue: 'Estadio Mundial', match_date: '2026-06-27T21:00:00Z' },
-    { id: 'wc_2026_27_2', team_a: 'Panama', team_b: 'England', flag_a: '🇵🇦', flag_b: '🇬🇧', venue: 'Estadio Mundial', match_date: '2026-06-27T21:00:00Z' },
-    { id: 'wc_2026_27_3', team_a: 'Colombia', team_b: 'Portugal', flag_a: '🇨🇴', flag_b: '🇵🇹', venue: 'Estadio Mundial', match_date: '2026-06-27T23:30:00Z' },
+    { id: 'wc_2026_27_2', team_a: 'England', team_b: 'Panama', flag_a: '🇬🇧', flag_b: '🇵🇦', venue: 'Estadio Mundial', match_date: '2026-06-27T21:00:00Z' },
+    { id: 'wc_2026_27_3', team_a: 'Portugal', team_b: 'Colombia', flag_a: '🇵🇹', flag_b: '🇨🇴', venue: 'Estadio Mundial', match_date: '2026-06-27T23:30:00Z' },
     { id: 'wc_2026_27_4', team_a: 'Congo DR', team_b: 'Uzbekistan', flag_a: '🇨🇩', flag_b: '🇺🇿', venue: 'Estadio Mundial', match_date: '2026-06-27T23:30:00Z' },
-    { id: 'wc_2026_27_5', team_a: 'Algeria', team_b: 'Austria', flag_a: '🇩🇿', flag_b: '🇦🇹', venue: 'Estadio Mundial', match_date: '2026-06-28T02:00:00Z' },
-    { id: 'wc_2026_27_6', team_a: 'Jordan', team_b: 'Argentina', flag_a: '🇯🇴', flag_b: '🇦🇷', venue: 'San Francisco Stadium', match_date: '2026-06-28T02:00:00Z' },
-    { id: 'wc_2026_28_1', team_a: 'South Africa', team_b: 'Canada', flag_a: '🇿🇦', flag_b: '🇨🇦', venue: '16avos de final', match_date: '2026-06-28T19:00:00Z' },
+    { id: 'wc_2026_27_5', team_a: 'Austria', team_b: 'Algeria', flag_a: '🇦🇹', flag_b: '🇩🇿', venue: 'Estadio Mundial', match_date: '2026-06-28T02:00:00Z' },
+    { id: 'wc_2026_27_6', team_a: 'Argentina', team_b: 'Jordan', flag_a: '🇦🇷', flag_b: '🇯🇴', venue: 'San Francisco Stadium', match_date: '2026-06-28T02:00:00Z' },
+    { id: 'wc_2026_28_1', team_a: 'Canada', team_b: 'South Africa', flag_a: '🇨🇦', flag_b: '🇿🇦', venue: '16avos de final', match_date: '2026-06-28T19:00:00Z' },
     { id: 'wc_2026_29_1', team_a: 'Brazil', team_b: 'Japan', flag_a: '🇧🇷', flag_b: '🇯🇵', venue: '16avos de final', match_date: '2026-06-29T17:00:00Z' },
     { id: 'wc_2026_29_2', team_a: 'Germany', team_b: 'Paraguay', flag_a: '🇩🇪', flag_b: '🇵🇾', venue: '16avos de final', match_date: '2026-06-29T20:30:00Z' },
     { id: 'wc_2026_29_3', team_a: 'Netherlands', team_b: 'Morocco', flag_a: '🇳🇱', flag_b: '🇲🇦', venue: '16avos de final', match_date: '2026-06-30T01:00:00Z' }
@@ -2062,7 +2062,13 @@ async function seedWorldCupMatches() {
       `insert into foxpay_matches
        (id, team_a, team_b, flag_a, flag_b, venue, match_date, status)
        values ($1, $2, $3, $4, $5, $6, $7, 'open')
-       on conflict (id) do nothing`,
+       on conflict (id) do update set
+         team_a = excluded.team_a,
+         team_b = excluded.team_b,
+         flag_a = excluded.flag_a,
+         flag_b = excluded.flag_b,
+         venue = excluded.venue,
+         match_date = excluded.match_date`,
       [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date]
     );
   }
