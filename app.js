@@ -1866,6 +1866,8 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
 let activeMinerTab = 'technology';
 let leaderboardMode = 'premium';
 let busy = false;
+let wcPromoActive = false;
+let wcPromoShown = false;
 let activeVideoTask = null;
 let videoTimer = null;
 let videoProgressUiTimer = null;
@@ -2096,6 +2098,10 @@ function updateDashboard(next, options = {}) {
   scheduleExpiredPendingPaymentsRefresh();
   if (next?.spin) {
     lastRouletteSpin = next.spin;
+  }
+  if (dashboard?.player?.active_package_id && dashboard.player.active_package_id !== 'free' && !wcPromoShown) {
+    wcPromoActive = true;
+    wcPromoShown = true;
   }
   if (options.skipRender) return;
   render();
@@ -4522,6 +4528,24 @@ function worldCupBetOverlay() {
   `;
 }
 
+function worldCupPromoOverlay() {
+  if (!wcPromoActive) return '';
+  let imageFile = 'en.jpg';
+  if (appLang === 'es') imageFile = 'sp.jpg';
+  else if (appLang === 'pt') imageFile = 'pt.jpg';
+  return `
+    <section class="skin-confirm-overlay" role="dialog" aria-modal="true" style="z-index: 1100;">
+      <article class="skin-confirm-card" style="padding: 16px 14px 14px; gap: 8px !important; text-align: center; max-width: 320px; width: 90%;">
+        <button class="skin-preview-close" type="button" data-action="close-wc-promo" aria-label="Cerrar" style="top: 14px; right: 14px;">${icon('ph:x-bold')}</button>
+        <img src="./images/iconbet/${imageFile}" alt="Mundial" style="width: 100%; border-radius: 12px; margin-bottom: 12px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
+        <button class="skin-confirm-primary" type="button" data-action="go-to-bets" style="width: 100%; font-weight: 700; padding: 12px; border-radius: 12px; background: linear-gradient(180deg, #a9f6ff, #20b9ff); color: #06194e; border: none; cursor: pointer;">
+          Apostar Ahora
+        </button>
+      </article>
+    </section>
+  `;
+}
+
 function updateWorldCupBetEstimate() {
   const input = document.getElementById('worldCupBetAmount');
   const output = document.getElementById('worldCupBetEstimate');
@@ -5958,7 +5982,7 @@ function render() {
   app.classList.toggle('is-free-pack', dashboard.player?.active_package_id === 'free');
   app.classList.toggle('has-install-banner', Boolean(!isStandalonePwa && canInstallPwa && !installBannerDismissed));
   app.classList.toggle('has-update-prompt', Boolean(swUpdateReady));
-  app.innerHTML = `${activeView === 'leaderboard' ? '' : topHud()}${mainView()}${nav()}${paymentOverlay()}${rankRulesOverlay()}${rankImagePreviewOverlay()}${taskPromptOverlay()}${dailyTicketRewardOverlay()}${roulettePrizeOverlay()}${skinPreviewOverlay()}${skinFoxConfirmOverlay()}${withdrawalChangeOverlay()}${withdrawalPendingOverlay()}${packageFoxConfirmOverlay()}${packInfoOverlay()}${worldCupBetOverlay()}${activeView === 'withdraw' ? '' : serviceWorkerUpdatePrompt()}`;
+  app.innerHTML = `${activeView === 'leaderboard' ? '' : topHud()}${mainView()}${nav()}${paymentOverlay()}${rankRulesOverlay()}${rankImagePreviewOverlay()}${taskPromptOverlay()}${dailyTicketRewardOverlay()}${roulettePrizeOverlay()}${skinPreviewOverlay()}${skinFoxConfirmOverlay()}${withdrawalChangeOverlay()}${withdrawalPendingOverlay()}${packageFoxConfirmOverlay()}${packInfoOverlay()}${worldCupBetOverlay()}${worldCupPromoOverlay()}${activeView === 'withdraw' ? '' : serviceWorkerUpdatePrompt()}`;
   updatePaymentTimerNode();
   syncSeasonCountdownTimer();
   syncVideoProgressUiTimer();
@@ -6453,6 +6477,18 @@ async function refreshExpiredPendingPayments() {
 }
 
 async function doAction(action, button, event) {
+  if (action === 'close-wc-promo') {
+    wcPromoActive = false;
+    render();
+    return;
+  }
+  if (action === 'go-to-bets') {
+    wcPromoActive = false;
+    activeView = 'worldcup';
+    loadWorldCupMatches();
+    render();
+    return;
+  }
   if (action === 'apply-update') {
     applyServiceWorkerUpdate();
     return;
