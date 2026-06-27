@@ -1727,6 +1727,11 @@ function renderWorldCup() {
                 <button type="button" class="primary-button" onclick="handleMatchAction('resolve', '${item.id}', 'team_b')">Ganó ${item.team_b}</button>
               ` : ''}
             </div>
+            <div class="match-control-row" style="margin-top: 6px;">
+              <button type="button" class="${item.status === 'disabled' ? 'approve-button' : 'reject-button'}" style="width:100%;" onclick="handleMatchAction('toggle-disabled', '${item.id}')">
+                ${item.status === 'disabled' ? '👁️ Activar (Mostrar a Usuarios)' : '🚫 Ocultar (Desactivar Partido)'}
+              </button>
+            </div>
           </div>
         </article>
       `;
@@ -3706,6 +3711,12 @@ async function handleMatchAction(action, id, result) {
   if (action === 'close') {
     title = 'Cerrar Apuestas';
     message = `¿Estás seguro de que deseas cerrar las apuestas para el partido ${matchText}? Ya no se permitirán nuevas apuestas.`;
+  } else if (action === 'toggle-disabled') {
+    const isDisabled = match?.status === 'disabled';
+    title = isDisabled ? 'Activar Partido' : 'Ocultar Partido';
+    message = isDisabled
+      ? `¿Deseas activar y mostrar nuevamente el partido ${matchText} a los usuarios?`
+      : `¿Deseas ocultar el partido ${matchText}? Los usuarios ya no podrán ver este partido en la lista de apuestas.`;
   } else if (action === 'resolve') {
     title = 'Resolver Partido';
     let resultText = '';
@@ -3724,8 +3735,8 @@ async function handleMatchAction(action, id, result) {
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Procesando...';
     try {
-      const endpoint = action === 'close' ? '/match/close' : '/match/resolve';
-      const body = action === 'close' ? { id } : { id, result };
+      const endpoint = action === 'close' ? '/match/close' : action === 'toggle-disabled' ? '/match/toggle-disabled' : '/match/resolve';
+      const body = action === 'resolve' ? { id, result } : { id };
       const res = await api(endpoint, body, 'POST');
       if (res.ok) {
         if (action === 'resolve') {
@@ -3733,6 +3744,8 @@ async function handleMatchAction(action, id, result) {
             ? ` Cuotas: L ${Number(res.odds.team_a || 0).toFixed(2)} | E ${Number(res.odds.draw || 0).toFixed(2)} | V ${Number(res.odds.team_b || 0).toFixed(2)}.`
             : '';
           showAlert(`Partido resuelto. Ganadores pagados.${oddsText} Apuestas cobradas: ${res.winnersCount || 0}.`, 'success');
+        } else if (action === 'toggle-disabled') {
+          showAlert(res.status === 'disabled' ? 'Partido ocultado con éxito.' : 'Partido activado con éxito.', 'success');
         } else {
           showAlert('Apuestas cerradas con éxito.', 'success');
         }

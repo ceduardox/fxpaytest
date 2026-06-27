@@ -8941,6 +8941,7 @@ async function handleFoxPayUserMatches(request, response, url) {
         myBetType
       };
     }).filter((match) => {
+      if (match.status === 'disabled') return false;
       if (match.myBetTotal > 0) return true;
       if (match.status === 'resolved') return true;
       if (match.status !== 'open') return false;
@@ -9876,6 +9877,35 @@ async function handleFoxPayAdminMatchClose(request, response, url) {
   } catch (error) {
     console.error('Match close failed', error);
     return sendJson(response, 500, { ok: false, error: 'match_close_failed' });
+  }
+}
+
+async function handleFoxPayAdminMatchToggleDisabled(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'content_edit');
+  if (!admin) return;
+  try {
+    const params = await readRequestParams(request, url);
+    const id = params.get('id');
+    if (!id) return sendJson(response, 400, { ok: false, error: 'missing_id' });
+    
+    let nextStatus = 'disabled';
+    if (pool) {
+      const mRes = await pool.query('select status from foxpay_matches where id = $1', [id]);
+      const currentStatus = mRes.rows[0]?.status;
+      nextStatus = currentStatus === 'disabled' ? 'open' : 'disabled';
+      await pool.query('update foxpay_matches set status = $1 where id = $2', [nextStatus, id]);
+    } else {
+      const match = foxpayMatchesMemory.get(id);
+      if (match) {
+        nextStatus = match.status === 'disabled' ? 'open' : 'disabled';
+        match.status = nextStatus;
+        foxpayMatchesMemory.set(id, match);
+      }
+    }
+    return sendJson(response, 200, { ok: true, status: nextStatus });
+  } catch (error) {
+    console.error('Match toggle disabled failed', error);
+    return sendJson(response, 500, { ok: false, error: 'match_toggle_disabled_failed' });
   }
 }
 
@@ -11663,6 +11693,9 @@ const server = createServer((request, response) => {
   }
   if (url.pathname === '/api/foxpay/admin/match/close') {
     return handleFoxPayAdminMatchClose(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/match/toggle-disabled') {
+    return handleFoxPayAdminMatchToggleDisabled(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/match/resolve') {
     return handleFoxPayAdminMatchResolve(request, response, url);
