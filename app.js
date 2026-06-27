@@ -5058,10 +5058,6 @@ function profileView() {
         <p>${player.referral_link}</p>
         <button type="button" data-action="copy-ref">${icon('ph:copy-duotone')} ${tr('copyLink')}</button>
       </article>
-      <article class="profile-card">
-        <strong>${tr('referralBonus')}</strong>
-        <small>${tr('referralBonusText')}</small>
-      </article>
       <article class="profile-card support-entry-card ${unread ? 'support-entry-card--unread' : ''}">
         <span>${icon('ph:chat-circle-dots-duotone')}</span>
         <div>
