@@ -5654,11 +5654,11 @@ function worldcupView() {
   return `
     <section class="sheet-panel worldcup-panel">
       <div class="sheet-head"><span>World Cup 2026</span><strong>Cuotas fijas</strong></div>
-      <p>
+      <p style="margin-bottom: 10px;">
         Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX.
       </p>
-      <figure class="worldcup-steps-image">
-        <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto;">
+      <figure class="worldcup-steps-image" style="margin-top: 0; margin-bottom: 16px;">
+        <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto; border-radius: 14px;">
       </figure>
       <div class="worldcup-matches matches-list">
         ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; padding: 20px;">Cargando partidos...</p>' : ''}
