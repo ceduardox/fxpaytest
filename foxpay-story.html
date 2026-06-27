@@ -56,6 +56,7 @@
           <a href="/" data-i18n="navHome">Home</a>
           <a href="/#game" data-i18n="navGame">Game</a>
           <a href="/#tasks" data-i18n="navTasks">Tasks</a>
+          <a href="#gfox" data-i18n="navGfox">GFOX Token</a>
         </nav>
         <div class="top-actions">
           <div class="language-switcher" aria-label="Language selector">
@@ -138,6 +139,145 @@
           </div>
         </article>
       </section>
+
+      <!-- GFOX SHOWCASE SECTION -->
+      <section class="gfox-showcase-section" id="gfox" aria-label="GFOX Economy">
+        <div class="gfox-showcase-header">
+          <p class="eyebrow" data-i18n="gfoxEyebrow">GFOX Economy & Web3 Tokens</p>
+          <h2 data-i18n-html="gfoxTitle">How <span>GFOX & FOX</span> Power the Ecosystem</h2>
+          <p class="gfox-intro-body" data-i18n="gfoxBody">
+            Discover how tapping, active mining packages, World Cup predictions, and instant rewards drive the sustainable GFOX token economy.
+          </p>
+        </div>
+
+        <div class="gfox-grid">
+          <article class="gfox-card">
+            <div class="gfox-card-header">
+              <div class="gfox-card-icon gold">
+                <iconify-icon icon="ph:lightning-fill"></iconify-icon>
+              </div>
+              <span class="gfox-badge">Mining</span>
+            </div>
+            <h3 data-i18n="gfoxPillar1Title">1. Mining & Packages</h3>
+            <p data-i18n="gfoxPillar1Body">
+              Activate mining packs (Starter, Silver, Gold, VIP) to boost daily FOX generation, captcha rewards, and profit per hour.
+            </p>
+            <div class="gfox-card-art">
+              <img src="./images/UX/package-icons/gift-pack.png" alt="Mining packages" />
+            </div>
+          </article>
+
+          <article class="gfox-card gfox-card-highlight">
+            <div class="gfox-card-header">
+              <div class="gfox-card-icon cyan">
+                <iconify-icon icon="ph:soccer-ball-fill"></iconify-icon>
+              </div>
+              <span class="gfox-badge hot">World Cup 2026</span>
+            </div>
+            <h3 data-i18n="gfoxPillar2Title">2. World Cup Predictions</h3>
+            <p data-i18n="gfoxPillar2Body">
+              Use your earned FOX tokens to predict real 2026 World Cup match outcomes with fixed multiplier odds and direct payouts.
+            </p>
+            <div class="gfox-card-art">
+              <img src="./images/ball.webp" alt="World Cup soccer ball" />
+            </div>
+          </article>
+
+          <article class="gfox-card">
+            <div class="gfox-card-header">
+              <div class="gfox-card-icon violet">
+                <iconify-icon icon="ph:currency-btc-fill"></iconify-icon>
+              </div>
+              <span class="gfox-badge">Web3 Withdrawals</span>
+            </div>
+            <h3 data-i18n="gfoxPillar3Title">3. Affiliate & Capping</h3>
+            <p data-i18n="gfoxPillar3Body">
+              Earn 10% direct referral commissions on active packs and withdraw real crypto (USDT/BSC) under transparent cap limits.
+            </p>
+            <div class="gfox-card-art">
+              <img src="./images/UX/package-icons/fox-diamond-badge.png" alt="FOX Crypto rewards" />
+            </div>
+          </article>
+        </div>
+
+        <div class="gfox-action-center">
+          <button type="button" class="primary-button gfox-btn-trigger" onclick="openGfoxModal()">
+            <iconify-icon icon="ph:book-open-fill"></iconify-icon>
+            <span data-i18n="gfoxLearnMoreBtn">✨ Explore Complete GFOX Guide & Whitepaper</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- INTERACTIVE GFOX DEEP DIVE MODAL -->
+      <dialog id="gfoxDeepDiveModal" class="gfox-modal">
+        <div class="gfox-modal-dialog">
+          <button class="gfox-modal-close" onclick="closeGfoxModal()" aria-label="Close modal">
+            <iconify-icon icon="ph:x-bold"></iconify-icon>
+          </button>
+          <div class="gfox-modal-header">
+            <img src="./images/UX/package-icons/fox-hex-badge.png" alt="GFOX Emblem" class="gfox-modal-badge" />
+            <h2 data-i18n="gfoxModalTitle">Complete Guide: GFOX & FOX Ecosystem</h2>
+            <p data-i18n="gfoxModalSub">Everything you need to know about mining, rewards, World Cup predictions, and crypto withdrawals.</p>
+          </div>
+
+          <div class="gfox-modal-tabs">
+            <button class="gfox-tab-btn active" onclick="switchGfoxTab(0)" data-i18n="gfoxModalTab1">🪙 What is FOX & GFOX?</button>
+            <button class="gfox-tab-btn" onclick="switchGfoxTab(1)" data-i18n="gfoxModalTab2">⚡ Mining Packages</button>
+            <button class="gfox-tab-btn" onclick="switchGfoxTab(2)" data-i18n="gfoxModalTab3">⚽ World Cup Betting</button>
+            <button class="gfox-tab-btn" onclick="switchGfoxTab(3)" data-i18n="gfoxModalTab4">💸 Withdrawals & Cap</button>
+          </div>
+
+          <div class="gfox-modal-body">
+            <div class="gfox-tab-content active" id="gfoxTab0">
+              <div class="gfox-content-grid">
+                <div>
+                  <h3>FoxPay Ecosystem & Tokens</h3>
+                  <p data-i18n="gfoxModalContent1">
+                    FOX is the core utility token inside FoxPay. Players earn FOX by completing daily tasks, tapping, watching videos, and participating in CPA missions. GFOX represents the Web3 governance and long-term blockchain vision of our studio.
+                  </p>
+                </div>
+                <img src="./images/cards.webp" alt="Cards tutorial" class="gfox-content-img" />
+              </div>
+            </div>
+
+            <div class="gfox-tab-content" id="gfoxTab1">
+              <div class="gfox-content-grid">
+                <div>
+                  <h3>Mining Tier System</h3>
+                  <p data-i18n="gfoxModalContent2">
+                    Packages enhance your mining speed. Higher tier packages (Silver, Gold, VIP) increase your daily energy capacity, profit-per-hour, and unlock high-tier World Cup betting limits.
+                  </p>
+                </div>
+                <img src="./images/UX/package-icons/gift-pack.png" alt="Packages tier" class="gfox-content-img" />
+              </div>
+            </div>
+
+            <div class="gfox-tab-content" id="gfoxTab2">
+              <div class="gfox-content-grid">
+                <div>
+                  <h3>Live Fixed Odds Predictions</h3>
+                  <p data-i18n="gfoxModalContent3">
+                    Our World Cup 2026 prediction module allows players to place bets on live real-world fixtures. Match odds (e.g. Favorite x1.10, Draw x3.00, Underdog x2.00) automatically calculate your payout in FOX.
+                  </p>
+                </div>
+                <img src="./images/ball.webp" alt="Soccer betting" class="gfox-content-img" />
+              </div>
+            </div>
+
+            <div class="gfox-tab-content" id="gfoxTab3">
+              <div class="gfox-content-grid">
+                <div>
+                  <h3>Sustainable Withdrawals & Affiliates</h3>
+                  <p data-i18n="gfoxModalContent4">
+                    FoxPay operates under transparent capping rules to guarantee economic sustainability. All player balances can be withdrawn directly to BEP-20 / USDT crypto wallets via NOWPayments.
+                  </p>
+                </div>
+                <img src="./images/UX/package-icons/fox-diamond-badge.png" alt="Withdrawal badge" class="gfox-content-img" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
 
       <section class="task-layout" id="tasks">
         <div>
@@ -352,6 +492,27 @@
           keywordsEyebrow: 'Ecosystem keywords',
           keywordsTitle: 'Core features',
           keywordsBody: 'tap game, video tasks, CPA rewards, FOX token, referral economy, roulette tickets, mobile PWA, skins, packages, seasonal ranking, withdrawals.',
+          navGfox: 'GFOX Token',
+          gfoxEyebrow: 'GFOX Economy & Web3 Tokens',
+          gfoxTitle: 'How <span>GFOX & FOX</span> Power the Ecosystem',
+          gfoxBody: 'Discover how tapping, active mining packages, World Cup predictions, and instant rewards drive the sustainable GFOX token economy.',
+          gfoxPillar1Title: '1. Mining & Packages',
+          gfoxPillar1Body: 'Activate mining packs (Starter, Silver, Gold, VIP) to boost daily FOX generation, captcha rewards, and profit per hour.',
+          gfoxPillar2Title: '2. World Cup Predictions',
+          gfoxPillar2Body: 'Use your earned FOX tokens to predict real 2026 World Cup match outcomes with fixed multiplier odds and direct payouts.',
+          gfoxPillar3Title: '3. Affiliate & Capping',
+          gfoxPillar3Body: 'Earn 10% direct referral commissions on active packs and withdraw real crypto (USDT/BSC) under transparent cap limits.',
+          gfoxLearnMoreBtn: '✨ Explore Complete GFOX Guide & Whitepaper',
+          gfoxModalTitle: 'Complete Guide: GFOX & FOX Ecosystem',
+          gfoxModalSub: 'Everything you need to know about mining, rewards, World Cup predictions, and crypto withdrawals.',
+          gfoxModalTab1: '🪙 What is FOX & GFOX?',
+          gfoxModalTab2: '⚡ Mining Packages',
+          gfoxModalTab3: '⚽ World Cup Betting',
+          gfoxModalTab4: '💸 Withdrawals & Cap',
+          gfoxModalContent1: 'FOX is the core utility token inside FoxPay. Players earn FOX by completing daily tasks, tapping, watching videos, and participating in CPA missions. GFOX represents the Web3 governance and long-term blockchain vision of our studio.',
+          gfoxModalContent2: 'Packages enhance your mining speed. Higher tier packages (Silver, Gold, VIP) increase your daily energy capacity, profit-per-hour, and unlock high-tier World Cup betting limits.',
+          gfoxModalContent3: 'Our World Cup 2026 prediction module allows players to place bets on live real-world fixtures. Match odds (e.g. Favorite x1.10, Draw x3.00, Underdog x2.00) automatically calculate your payout in FOX.',
+          gfoxModalContent4: 'FoxPay operates under transparent capping rules to guarantee economic sustainability. All player balances can be withdrawn directly to BEP-20 / USDT crypto wallets via NOWPayments.',
         },
         es: {
           documentTitle: 'FoxPay - Toca, completa tareas y gana recompensas',
@@ -420,6 +581,27 @@
           keywordsEyebrow: 'Palabras clave del ecosistema',
           keywordsTitle: 'Funciones centrales',
           keywordsBody: 'juego tap, tareas de video, recompensas CPA, token FOX, economia de referidos, tickets de ruleta, PWA movil, skins, paquetes, ranking de temporada, retiros.',
+          navGfox: 'Token GFOX',
+          gfoxEyebrow: 'Economía GFOX y Tokens Web3',
+          gfoxTitle: 'Cómo <span>GFOX y FOX</span> Impulsan el Ecosistema',
+          gfoxBody: 'Descubre cómo el tap, los paquetes de minería activos, los pronósticos del Mundial y las recompensas instantáneas impulsan la economía sostenible de FOX.',
+          gfoxPillar1Title: '1. Minería y Paquetes',
+          gfoxPillar1Body: 'Activa paquetes de minería (Starter, Silver, Gold, VIP) para potenciar tu generación diaria de FOX, captchas y ganancias por hora.',
+          gfoxPillar2Title: '2. Pronósticos del Mundial',
+          gfoxPillar2Body: 'Utiliza tus tokens FOX para predecir partidos reales del Mundial 2026 con cuotas fijas multiplicadoras y pagos directos.',
+          gfoxPillar3Title: '3. Afiliados y Capping',
+          gfoxPillar3Body: 'Gana el 10% de comisión directa por referidos con paquetes activos y retira cripto real (USDT/BSC) bajo límites transparentes.',
+          gfoxLearnMoreBtn: '✨ Explorar Guía Completa de GFOX',
+          gfoxModalTitle: 'Guía Completa: Ecosistema GFOX y FOX',
+          gfoxModalSub: 'Todo lo que necesitas saber sobre minería, recompensas, pronósticos del Mundial y retiros cripto.',
+          gfoxModalTab1: '🪙 ¿Qué es FOX y GFOX?',
+          gfoxModalTab2: '⚡ Paquetes de Minería',
+          gfoxModalTab3: '⚽ Apuestas del Mundial',
+          gfoxModalTab4: '💸 Retiros y Capping',
+          gfoxModalContent1: 'FOX es el token principal de utilidad dentro de FoxPay. Los jugadores ganan FOX completando tareas diarias, haciendo tap, viendo videos y participando en misiones CPA. GFOX representa la gobernanza Web3 y la visión blockchain a largo plazo.',
+          gfoxModalContent2: 'Los paquetes aumentan tu velocidad de minería. Paquetes de nivel superior (Silver, Gold, VIP) incrementan tu capacidad de energía diaria, ganancias por hora y desbloquean límites altos de apuesta en el Mundial.',
+          gfoxModalContent3: 'Nuestro módulo de pronósticos del Mundial 2026 permite a los jugadores apostar en partidos reales. Las cuotas fijas (ej. Favorito x1.10, Empate x3.00, Sorpresa x2.00) calculan automáticamente tu pago directo en FOX.',
+          gfoxModalContent4: 'FoxPay opera bajo reglas de capping transparentes para garantizar la sostenibilidad económica. Los saldos de los jugadores pueden retirarse directamente a billeteras cripto BEP-20 / USDT a través de NOWPayments.',
         },
         pt: {
           documentTitle: 'FoxPay - Toque, complete tarefas e ganhe recompensas',
@@ -488,8 +670,44 @@
           keywordsEyebrow: 'Palavras-chave do ecossistema',
           keywordsTitle: 'Recursos centrais',
           keywordsBody: 'jogo tap, tarefas de video, recompensas CPA, token FOX, economia de indicacoes, tickets de roleta, PWA movel, skins, pacotes, ranking de temporada, saques.',
+          navGfox: 'Token GFOX',
+          gfoxEyebrow: 'Economia GFOX e Tokens Web3',
+          gfoxTitle: 'Como <span>GFOX e FOX</span> Impulsionam o Ecossistema',
+          gfoxBody: 'Descubra como o toque, os pacotes de mineracao ativos, os palpites da Copa do Mundo e as recompensas instantaneas impulsionam a economia sustentavel do FOX.',
+          gfoxPillar1Title: '1. Mineracao e Pacotes',
+          gfoxPillar1Body: 'Ative pacotes de mineracao (Starter, Silver, Gold, VIP) para impulsionar sua geracao diaria de FOX, captchas e lucros por hora.',
+          gfoxPillar2Title: '2. Palpites da Copa do Mundo',
+          gfoxPillar2Body: 'Use seus tokens FOX para prever partidas reais da Copa do Mundo 2026 com odds fixas multiplicadoras e pagamentos diretos.',
+          gfoxPillar3Title: '3. Afiliados e Capping',
+          gfoxPillar3Body: 'Ganhe 10% de comissao direta por indicacoes com pacotes ativos e saque cripto real (USDT/BSC) sob limites transparentes.',
+          gfoxLearnMoreBtn: '✨ Explorar Guia Completo do GFOX',
+          gfoxModalTitle: 'Guia Completo: Ecossistema GFOX e FOX',
+          gfoxModalSub: 'Tudo o que voce precisa saber sobre mineracao, recompensas, palpites da Copa do Mundo e saques cripto.',
+          gfoxModalTab1: '🪙 O que e FOX e GFOX?',
+          gfoxModalTab2: '⚡ Pacotes de Mineracao',
+          gfoxModalTab3: '⚽ Apostas da Copa do Mundo',
+          gfoxModalTab4: '💸 Saques e Capping',
+          gfoxModalContent1: 'O FOX e o token principal de utilidade dentro da FoxPay. Os jogadores ganham FOX completando tarefas diarias, tocando, assistindo a videos e participando de missoes CPA. O GFOX representa a governanca Web3 e a visao blockchain de longo prazo.',
+          gfoxModalContent2: 'Os pacotes aumentam sua velocidade de mineracao. Pacotes de nivel superior (Silver, Gold, VIP) aumentam sua capacidade de energia diaria, lucros por hora e desbloqueiam limites mais altos de apostas.',
+          gfoxModalContent3: 'Nosso modulo de palpites da Copa do Mundo 2026 permite que os jogadores apostem em partidas reais. As odds fixas (ex. Favorito x1.10, Empate x3.00, Zebra x2.00) calculam automaticamente seu pagamento direto em FOX.',
+          gfoxModalContent4: 'A FoxPay opera sob regras de capping transparentes para garantir a sustentabilidade economica. Os saldos dos jogadores podem ser sacados diretamente para carteiras cripto BEP-20 / USDT via NOWPayments.',
         },
       };
+
+      function openGfoxModal() {
+        const modal = document.getElementById('gfoxDeepDiveModal');
+        if (modal) modal.showModal();
+      }
+      function closeGfoxModal() {
+        const modal = document.getElementById('gfoxDeepDiveModal');
+        if (modal) modal.close();
+      }
+      function switchGfoxTab(index) {
+        const tabs = document.querySelectorAll('.gfox-tab-btn');
+        const contents = document.querySelectorAll('.gfox-tab-content');
+        tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+        contents.forEach((content, i) => content.classList.toggle('active', i === index));
+      }
 
       function detectFoxPayStoryLanguage() {
         const saved = localStorage.getItem('foxpay_story_lang');
