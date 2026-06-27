@@ -6544,7 +6544,7 @@ async function createFoxPayCryptoPayment({ playerId, itemType, itemId, amountUsd
 
   const nowPayload = await nowPaymentsRequest('/payment', {
     price_amount: Number(amountUsdt),
-    price_currency: 'usd',
+    price_currency: payCurrency,
     pay_currency: payCurrency,
     ipn_callback_url: callbackUrl,
     order_id: orderId,
