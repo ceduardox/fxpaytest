@@ -1868,6 +1868,7 @@ let leaderboardMode = 'premium';
 let busy = false;
 let wcPromoActive = false;
 let wcPromoShown = false;
+let worldCupCountdownTimer = null;
 let activeVideoTask = null;
 let videoTimer = null;
 let videoProgressUiTimer = null;
@@ -2621,7 +2622,7 @@ async function loadDashboard() {
   handleSessionState(dashboard);
   await preloadCriticalAssets();
   stopLoading();
-  render();
+  updateDashboard(dashboard);
   if (activeView === 'worldcup') loadWorldCupMatches();
   scheduleAvatarPreload();
   void refreshExpiredPendingPayments();
@@ -3014,6 +3015,63 @@ function syncSeasonCountdownTimer() {
   }
   if (!seasonIsActive()) return;
   seasonCountdownTimer = window.setInterval(updateSeasonCountdownNode, 1000);
+}
+
+function updateWorldCupCountdowns() {
+  const pills = document.querySelectorAll('.worldcup-countdown-pill');
+  if (!pills.length) return;
+  const now = Date.now();
+  pills.forEach((pill) => {
+    const matchTime = Number(pill.dataset.matchTime || 0);
+    if (!matchTime) return;
+    const timeDiff = matchTime - now;
+    if (timeDiff <= 0) {
+      pill.textContent = 'Cerrado';
+      pill.style.color = '';
+      const card = pill.closest('article');
+      if (card) {
+        card.querySelectorAll('.match-bet-btn').forEach(btn => btn.disabled = true);
+      }
+    } else if (timeDiff < 60 * 1000) {
+      pill.textContent = 'Cerrado (menos de 1 min)';
+      pill.style.color = '#ff5b8c';
+      const card = pill.closest('article');
+      if (card) {
+        card.querySelectorAll('.match-bet-btn').forEach(btn => btn.disabled = true);
+      }
+    } else {
+      const diffSec = Math.floor(timeDiff / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHr / 24);
+
+      if (diffDay > 0) {
+        pill.textContent = `Cierra en: ${diffDay}d ${diffHr % 24}h ${diffMin % 60}m`;
+        pill.style.color = '';
+      } else if (diffHr > 0) {
+        const hrs = String(diffHr).padStart(2, '0');
+        const mins = String(diffMin % 60).padStart(2, '0');
+        const secs = String(diffSec % 60).padStart(2, '0');
+        pill.textContent = `Cierra en: ${hrs}:${mins}:${secs}`;
+        pill.style.color = '#ffcd4d';
+      } else {
+        const mins = String(diffMin).padStart(2, '0');
+        const secs = String(diffSec % 60).padStart(2, '0');
+        pill.textContent = `Cierra en: ${mins}:${secs}`;
+        pill.style.color = '#ff5b8c';
+        pill.style.fontWeight = 'bold';
+      }
+    }
+  });
+}
+
+function syncWorldCupCountdownTimer() {
+  if (worldCupCountdownTimer) {
+    window.clearInterval(worldCupCountdownTimer);
+    worldCupCountdownTimer = null;
+  }
+  if (activeView !== 'worldcup') return;
+  worldCupCountdownTimer = window.setInterval(updateWorldCupCountdowns, 1000);
 }
 
 function seasonDateLabel(value) {
@@ -4538,7 +4596,7 @@ function worldCupPromoOverlay() {
       <article class="skin-confirm-card" style="padding: 16px 14px 14px; gap: 8px !important; text-align: center; max-width: 320px; width: 90%;">
         <button class="skin-preview-close" type="button" data-action="close-wc-promo" aria-label="Cerrar" style="top: 14px; right: 14px;">${icon('ph:x-bold')}</button>
         <img src="./images/iconbet/${imageFile}" alt="Mundial" style="width: 100%; border-radius: 12px; margin-bottom: 12px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
-        <button class="skin-confirm-primary" type="button" data-action="go-to-bets" style="width: 100%; font-weight: 700; padding: 12px; border-radius: 12px; background: linear-gradient(180deg, #a9f6ff, #20b9ff); color: #06194e; border: none; cursor: pointer;">
+        <button class="skin-confirm-primary" type="button" data-action="go-to-bets" style="width: 100%; font-weight: 700; padding: 12px; border-radius: 12px; color: #08205a; border: 1px solid rgba(255, 239, 157, 0.95); background: linear-gradient(180deg, #fff7aa 0%, #ffda5e 48%, #f2ad24 100%); box-shadow: 0 0 8px rgba(255, 226, 92, 0.8), 0 0 20px rgba(255, 188, 42, 0.52), inset 0 2px 0 rgba(255, 255, 255, 0.62), inset 0 -4px 8px rgba(155, 91, 0, 0.32); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28); cursor: pointer;">
           Apostar Ahora
         </button>
       </article>
@@ -4950,7 +5008,7 @@ function profileView() {
       <article class="profile-card">
         <strong>${player.is_registered ? tr('registeredAccount') : 'Device ID'}</strong>
         <small>${player.is_registered ? tr('readyWithdrawals') : tr('registerBeforeWithdrawals')}</small>
-        <p>${player.player_id}</p>
+        <p onclick="navigator.clipboard?.writeText('${player.player_id}'); toast(tr('copied'));" style="cursor: pointer; word-break: break-all;">${player.player_id}</p>
         ${player.email ? `<small>${tr('email')}: ${escapeHtml(player.email)}</small>` : ''}
         <small>${player.country_name || player.country_code ? `${tr('country')}: ${player.country_name || player.country_code}` : tr('countryPending')}</small>
       </article>
@@ -5615,6 +5673,29 @@ function worldcupView() {
           const myBetType = match.myBetType;
           const isResolved = match.status === 'resolved';
 
+          const matchTime = match.match_date ? new Date(match.match_date).getTime() : 0;
+          const now = Date.now();
+          const timeDiff = matchTime - now;
+          const isClosedSoon = matchTime && timeDiff < 60 * 1000;
+
+          let countdownText = '';
+          if (match.status === 'open' && matchTime) {
+            if (isClosedSoon) {
+              countdownText = 'Cerrado (menos de 1 min)';
+            } else {
+              const diffMin = Math.floor(timeDiff / (1000 * 60));
+              const diffHr = Math.floor(diffMin / 60);
+              const diffDay = Math.floor(diffHr / 24);
+              if (diffDay > 0) {
+                countdownText = `Cierra en: ${diffDay}d ${diffHr % 24}h`;
+              } else if (diffHr > 0) {
+                countdownText = `Cierra en: ${diffHr}h ${diffMin % 60}m`;
+              } else {
+                countdownText = `Cierra en: ${diffMin}m`;
+              }
+            }
+          }
+
           let resultSection = '';
           if (isResolved) {
             const userWon = myBetTotal > 0 && myBetType === match.result;
@@ -5665,7 +5746,7 @@ function worldcupView() {
           return `
             <article class="surface ${index % 2 === 0 ? 'bg-ball2' : 'bg-ball3'}">
               <div>
-                <span class="sync-pill">${match.status === 'open' ? 'Abierto para apostar' : match.status === 'closed' ? 'Cerrado' : 'Resultado listo'}</span>
+                <span class="sync-pill worldcup-countdown-pill" data-match-time="${matchTime}">${match.status === 'open' ? (countdownText || 'Abierto para apostar') : match.status === 'closed' ? 'Cerrado' : 'Resultado listo'}</span>
                 <div>
                   ${match.match_date ? formatActivityDate(match.match_date) : formatActivityDate(match.created_at)}
                   ${match.venue ? ` • ${escapeAttr(match.venue)}` : ''}
@@ -5692,15 +5773,15 @@ function worldcupView() {
                 ` : ''}
                 
                 <div class="worldcup-bets" style="margin-top: 12px;">
-                  <button type="button" class="match-bet-btn match-bet-btn--team-a" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_a');">
+                  <button type="button" class="match-bet-btn match-bet-btn--team-a" ${match.status !== 'open' || isClosedSoon || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_a');">
                     <strong>${match.team_a}</strong>
                     <small>x${odds.team_a.toFixed(2)} ${odds.team_a <= 1.15 ? 'Favorito' : 'Ganancia'}</small>
                   </button>
-                  <button type="button" class="match-bet-btn match-bet-btn--draw" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'draw');">
+                  <button type="button" class="match-bet-btn match-bet-btn--draw" ${match.status !== 'open' || isClosedSoon || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'draw');">
                     <strong>Empate</strong>
                     <small>x${odds.draw.toFixed(2)} Pago</small>
                   </button>
-                  <button type="button" class="match-bet-btn match-bet-btn--team-b" ${match.status !== 'open' || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_b');">
+                  <button type="button" class="match-bet-btn match-bet-btn--team-b" ${match.status !== 'open' || isClosedSoon || myBetTotal ? 'disabled' : ''} onclick="window.openWorldCupBetModal('${match.id}', 'team_b');">
                     <strong>${match.team_b}</strong>
                     <small>x${odds.team_b.toFixed(2)} ${odds.team_b <= 1.15 ? 'Favorito' : 'Ganancia'}</small>
                   </button>
@@ -5987,6 +6068,7 @@ function render() {
   syncSeasonCountdownTimer();
   syncVideoProgressUiTimer();
   syncMinerTickerTimer();
+  syncWorldCupCountdownTimer();
   initMinerSwipeToClaim();
 }
 
@@ -7443,6 +7525,16 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+function preloadPromoImages() {
+  const images = ['./images/iconbet/sp.jpg', './images/iconbet/en.jpg', './images/iconbet/pt.jpg'];
+  images.forEach((url) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+  });
+}
+
+preloadPromoImages();
 startLoading();
 void loadDashboard();
 startDashboardRefreshTimer();

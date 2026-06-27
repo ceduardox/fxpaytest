@@ -8986,6 +8986,13 @@ async function handleFoxPayUserMatchBet(request, response, url) {
     if (!match) return sendJson(response, 404, { ok: false, error: 'match_not_found' });
     if (match.status !== 'open') return sendJson(response, 400, { ok: false, error: 'match_not_open' });
 
+    if (match.match_date) {
+      const matchTime = new Date(match.match_date).getTime();
+      if (matchTime - Date.now() < 60 * 1000) {
+        return sendJson(response, 400, { ok: false, error: 'match_betting_closed_soon' });
+      }
+    }
+
     if (Number(player.token_balance || 0) < betAmount) {
       return sendJson(response, 400, { ok: false, error: 'insufficient_fox_balance' });
     }
