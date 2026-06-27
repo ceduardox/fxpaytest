@@ -5657,10 +5657,10 @@ function worldcupView() {
       <p style="margin-bottom: 10px;">
         Elige un resultado, revisa la cuota y confirma. Si aciertas, recibes tu pago directo en FOX.
       </p>
-      <figure class="worldcup-steps-image" style="margin-top: 0; margin-bottom: 16px;">
-        <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto; border-radius: 14px;">
-      </figure>
       <div class="worldcup-matches matches-list">
+        <figure class="worldcup-steps-image" style="margin: 0 0 16px 0;">
+          <img src="images/cards.webp" alt="Tres pasos para usar cuotas fijas: elige, revisa y cobra" loading="eager" style="display: block; width: 100%; height: auto; border-radius: 14px;">
+        </figure>
         ${isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; padding: 20px;">Cargando partidos...</p>' : ''}
         ${!isLoadingWorldCup && worldCupMatches.length === 0 ? '<p style="text-align:center; opacity:0.6; padding: 20px;">No hay partidos programados.</p>' : ''}
         ${worldCupMatches.map((match, index) => {
