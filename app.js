@@ -1841,7 +1841,7 @@ window.handleWorldCupBet = async (matchId, betType, amount) => {
     return;
   }
   const betAmount = parseInt(amount, 10);
-  if (!betAmount || betAmount <= 0) return toast('Cantidad inválida.');
+  if (!betAmount || betAmount < 1000) return toast('La apuesta mínima es de 1,000 FOX.');
   if (betAmount > dashboard.player.token_balance) return toast('FOX insuficiente.');
 
   try {
@@ -4568,10 +4568,10 @@ function worldCupBetOverlay() {
             <span style="display: inline-flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 8px;">
               ${coinIcon('modal-coin-icon')}
             </span>
-            <input type="number" inputmode="numeric" pattern="[0-9]*" id="worldCupBetAmount" placeholder="Ej: 1000" min="1" step="1" style="flex: 1; border: none; background: transparent; padding: 10px 0; color: #fff; font-size: 14px; font-family: var(--font-sans); outline: none; font-weight: 400;" />
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="worldCupBetAmount" placeholder="Mínimo 1000" min="1000" step="1" style="flex: 1; border: none; background: transparent; padding: 10px 0; color: #fff; font-size: 14px; font-family: var(--font-sans); outline: none; font-weight: 400;" />
           </div>
           <div id="worldCupBetEstimate" style="margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(76, 216, 255, 0.08); border: 1px solid rgba(76, 216, 255, 0.12); color: rgba(235,244,255,0.82); font-size: 12px; line-height: 1.35;">
-            Escribe un monto para ver tu pago estimado.
+            Apuesta mínima: 1,000 FOX. Escribe un monto para ver tu pago estimado.
           </div>
           ${activeBetError ? `<em class="skin-confirm-error" style="color: #ff5b8c; font-size: 12px; display: block; margin-top: 6px; font-weight: 400;">${escapeHtml(activeBetError)}</em>` : ''}
         </div>
@@ -4615,8 +4615,8 @@ function updateWorldCupBetEstimate() {
     team_b: Math.max(1, Number(activeBetMatch.odds_team_b || 2.00)),
   };
   const selectedOdds = odds[activeBetType] || 1;
-  if (!amount || amount <= 0) {
-    output.textContent = `Cuota fija: x${selectedOdds.toFixed(2)}. Escribe un monto para ver tu pago estimado.`;
+  if (!amount || amount < 1000) {
+    output.textContent = `Cuota fija: x${selectedOdds.toFixed(2)}. La apuesta mínima es de 1,000 FOX.`;
     return;
   }
   const payout = Math.floor(amount * selectedOdds);
@@ -6628,8 +6628,8 @@ async function doAction(action, button, event) {
       const amount = Number(amountInput.value);
       const playerBalance = Number(dashboard?.player?.token_balance || 0);
 
-      if (isNaN(amount) || amount <= 0) {
-        activeBetError = 'Ingresa una cantidad válida.';
+      if (isNaN(amount) || amount < 1000) {
+        activeBetError = 'La apuesta mínima es de 1,000 FOX.';
         render();
         return;
       }

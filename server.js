@@ -8967,7 +8967,7 @@ async function handleFoxPayUserMatchBet(request, response, url) {
     const betType = params.get('betType');
     const amount = params.get('amount');
     const betAmount = Math.floor(Number(amount));
-    if (!matchId || !betType || betAmount <= 0) return sendJson(response, 400, { ok: false, error: 'invalid_params' });
+    if (!matchId || !betType || betAmount < 1000) return sendJson(response, 400, { ok: false, error: 'min_bet_1000_fox' });
 
     const player = await ensureFoxPayPlayer(playerId);
     if (!foxPayAccountEnabled(player)) {
