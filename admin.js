@@ -1522,25 +1522,102 @@ function renderPurchases() {
   }
 
   const filter = $('#purchaseFilter').value;
-  const rows = state.overview.purchases.filter((item) => filter === 'all' || item.status === filter);
-  $('#purchasesBody').innerHTML = rows.length
-    ? rows.map((item) => `
-      <tr>
-        <td><strong>${item.id}</strong></td>
-        <td>${item.player_id}</td>
-        <td>${item.package_id}<br><span class="muted">${item.tx_hash || 'Sin hash'}</span></td>
-        <td>${fmt(item.amount_usdt, 2)} USDT</td>
-        <td>${statusPill(item.status)}</td>
-        <td>
-          ${item.status === 'pending' ? `
-            ${canAdmin('finance_edit') ? `
-            <button class="approve-button" data-purchase-action="approve" data-id="${item.id}">Aprobar</button>
-            <button class="danger-button" data-purchase-action="reject" data-id="${item.id}">Rechazar</button>
-            ` : ''}
-          ` : item.created_at || ''}
-        </td>
-      </tr>
-    `).join('')
+  const startDateVal = $('#purchaseStartDate')?.value || '';
+  const endDateVal = $('#purchaseEndDate')?.value || '';
+
+  // Filter purchases
+  const filteredPurchases = (state.overview.purchases || []).filter((item) => {
+    // Status filter
+    if (filter !== 'all' && item.status !== filter) return false;
+
+    // Date range filter
+    if (item.created_at) {
+      const createdDate = new Date(item.created_at);
+      if (startDateVal) {
+        const start = new Date(startDateVal + 'T00:00:00');
+        if (createdDate < start) return false;
+      }
+      if (endDateVal) {
+        const end = new Date(endDateVal + 'T23:59:59');
+        if (createdDate > end) return false;
+      }
+    }
+    return true;
+  });
+
+  // Calculate metrics (using ALL purchases matching the date range, regardless of status filter, but only status === 'approved' for sales totals)
+  let npTotal = 0;
+  let npCount = 0;
+  let manTotal = 0;
+  let manCount = 0;
+
+  (state.overview.purchases || []).forEach((item) => {
+    // Apply date filter for metrics
+    if (item.created_at) {
+      const createdDate = new Date(item.created_at);
+      if (startDateVal) {
+        const start = new Date(startDateVal + 'T00:00:00');
+        if (createdDate < start) return;
+      }
+      if (endDateVal) {
+        const end = new Date(endDateVal + 'T23:59:59');
+        if (createdDate > end) return;
+      }
+    }
+
+    if (item.status === 'approved') {
+      const isManual = item.network === 'manual' || !item.network;
+      if (isManual) {
+        manTotal += Number(item.amount_usdt || 0);
+        manCount++;
+      } else {
+        npTotal += Number(item.amount_usdt || 0);
+        npCount++;
+      }
+    }
+  });
+
+  // Update cards UI
+  const nowpaymentsTotalEl = $('#nowpaymentsTotal');
+  const nowpaymentsCountEl = $('#nowpaymentsCount');
+  const manualTotalEl = $('#manualTotal');
+  const manualCountEl = $('#manualCount');
+  if (nowpaymentsTotalEl) nowpaymentsTotalEl.textContent = `${fmt(npTotal, 2)} USDT`;
+  if (nowpaymentsCountEl) nowpaymentsCountEl.textContent = `${fmt(npCount, 0)} transacciones`;
+  if (manualTotalEl) manualTotalEl.textContent = `${fmt(manTotal, 2)} USDT`;
+  if (manualCountEl) manualCountEl.textContent = `${fmt(manCount, 0)} transacciones`;
+
+  $('#purchasesBody').innerHTML = filteredPurchases.length
+    ? filteredPurchases.map((item) => {
+      const isManual = item.network === 'manual' || !item.network;
+      const typeBadge = isManual
+        ? `<span class="sync-pill" style="background: rgba(255,160,0,0.15); color: #ffa000; border-color: rgba(255,160,0,0.22); margin-top: 4px;">Manual</span>`
+        : `<span class="sync-pill" style="background: rgba(70,211,158,0.15); color: #46d39e; border-color: rgba(70,211,158,0.22); margin-top: 4px;">${escapeAttr(String(item.network).toUpperCase())}</span>`;
+      
+      return `
+        <tr>
+          <td>
+            <strong>${item.id}</strong><br>
+            ${typeBadge}
+          </td>
+          <td>${item.player_id}</td>
+          <td>
+            ${item.package_id}<br>
+            <span class="muted" style="font-size: 0.8rem; font-family: monospace;">Hash: ${escapeAttr(item.tx_hash || 'Sin hash')}</span>
+          </td>
+          <td>${fmt(item.amount_usdt, 2)} USDT</td>
+          <td>${statusPill(item.status)}</td>
+          <td>
+            ${item.status === 'pending' ? `
+              ${canAdmin('finance_edit') ? `
+              <button class="approve-button" data-purchase-action="approve" data-id="${item.id}">Aprobar</button>
+              <button class="danger-button" data-purchase-action="reject" data-id="${item.id}">Rechazar</button>
+              ` : ''}
+            ` : item.reviewed_at ? formatDateTime(item.reviewed_at) : formatDateTime(item.created_at)}
+          </td>
+        </tr>
+      `;
+    }).join('')
     : '<tr><td colspan="6" class="empty-state">Sin compras.</td></tr>';
 }
 
@@ -3613,6 +3690,8 @@ $('#userSearch').addEventListener('input', () => {
 $('#supportFilter')?.addEventListener('change', renderSupportTickets);
 $('#unilevelUserSearch').addEventListener('input', renderAdminUnilevelMap);
 $('#purchaseFilter').addEventListener('change', renderPurchases);
+$('#purchaseStartDate')?.addEventListener('change', renderPurchases);
+$('#purchaseEndDate')?.addEventListener('change', renderPurchases);
 $('#withdrawalFilter').addEventListener('change', renderWithdrawals);
 $('#newPackageButton').addEventListener('click', () => openPackageModal({ id: 'custom', name: 'Custom Pack', price_usdt: 100, monthly_cap_usd: 300, daily_energy: 700, tap_reward_tokens: 2, active: true }));
 $('#newRankButton').addEventListener('click', () => openRankModal({}));

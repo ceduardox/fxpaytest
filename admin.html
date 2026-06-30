@@ -489,17 +489,35 @@
           </section>
 
           <section class="panel" data-panel-view="purchases">
-            <div class="section-head">
+            <div class="section-head" style="align-items: flex-start; flex-wrap: wrap; gap: 10px;">
               <div>
                 <p class="eyebrow">Compras</p>
                 <h3>Historial de pagos</h3>
               </div>
-              <select class="select-control" id="purchaseFilter">
-                <option value="all">Todas</option>
-                <option value="pending">Pendientes</option>
-                <option value="approved">Aprobadas</option>
-                <option value="rejected">Rechazadas</option>
-              </select>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label style="font-size: 0.85rem; color: var(--muted);">Desde: <input type="date" id="purchaseStartDate" class="input-control" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; height: auto;" /></label>
+                <label style="font-size: 0.85rem; color: var(--muted);">Hasta: <input type="date" id="purchaseEndDate" class="input-control" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; height: auto;" /></label>
+                <select class="select-control" id="purchaseFilter" style="height: auto; padding: 4px 24px 4px 8px; font-size: 0.85rem;">
+                  <option value="all">Todas</option>
+                  <option value="pending">Pendientes</option>
+                  <option value="approved">Aprobadas</option>
+                  <option value="rejected">Rechazadas</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Metrics Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+              <article class="surface" style="padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 600;">Vendido por NowPayments</span>
+                <strong id="nowpaymentsTotal" style="font-size: 1.8rem; color: #46d39e;">0.00 USDT</strong>
+                <span id="nowpaymentsCount" style="font-size: 0.75rem; color: var(--muted);">0 transacciones</span>
+              </article>
+              <article class="surface" style="padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 600;">Ventas Manuales</span>
+                <strong id="manualTotal" style="font-size: 1.8rem; color: var(--accent);">0.00 USDT</strong>
+                <span id="manualCount" style="font-size: 0.75rem; color: var(--muted);">0 transacciones</span>
+              </article>
             </div>
             <article class="surface">
               <div class="section-head">

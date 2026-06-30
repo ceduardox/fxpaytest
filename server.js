@@ -6845,22 +6845,34 @@ async function handleFoxPayPurchase(request, response, url) {
 }
 
 async function listFoxPayPurchases(playerId = '') {
-  const normalize = (rows) => rows.map((row) => ({
-    ...row,
-    amount_usdt: toNumber(row.amount_usdt),
-    fox_tokens_paid: Math.max(0, Math.floor(toNumber(row.fox_tokens_paid))),
-    fox_usdt_paid: toNumber(row.fox_usdt_paid),
-    usdt_due: toNumber(row.usdt_due),
-  }));
+  const normalize = (rows) => rows.map((row) => {
+    let network = 'unknown';
+    if (!pool) {
+      const pm = foxpayPayments.get(row.id);
+      if (pm) network = pm.network;
+    } else {
+      network = row.network || 'unknown';
+    }
+    return {
+      ...row,
+      network,
+      amount_usdt: toNumber(row.amount_usdt),
+      fox_tokens_paid: Math.max(0, Math.floor(toNumber(row.fox_tokens_paid))),
+      fox_usdt_paid: toNumber(row.fox_usdt_paid),
+      usdt_due: toNumber(row.usdt_due),
+    };
+  });
   if (!pool) {
     return normalize([...foxpayPurchases.values()]
       .filter((row) => !playerId || row.player_id === playerId)
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
   }
   const result = await pool.query(
-    `select * from foxpay_purchases
-     ${playerId ? 'where player_id = $1' : ''}
-     order by created_at desc limit 500`,
+    `select p.*, pay.network
+     from foxpay_purchases p
+     left join foxpay_payments pay on p.id = pay.id
+     ${playerId ? 'where p.player_id = $1' : ''}
+     order by p.created_at desc limit 500`,
     playerId ? [playerId] : [],
   );
   return normalize(result.rows);
