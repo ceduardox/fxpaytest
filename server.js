@@ -6899,7 +6899,37 @@ async function listFoxPayPurchases(playerId = '') {
      order by p.created_at desc limit 500`,
     playerId ? [playerId] : [],
   );
-  return normalize(result.rows);
+
+  const normalizedRows = normalize(result.rows);
+
+  // Background refresh for approved transactions without real_tx_hash
+  setTimeout(async () => {
+    try {
+      const missingHashes = normalizedRows.filter(row =>
+        row.status === 'approved' &&
+        row.network !== 'manual' &&
+        row.network !== 'unknown' &&
+        !row.real_tx_hash
+      ).slice(0, 10);
+
+      for (const row of missingHashes) {
+        const npId = row.tx_hash;
+        if (npId && /^\d+$/.test(npId)) {
+          const payload = await nowPaymentsRequest(`/payment/${encodeURIComponent(npId)}`);
+          if (payload) {
+            const payment = await getFoxPayPayment(row.id);
+            if (payment) {
+              await updateFoxPayPaymentFromNow(payment, payload);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Background purchase hash refresh failed', e);
+    }
+  }, 100);
+
+  return normalizedRows;
 }
 
 async function listFoxPayWithdrawals(playerId = '') {
