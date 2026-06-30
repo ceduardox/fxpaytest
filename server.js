@@ -6847,15 +6847,34 @@ async function handleFoxPayPurchase(request, response, url) {
 async function listFoxPayPurchases(playerId = '') {
   const normalize = (rows) => rows.map((row) => {
     let network = 'unknown';
+    let rawPay = null;
     if (!pool) {
       const pm = foxpayPayments.get(row.id);
-      if (pm) network = pm.network;
+      if (pm) {
+        network = pm.network;
+        rawPay = pm.raw_payload;
+      }
     } else {
       network = row.network || 'unknown';
+      try {
+        rawPay = typeof row.raw_payload === 'string' ? JSON.parse(row.raw_payload) : row.raw_payload;
+      } catch (e) {}
     }
+
+    let realTxHash = '';
+    if (row.tx_hash && !row.tx_hash.includes(':') && (row.tx_hash.startsWith('0x') || /^[a-zA-Z0-9]{64}$/.test(row.tx_hash))) {
+      realTxHash = row.tx_hash;
+    } else if (rawPay) {
+      const np = rawPay.nowpayments || {};
+      if (np.pay_txn_id && np.pay_txn_id !== 'null') {
+        realTxHash = np.pay_txn_id;
+      }
+    }
+
     return {
       ...row,
       network,
+      real_tx_hash: realTxHash,
       amount_usdt: toNumber(row.amount_usdt),
       fox_tokens_paid: Math.max(0, Math.floor(toNumber(row.fox_tokens_paid))),
       fox_usdt_paid: toNumber(row.fox_usdt_paid),
@@ -6868,7 +6887,7 @@ async function listFoxPayPurchases(playerId = '') {
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
   }
   const result = await pool.query(
-    `select p.*, pay.network
+    `select p.*, pay.network, pay.raw_payload
      from foxpay_purchases p
      left join foxpay_payments pay on p.id = pay.id
      ${playerId ? 'where p.player_id = $1' : ''}

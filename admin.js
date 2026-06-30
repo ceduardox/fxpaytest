@@ -1593,7 +1593,12 @@ function renderPurchases() {
       const typeBadge = isManual
         ? `<span class="sync-pill" style="background: rgba(255,160,0,0.15); color: #ffa000; border-color: rgba(255,160,0,0.22); margin-top: 4px;">Manual</span>`
         : `<span class="sync-pill" style="background: rgba(70,211,158,0.15); color: #46d39e; border-color: rgba(70,211,158,0.22); margin-top: 4px;">${escapeAttr(String(item.network).toUpperCase())}</span>`;
-      
+
+      const txUrl = item.real_tx_hash ? explorerUrl(item.network, item.real_tx_hash) : '';
+      const hashDisplay = txUrl
+        ? `<a class="sync-pill tx-link" href="${txUrl}" target="_blank" rel="noopener" style="font-size: 0.75rem; padding: 2px 6px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; border: 1px solid rgba(130, 214, 255, 0.22); color: #4cd8ff; background: rgba(5, 17, 61, 0.6);"><iconify-icon icon="ph:arrow-square-out-bold"></iconify-icon>${shortText(item.real_tx_hash, 14)}</a>`
+        : `<span class="muted" style="font-size: 0.8rem; font-family: monospace;">ID: ${escapeAttr(item.tx_hash || 'Sin hash')}</span>`;
+
       return `
         <tr>
           <td>
@@ -1603,7 +1608,7 @@ function renderPurchases() {
           <td>${item.player_id}</td>
           <td>
             ${item.package_id}<br>
-            <span class="muted" style="font-size: 0.8rem; font-family: monospace;">Hash: ${escapeAttr(item.tx_hash || 'Sin hash')}</span>
+            ${hashDisplay}
           </td>
           <td>${fmt(item.amount_usdt, 2)} USDT</td>
           <td>${statusPill(item.status)}</td>
