@@ -6867,8 +6867,8 @@ async function listFoxPayPurchases(playerId = '') {
     } else if (rawPay) {
       const np = rawPay.nowpayments || {};
       const hashSources = [
-        np.pay_txn_id, np.txn_id, np.tx_hash,
-        rawPay.pay_txn_id, rawPay.txn_id, rawPay.tx_hash
+        np.payin_hash, np.pay_txn_id, np.txn_id, np.tx_hash,
+        rawPay.payin_hash, rawPay.pay_txn_id, rawPay.txn_id, rawPay.tx_hash
       ];
       const foundHash = hashSources.find(h => h && typeof h === 'string' && h !== 'null' && (h.startsWith('0x') || /^[a-zA-Z0-9]{64}$/.test(h)));
       if (foundHash) {
