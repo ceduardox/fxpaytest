@@ -2036,7 +2036,15 @@ async function seedWorldCupMatches() {
     { id: 'wc_2026_28_1', team_a: 'Canada', team_b: 'South Africa', flag_a: '🇨🇦', flag_b: '🇿🇦', venue: '16avos de final', match_date: '2026-06-28T19:00:00Z' },
     { id: 'wc_2026_29_1', team_a: 'Brazil', team_b: 'Japan', flag_a: '🇧🇷', flag_b: '🇯🇵', venue: '16avos de final', match_date: '2026-06-29T17:00:00Z' },
     { id: 'wc_2026_29_2', team_a: 'Germany', team_b: 'Paraguay', flag_a: '🇩🇪', flag_b: '🇵🇾', venue: '16avos de final', match_date: '2026-06-29T20:30:00Z' },
-    { id: 'wc_2026_29_3', team_a: 'Netherlands', team_b: 'Morocco', flag_a: '🇳🇱', flag_b: '🇲🇦', venue: '16avos de final', match_date: '2026-06-30T01:00:00Z' }
+    { id: 'wc_2026_29_3', team_a: 'Netherlands', team_b: 'Morocco', flag_a: '🇳🇱', flag_b: '🇲🇦', venue: '16avos de final', match_date: '2026-06-30T01:00:00Z' },
+    
+    // New Matches June 30 & July 1
+    { id: 'wc_2026_30_1', team_a: 'Costa de Marfil', team_b: 'Noruega', flag_a: '🇨🇮', flag_b: '🇳🇴', venue: 'Estadio Mundial', match_date: '2026-06-30T13:00:00Z', odds_team_a: 3.60, odds_draw: 3.50, odds_team_b: 2.05 },
+    { id: 'wc_2026_30_2', team_a: 'Francia', team_b: 'Suecia', flag_a: '🇫🇷', flag_b: '🇸🇪', venue: 'Estadio Mundial', match_date: '2026-06-30T17:00:00Z', odds_team_a: 1.32, odds_draw: 5.33, odds_team_b: 9.50 },
+    { id: 'wc_2026_30_3', team_a: 'México', team_b: 'Ecuador', flag_a: '🇲🇽', flag_b: '🇪🇨', venue: 'Estadio Mundial', match_date: '2026-06-30T21:00:00Z', odds_team_a: 2.14, odds_draw: 3.00, odds_team_b: 4.00 },
+    { id: 'wc_2026_07_1', team_a: 'Inglaterra', team_b: 'RD Congo', flag_a: '🇬🇧', flag_b: '🇨🇩', venue: 'Estadio Mundial', match_date: '2026-07-01T12:00:00Z', odds_team_a: 1.27, odds_draw: 5.33, odds_team_b: 13.00 },
+    { id: 'wc_2026_07_2', team_a: 'Bélgica', team_b: 'Senegal', flag_a: '🇧🇪', flag_b: '🇸🇳', venue: 'Estadio Mundial', match_date: '2026-07-01T16:00:00Z', odds_team_a: 2.20, odds_draw: 3.25, odds_team_b: 3.50 },
+    { id: 'wc_2026_07_3', team_a: 'Estados Unidos', team_b: 'Uruguay', flag_a: '🇺🇸', flag_b: '🇺🇾', venue: 'Estadio Mundial', match_date: '2026-07-01T20:00:00Z', odds_team_a: 2.50, odds_draw: 3.20, odds_team_b: 2.80 }
   ];
 
   if (!pool) {
@@ -2050,7 +2058,10 @@ async function seedWorldCupMatches() {
           created_at: new Date().toISOString(),
           manual_pool_a: 0,
           manual_pool_b: 0,
-          manual_pool_draw: 0
+          manual_pool_draw: 0,
+          odds_team_a: match.odds_team_a || 1.10,
+          odds_draw: match.odds_draw || 3.00,
+          odds_team_b: match.odds_team_b || 2.00
         });
       }
     }
@@ -2060,8 +2071,8 @@ async function seedWorldCupMatches() {
   for (const match of matches) {
     await pool.query(
       `insert into foxpay_matches
-       (id, team_a, team_b, flag_a, flag_b, venue, match_date, status)
-       values ($1, $2, $3, $4, $5, $6, $7, 'open')
+       (id, team_a, team_b, flag_a, flag_b, venue, match_date, status, odds_team_a, odds_draw, odds_team_b)
+       values ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10)
        on conflict (id) do update set
          team_a = excluded.team_a,
          team_b = excluded.team_b,
@@ -2069,7 +2080,18 @@ async function seedWorldCupMatches() {
          flag_b = excluded.flag_b,
          venue = excluded.venue,
          match_date = excluded.match_date`,
-      [match.id, match.team_a, match.team_b, match.flag_a, match.flag_b, match.venue, match.match_date]
+      [
+        match.id,
+        match.team_a,
+        match.team_b,
+        match.flag_a,
+        match.flag_b,
+        match.venue,
+        match.match_date,
+        match.odds_team_a || 1.10,
+        match.odds_draw || 3.00,
+        match.odds_team_b || 2.00
+      ]
     );
   }
 }
