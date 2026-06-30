@@ -2044,7 +2044,7 @@ async function seedWorldCupMatches() {
     { id: 'wc_2026_30_3', team_a: 'México', team_b: 'Ecuador', flag_a: '🇲🇽', flag_b: '🇪🇨', venue: 'Estadio Mundial', match_date: '2026-06-30T21:00:00Z', odds_team_a: 2.14, odds_draw: 3.00, odds_team_b: 4.00 },
     { id: 'wc_2026_07_1', team_a: 'Inglaterra', team_b: 'RD Congo', flag_a: '🇬🇧', flag_b: '🇨🇩', venue: 'Estadio Mundial', match_date: '2026-07-01T12:00:00Z', odds_team_a: 1.27, odds_draw: 5.33, odds_team_b: 13.00 },
     { id: 'wc_2026_07_2', team_a: 'Bélgica', team_b: 'Senegal', flag_a: '🇧🇪', flag_b: '🇸🇳', venue: 'Estadio Mundial', match_date: '2026-07-01T16:00:00Z', odds_team_a: 2.20, odds_draw: 3.25, odds_team_b: 3.50 },
-    { id: 'wc_2026_07_3', team_a: 'Estados Unidos', team_b: 'Uruguay', flag_a: '🇺🇸', flag_b: '🇺🇾', venue: 'Estadio Mundial', match_date: '2026-07-01T20:00:00Z', odds_team_a: 2.50, odds_draw: 3.20, odds_team_b: 2.80 }
+    { id: 'wc_2026_07_3', team_a: 'Estados Unidos', team_b: 'Bosnia', flag_a: '🇺🇸', flag_b: '🇧🇦', venue: 'Estadio Mundial', match_date: '2026-07-01T20:00:00Z', odds_team_a: 2.50, odds_draw: 3.20, odds_team_b: 2.80 }
   ];
 
   if (!pool) {
