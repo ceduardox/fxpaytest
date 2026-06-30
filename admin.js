@@ -1545,6 +1545,8 @@ function renderPurchases() {
     return true;
   });
 
+  console.log('Purchases list for rendering:', filteredPurchases);
+
   // Calculate metrics (using ALL purchases matching the date range, regardless of status filter, but only status === 'approved' for sales totals)
   let npTotal = 0;
   let npCount = 0;
