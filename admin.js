@@ -1552,6 +1552,8 @@ function renderPurchases() {
   let npCount = 0;
   let manTotal = 0;
   let manCount = 0;
+  let verifiedTotal = 0;
+  let verifiedCount = 0;
 
   (state.overview.purchases || []).forEach((item) => {
     // Apply date filter for metrics
@@ -1575,6 +1577,10 @@ function renderPurchases() {
       } else {
         npTotal += Number(item.amount_usdt || 0);
         npCount++;
+        if (item.real_tx_hash) {
+          verifiedTotal += Number(item.amount_usdt || 0);
+          verifiedCount++;
+        }
       }
     }
   });
@@ -1584,10 +1590,14 @@ function renderPurchases() {
   const nowpaymentsCountEl = $('#nowpaymentsCount');
   const manualTotalEl = $('#manualTotal');
   const manualCountEl = $('#manualCount');
+  const verifiedTotalEl = $('#verifiedTotal');
+  const verifiedCountEl = $('#verifiedCount');
   if (nowpaymentsTotalEl) nowpaymentsTotalEl.textContent = `${fmt(npTotal, 2)} USDT`;
   if (nowpaymentsCountEl) nowpaymentsCountEl.textContent = `${fmt(npCount, 0)} transacciones`;
   if (manualTotalEl) manualTotalEl.textContent = `${fmt(manTotal, 2)} USDT`;
   if (manualCountEl) manualCountEl.textContent = `${fmt(manCount, 0)} transacciones`;
+  if (verifiedTotalEl) verifiedTotalEl.textContent = `${fmt(verifiedTotal, 2)} USDT`;
+  if (verifiedCountEl) verifiedCountEl.textContent = `${fmt(verifiedCount, 0)} transacciones`;
 
   $('#purchasesBody').innerHTML = filteredPurchases.length
     ? filteredPurchases.map((item) => {
