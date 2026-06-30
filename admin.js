@@ -1641,6 +1641,26 @@ function renderWorldCup() {
         team_b: Math.max(1, Number(item.odds_team_b || 2.00)),
       };
 
+      let platformProfit = 0;
+      let totalBetsAmount = 0;
+      if (item.userBets) {
+        item.userBets.forEach(b => {
+          totalBetsAmount += Number(b.amount || 0);
+        });
+      }
+      if (item.status === 'resolved' && item.result) {
+        let totalPayouts = 0;
+        if (item.userBets) {
+          item.userBets.forEach(b => {
+            if (b.bet_type === item.result) {
+              const winningOdds = odds[item.result] || 1;
+              totalPayouts += Math.floor(Number(b.amount) * winningOdds);
+            }
+          });
+        }
+        platformProfit = totalBetsAmount - totalPayouts;
+      }
+
       return `
         <article class="match-card">
           <div class="match-card-header">
@@ -1694,8 +1714,15 @@ function renderWorldCup() {
             </div>
           </div>
           
-          <div style="text-align: right; font-size: 0.85rem; font-weight:700; color: #fff; margin-top: -4px;">
-            Apuestas registradas: <span style="color:var(--accent);">${fmt(stats.total, 0)} FOX</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight:700; color: #fff; margin-top: -4px;">
+            <div>Apuestas: <span style="color:var(--accent);">${fmt(totalBetsAmount, 0)} FOX</span></div>
+            <div>
+              ${item.status === 'resolved' ? `
+                Plataforma: <span style="color: ${platformProfit >= 0 ? '#46d39e' : '#ff5b8c'};">${platformProfit >= 0 ? 'Ganó +' : 'Perdió '}${fmt(platformProfit, 0)} FOX</span>
+              ` : `
+                <span style="color: rgba(255,255,255,0.5);">Pendiente de juego</span>
+              `}
+            </div>
           </div>
 
           <!-- User Bets Expandable List -->
@@ -1706,12 +1733,33 @@ function renderWorldCup() {
             </button>
             
             <div id="bets-detail-${item.id}" class="match-bets-details-list" style="display: none;">
-              ${betsCount > 0 ? item.userBets.map(b => `
-                <div class="match-bet-detail-row">
-                  <span><strong>${escapeAttr(b.username)}</strong></span>
-                  <span style="color: var(--accent);">${b.bet_type === 'team_a' ? item.team_a : b.bet_type === 'team_b' ? item.team_b : 'Empate'} (${fmt(b.amount, 0)} FOX)</span>
-                </div>
-              `).join('') : '<div style="text-align:center; color:var(--muted); padding: 4px;">Sin apuestas registradas</div>'}
+              ${betsCount > 0 ? item.userBets.map(b => {
+                const isWinning = item.status === 'resolved' && b.bet_type === item.result;
+                let statusHtml = '';
+                if (item.status === 'resolved') {
+                  if (isWinning) {
+                    const winningOdds = odds[item.result] || 1;
+                    const payout = Math.floor(Number(b.amount) * winningOdds);
+                    statusHtml = `<span style="color: #46d39e; font-weight: 700;">Ganó (+${fmt(payout, 0)} FOX)</span>`;
+                  } else {
+                    statusHtml = `<span style="color: #ff5b8c; font-weight: 700;">Perdió (-${fmt(b.amount, 0)} FOX)</span>`;
+                  }
+                } else {
+                  statusHtml = `<span style="color: rgba(255,255,255,0.5);">Pendiente</span>`;
+                }
+                const chosenTeam = b.bet_type === 'team_a' ? item.team_a : b.bet_type === 'team_b' ? item.team_b : 'Empate';
+                return `
+                  <div class="match-bet-detail-row" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0;">
+                    <div>
+                      <strong>${escapeAttr(b.username)}</strong>
+                      <div style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">${chosenTeam} (${fmt(b.amount, 0)} FOX)</div>
+                    </div>
+                    <div style="text-align: right;">
+                      ${statusHtml}
+                    </div>
+                  </div>
+                `;
+              }).join('') : '<div style="text-align:center; color:var(--muted); padding: 8px;">Sin apuestas registradas</div>'}
             </div>
           </div>
 
