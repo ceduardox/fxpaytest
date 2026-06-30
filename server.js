@@ -6866,8 +6866,13 @@ async function listFoxPayPurchases(playerId = '') {
       realTxHash = row.tx_hash;
     } else if (rawPay) {
       const np = rawPay.nowpayments || {};
-      if (np.pay_txn_id && np.pay_txn_id !== 'null') {
-        realTxHash = np.pay_txn_id;
+      const hashSources = [
+        np.pay_txn_id, np.txn_id, np.tx_hash,
+        rawPay.pay_txn_id, rawPay.txn_id, rawPay.tx_hash
+      ];
+      const foundHash = hashSources.find(h => h && typeof h === 'string' && h !== 'null' && (h.startsWith('0x') || /^[a-zA-Z0-9]{64}$/.test(h)));
+      if (foundHash) {
+        realTxHash = foundHash;
       }
     }
 
