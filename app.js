@@ -5676,7 +5676,9 @@ function worldcupView() {
 
           let countdownText = '';
           if (match.status === 'open' && matchTime) {
-            if (isClosedSoon) {
+            if (timeDiff <= 0) {
+              countdownText = 'En juego';
+            } else if (isClosedSoon) {
               countdownText = 'Cerrado (menos de 1 min)';
             } else {
               const diffMin = Math.floor(timeDiff / (1000 * 60));
