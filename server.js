@@ -2049,7 +2049,12 @@ async function seedWorldCupMatches() {
     // New Matches July 2
     { id: 'wc_2026_07_02_1', team_a: 'España', team_b: 'Austria', flag_a: '🇪🇸', flag_b: '🇦🇹', venue: '16avos de final', match_date: '2026-07-02T15:00:00Z', odds_team_a: 1.26, odds_draw: 5.25, odds_team_b: 10.50 },
     { id: 'wc_2026_07_02_2', team_a: 'Portugal', team_b: 'Croacia', flag_a: '🇵🇹', flag_b: '🇭🇷', venue: '16avos de final', match_date: '2026-07-02T19:00:00Z', odds_team_a: 1.80, odds_draw: 3.60, odds_team_b: 5.10 },
-    { id: 'wc_2026_07_02_3', team_a: 'Suiza', team_b: 'Argelia', flag_a: '🇨🇭', flag_b: '🇩🇿', venue: '16avos de final', match_date: '2026-07-02T23:00:00Z', odds_team_a: 2.05, odds_draw: 3.20, odds_team_b: 4.06 }
+    { id: 'wc_2026_07_02_3', team_a: 'Suiza', team_b: 'Argelia', flag_a: '🇨🇭', flag_b: '🇩🇿', venue: '16avos de final', match_date: '2026-07-02T23:00:00Z', odds_team_a: 2.05, odds_draw: 3.20, odds_team_b: 4.06 },
+    
+    // New Matches July 3
+    { id: 'wc_2026_07_03_1', team_a: 'Australia', team_b: 'Egipto', flag_a: '🇦🇺', flag_b: '🇪🇬', venue: '16avos de final', match_date: '2026-07-03T14:00:00Z', odds_team_a: 3.40, odds_draw: 2.90, odds_team_b: 2.55 },
+    { id: 'wc_2026_07_03_2', team_a: 'Argentina', team_b: 'Cabo Verde', flag_a: '🇦🇷', flag_b: '🇨🇻', venue: '16avos de final', match_date: '2026-07-03T18:00:00Z', odds_team_a: 1.16, odds_draw: 8.75, odds_team_b: 21.00 },
+    { id: 'wc_2026_07_03_3', team_a: 'Colombia', team_b: 'Ghana', flag_a: '🇨🇴', flag_b: '🇬🇭', venue: '16avos de final', match_date: '2026-07-03T21:30:00Z', odds_team_a: 1.44, odds_draw: 4.40, odds_team_b: 8.75 }
   ];
 
   if (!pool) {
