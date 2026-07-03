@@ -8133,9 +8133,14 @@ async function handleFoxPayAdminOverview(request, response) {
     const rouletteRewards = await getFoxPayRouletteRewards('', true);
     const rouletteSettings = await getFoxPayRouletteSettings();
     let players;
+    let totalUsersCount = 0;
     if (!pool) {
       players = [...foxpayPlayers.values()];
+      totalUsersCount = players.length;
     } else {
+      const countRes = await pool.query('select count(*) as count from foxpay_players');
+      totalUsersCount = Number(countRes.rows[0]?.count || 0);
+
       const result = await pool.query('select * from foxpay_players order by updated_at desc limit 500');
       players = result.rows;
     }
@@ -8219,7 +8224,7 @@ async function handleFoxPayAdminOverview(request, response) {
       roulette_settings: canContent ? rouletteSettings : {},
       matches: matchesWithAdminDetails,
       metrics: {
-        users: players.length,
+        users: totalUsersCount,
         pending_purchases: purchases.filter((row) => row.status === 'pending').length,
         pending_withdrawals: withdrawals.filter((row) => row.status === 'pending').length,
         support_open: supportTickets.filter((row) => row.status !== 'closed').length,
