@@ -507,21 +507,30 @@
             </div>
 
             <!-- Metrics Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-              <article class="surface" style="padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
-                <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 600;">Vendido por NowPayments</span>
-                <strong id="nowpaymentsTotal" style="font-size: 1.8rem; color: #46d39e;">0.00 USDT</strong>
-                <span id="nowpaymentsCount" style="font-size: 0.75rem; color: var(--muted);">0 transacciones</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+              <article class="metric-card">
+                <span class="metric-icon" style="border-color: rgba(70, 211, 158, 0.4); background: rgba(70, 211, 158, 0.1); color: #46d39e;"><iconify-icon icon="ph:credit-card-bold"></iconify-icon></span>
+                <div>
+                  <span class="metric-label">Vendido por NowPayments</span>
+                  <strong id="nowpaymentsTotal" style="color: #46d39e; display: block; font-size: 1.8rem; margin: 4px 0;">0.00 USDT</strong>
+                  <small id="nowpaymentsCount" style="color: var(--muted); font-size: 0.75rem;">0 transacciones</small>
+                </div>
               </article>
-              <article class="surface" style="padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
-                <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 600;">Ventas Manuales</span>
-                <strong id="manualTotal" style="font-size: 1.8rem; color: var(--accent);">0.00 USDT</strong>
-                <span id="manualCount" style="font-size: 0.75rem; color: var(--muted);">0 transacciones</span>
+              <article class="metric-card">
+                <span class="metric-icon" style="border-color: rgba(33, 214, 166, 0.4); background: rgba(33, 214, 166, 0.1); color: var(--accent);"><iconify-icon icon="ph:hand-coins-bold"></iconify-icon></span>
+                <div>
+                  <span class="metric-label">Ventas Manuales</span>
+                  <strong id="manualTotal" style="color: var(--accent); display: block; font-size: 1.8rem; margin: 4px 0;">0.00 USDT</strong>
+                  <small id="manualCount" style="color: var(--muted); font-size: 0.75rem;">0 transacciones</small>
+                </div>
               </article>
-              <article class="surface" style="padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
-                <span style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 600;">Con Hash Verificado</span>
-                <strong id="verifiedTotal" style="font-size: 1.8rem; color: #4cd8ff;">0.00 USDT</strong>
-                <span id="verifiedCount" style="font-size: 0.75rem; color: var(--muted);">0 transacciones</span>
+              <article class="metric-card">
+                <span class="metric-icon" style="border-color: rgba(76, 216, 255, 0.4); background: rgba(76, 216, 255, 0.1); color: #4cd8ff;"><iconify-icon icon="ph:shield-check-bold"></iconify-icon></span>
+                <div>
+                  <span class="metric-label">Con Hash Verificado</span>
+                  <strong id="verifiedTotal" style="color: #4cd8ff; display: block; font-size: 1.8rem; margin: 4px 0;">0.00 USDT</strong>
+                  <small id="verifiedCount" style="color: var(--muted); font-size: 0.75rem;">0 transacciones</small>
+                </div>
               </article>
             </div>
             <article class="surface">
@@ -1190,6 +1199,6 @@
     </div>
 
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-    <script src="/admin.js?v=20260630-purchases-hash-v2"></script>
+    <script src="/admin.js?v=20260705-centered-icons"></script>
   </body>
 </html>

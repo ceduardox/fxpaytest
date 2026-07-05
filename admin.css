@@ -524,18 +524,25 @@ textarea:focus {
 }
 
 .metric-card .metric-icon {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 54px;
   height: 54px;
-  place-items: center;
   border: 1px solid rgba(33, 214, 166, 0.38);
   border-radius: 16px;
   color: var(--accent);
   background: rgba(33, 214, 166, 0.09);
+  flex-shrink: 0;
 }
 
 .metric-card .metric-icon iconify-icon {
   font-size: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
 }
 
 .metric-card .metric-label {
