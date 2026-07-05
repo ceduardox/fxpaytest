@@ -831,6 +831,107 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
   const actionIcon = user.account_status === 'disabled' ? 'ph:play-bold' : 'ph:trash-bold';
   const actionClass = user.account_status === 'disabled' ? 'approve-button' : 'danger-button';
 
+  // Find all bets for this player
+  const userBetsList = [];
+  if (state.overview && Array.isArray(state.overview.matches)) {
+    state.overview.matches.forEach(match => {
+      const myBet = match.userBets?.find(b => b.player_id === user.player_id);
+      if (myBet) {
+        userBetsList.push({
+          match,
+          bet: myBet
+        });
+      }
+    });
+  }
+  // Sort bets chronologically by date
+  userBetsList.sort((a, b) => new Date(a.bet.created_at) - new Date(b.bet.created_at));
+
+  let betsHtml = '';
+  let totalBetAmount = 0;
+  let totalReturnAmount = 0;
+
+  if (userBetsList.length === 0) {
+    betsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">No ha realizado apuestas en el Mundial.</p>`;
+  } else {
+    let tableRows = '';
+    userBetsList.forEach(({ match, bet }) => {
+      const matchName = `${match.flag_a || ''} ${match.team_a} vs ${match.team_b} ${match.flag_b || ''}`;
+      
+      // Determine bet type display name
+      let choiceLabel = 'Empate';
+      if (bet.bet_type === 'team_a') choiceLabel = match.team_a;
+      if (bet.bet_type === 'team_b') choiceLabel = match.team_b;
+      
+      // Determine odds
+      let oddValue = 1.00;
+      if (bet.bet_type === 'team_a') oddValue = Number(match.odds_team_a || 1.00);
+      if (bet.bet_type === 'team_b') oddValue = Number(match.odds_team_b || 1.00);
+      if (bet.bet_type === 'draw') oddValue = Number(match.odds_draw || 1.00);
+
+      let statusLabel = 'Pendiente';
+      let statusColor = 'var(--muted)';
+      let returnAmount = 0;
+      let netAmount = -Number(bet.amount);
+
+      if (match.status === 'resolved') {
+        if (match.result === bet.bet_type) {
+          statusLabel = 'Ganó 🟢';
+          statusColor = '#46d39e';
+          returnAmount = Math.floor(Number(bet.amount) * oddValue);
+          netAmount = returnAmount - Number(bet.amount);
+          totalReturnAmount += returnAmount;
+        } else {
+          statusLabel = 'Perdió 🔴';
+          statusColor = '#ff6b6b';
+          returnAmount = 0;
+          netAmount = -Number(bet.amount);
+        }
+      }
+      totalBetAmount += Number(bet.amount);
+
+      tableRows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td style="padding: 10px 8px; font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${matchName}">${matchName}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem;">${new Date(bet.created_at).toLocaleDateString()}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${choiceLabel}</strong> <span style="color: var(--muted); font-size: 0.75rem;">(${oddValue.toFixed(2)})</span></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; color: #ff6b6b;">-${fmt(bet.amount, 0)}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${returnAmount > 0 ? '#46d39e' : 'var(--muted)'}; font-weight: 500;">${returnAmount > 0 ? `+${fmt(returnAmount, 0)}` : '0'}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${netAmount >= 0 ? '#46d39e' : '#ff6b6b'}; font-weight: 600;">${netAmount >= 0 ? `+${fmt(netAmount, 0)}` : `-${fmt(Math.abs(netAmount), 0)}`}</td>
+        </tr>
+      `;
+    });
+
+    const totalNet = totalReturnAmount - totalBetAmount;
+
+    betsHtml = `
+      <div class="table-wrap" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Partido</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Apuesta</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Retorno</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.04);">
+        <div>Total Apostado: <strong style="color: #ff6b6b;">${fmt(totalBetAmount, 0)} FOX</strong></div>
+        <div>Total Retornado: <strong style="color: #46d39e;">${fmt(totalReturnAmount, 0)} FOX</strong></div>
+        <div>Neto de Apuestas: <strong style="color: ${totalNet >= 0 ? '#46d39e' : '#ff6b6b'};">${totalNet >= 0 ? `+${fmt(totalNet, 0)}` : `-${fmt(Math.abs(totalNet), 0)}`} FOX</strong></div>
+      </div>
+    `;
+  }
+
   return `
     <details class="user-mobile-card user-admin-card" ${open ? 'open' : ''}>
       <summary class="user-admin-summary">
@@ -905,6 +1006,11 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
             </div>
             ` : ''}
           </div>
+        </section>
+        
+        <section class="user-admin-balance-panel" style="grid-column: span 2; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold"></iconify-icon>Historial de Apuestas (Mundial)</h4>
+          ${betsHtml}
         </section>
       </div>
     </details>
