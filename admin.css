@@ -2485,6 +2485,25 @@ tr:last-child td {
   padding: 20px;
 }
 
+.audit-toolbar {
+  background: rgba(255,255,255,0.02);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 20px;
+}
+
+.audit-toolbar-grid {
+  display: grid;
+  grid-template-columns: 1fr 120px auto;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.audit-calc-button {
+  width: 100%;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3583,22 +3602,27 @@ tr:last-child td {
 
 @media (max-width: 768px) {
   /* Make table columns into vertical rows on mobile */
-  .table-wrap table {
+  .table-wrap table,
+  .bets-table-wrap table {
     min-width: 100% !important;
     display: block;
   }
   
-  .table-wrap thead {
+  .table-wrap thead,
+  .bets-table-wrap thead {
     display: none; /* Hide header columns */
   }
   
   .table-wrap tbody,
-  .table-wrap tr {
+  .table-wrap tr,
+  .bets-table-wrap tbody,
+  .bets-table-wrap tr {
     display: block;
     width: 100%;
   }
   
-  .table-wrap tr {
+  .table-wrap tr,
+  .bets-table-wrap tr {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
@@ -3606,7 +3630,8 @@ tr:last-child td {
     padding: 14px;
   }
   
-  .table-wrap td {
+  .table-wrap td,
+  .bets-table-wrap td {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -3616,12 +3641,14 @@ tr:last-child td {
     width: 100% !important;
   }
   
-  .table-wrap td:last-child {
+  .table-wrap td:last-child,
+  .bets-table-wrap td:last-child {
     border-bottom: none;
   }
   
   /* Add label prefix to cells */
-  .table-wrap td[data-label]::before {
+  .table-wrap td[data-label]::before,
+  .bets-table-wrap td[data-label]::before {
     content: attr(data-label);
     display: block;
     font-size: 0.75rem;
@@ -3632,10 +3659,17 @@ tr:last-child td {
   }
   
   /* Ensure the table wrapper does not scroll horizontally since it fits vertically now */
-  .table-wrap {
+  .table-wrap,
+  .bets-table-wrap {
     border: none;
     background: transparent;
     overflow: visible;
+  }
+}
+
+@media (max-width: 680px) {
+  .audit-toolbar-grid {
+    grid-template-columns: 1fr;
   }
 }
 

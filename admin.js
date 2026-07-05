@@ -4638,8 +4638,8 @@ async function openAuditDuplicatesModal() {
     }).join('');
 
     container.innerHTML = `
-      <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
-        <div style="display: grid; grid-template-columns: 1fr 120px auto; gap: 15px; align-items: flex-end;">
+      <div class="audit-toolbar">
+        <div class="audit-toolbar-grid">
           <div>
             <label style="display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px;">Seleccione Partido Resuelto:</label>
             <select id="auditMatchSelect" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; font-weight: 600; outline: none;">
@@ -4651,7 +4651,7 @@ async function openAuditDuplicatesModal() {
             <input type="number" id="auditTimesPaid" min="2" max="10" value="3" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; font-weight: 700; text-align: center; outline: none;">
           </div>
           <div>
-            <button type="button" class="primary-button" onclick="calculateMatchDeductions()" style="padding: 10px 20px; font-weight: 700; height: 42px; border-radius: 6px; cursor: pointer;">
+            <button type="button" class="primary-button audit-calc-button" onclick="calculateMatchDeductions()" style="padding: 10px 20px; font-weight: 700; height: 42px; border-radius: 6px; cursor: pointer;">
               Calcular Deducciones
             </button>
           </div>
@@ -4712,13 +4712,13 @@ async function calculateMatchDeductions() {
 
       rows += `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(w.username)}</strong></td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: var(--muted);">${fmt(w.bet_amount, 0)} FOX</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: #46d39e; font-weight: 500;">+${fmt(w.expected_payout, 0)} FOX</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center; font-weight: 600;">${detectedHtml}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,255,255,0.05); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">+${timesExtra}</span></td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(suggestedDeduction, 0)} FOX</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
+          <td data-label="Usuario" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(w.username)}</strong></td>
+          <td data-label="Monto Apostado" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: var(--muted);">${fmt(w.bet_amount, 0)} FOX</td>
+          <td data-label="Premio Unico" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: #46d39e; font-weight: 500;">+${fmt(w.expected_payout, 0)} FOX</td>
+          <td data-label="Detectado en Wallet" style="padding: 10px 8px; font-size: 0.85rem; text-align: center; font-weight: 600;">${detectedHtml}</td>
+          <td data-label="Cobros Extra" style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,255,255,0.05); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">+${timesExtra}</span></td>
+          <td data-label="Descuento Sugerido" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(suggestedDeduction, 0)} FOX</td>
+          <td data-label="Accion" style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
             <button type="button" class="danger-button compact-button" onclick="deductExtraPayout('${w.player_id}', '${escapeAttr(w.username)}', ${suggestedDeduction})" style="background: #ff5b8c; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
               Descontar
             </button>
@@ -4728,7 +4728,7 @@ async function calculateMatchDeductions() {
     });
 
     resultDiv.innerHTML = `
-      <div class="bets-table-wrap" style="display: block !important; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+      <div class="bets-table-wrap audit-table-wrap" style="display: block !important; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
             <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
