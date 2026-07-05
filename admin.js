@@ -4697,12 +4697,26 @@ async function calculateMatchDeductions() {
     let rows = '';
     winners.forEach(w => {
       const suggestedDeduction = w.expected_payout * timesExtra;
+      
+      const ratio = w.expected_payout > 0 ? (w.discrepancy / w.expected_payout) : 0;
+      const detectedTimes = Math.round(ratio);
+      let detectedHtml = '';
+      
+      if (detectedTimes <= 0) {
+        detectedHtml = `<span style="color: #46d39e; font-weight: 500;">0 (Cuadra)</span>`;
+      } else if (detectedTimes > 5) {
+        detectedHtml = `<span style="color: #ffaa00; font-weight: 600; font-size: 0.8rem;"><iconify-icon icon="ph:warning-fill" style="vertical-align: middle;"></iconify-icon> +${detectedTimes} (Carga Inicial)</span>`;
+      } else {
+        detectedHtml = `<span style="color: #ff5b8c; font-weight: 700; background: rgba(255,91,140,0.1); padding: 2px 6px; border-radius: 4px;">+${detectedTimes} veces</span>`;
+      }
+
       rows += `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
           <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(w.username)}</strong></td>
           <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: var(--muted);">${fmt(w.bet_amount, 0)} FOX</td>
           <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: #46d39e; font-weight: 500;">+${fmt(w.expected_payout, 0)} FOX</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,91,140,0.15); color: #ff5b8c; padding: 2px 6px; border-radius: 4px; font-weight: 700;">+${timesExtra} extra</span></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center; font-weight: 600;">${detectedHtml}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,255,255,0.05); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600;">+${timesExtra}</span></td>
           <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(suggestedDeduction, 0)} FOX</td>
           <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
             <button type="button" class="danger-button compact-button" onclick="deductExtraPayout('${w.player_id}', '${escapeAttr(w.username)}', ${suggestedDeduction})" style="background: #ff5b8c; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
@@ -4721,6 +4735,7 @@ async function calculateMatchDeductions() {
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Monto Apostado</th>
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Premio Único</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Detectado en Wallet</th>
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Cobros Extra</th>
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Descuento Sugerido</th>
               <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Acción</th>
