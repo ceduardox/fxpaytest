@@ -10252,6 +10252,164 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'finance_edit');
+  if (!admin) return;
+  
+  try {
+    const report = [];
+
+    if (!pool) {
+      // In-memory diagnostics fallback
+      const matches = [...foxpayMatchesMemory.values()].filter(m => m.status === 'resolved');
+      for (const match of matches) {
+        const result = match.result;
+        let odds = 1.00;
+        if (result === 'team_a') odds = Number(match.odds_team_a || 1.00);
+        else if (result === 'team_b') odds = Number(match.odds_team_b || 1.00);
+        else if (result === 'draw') odds = Number(match.odds_draw || 1.00);
+
+        const bets = [...foxpayBetsMemory.values()].filter(b => b.match_id === match.id && b.bet_type === result);
+        for (const bet of bets) {
+          const expectedPayout = Math.floor(Number(bet.amount) * odds);
+          const player = foxpayPlayers.get(bet.player_id);
+          if (!player) continue;
+
+          const currentActualBalance = Number(player.token_balance || 0);
+
+          const totalMined = [...foxpayPlayerDailyStatsMemory.values()]
+            .filter(s => s.player_id === player.player_id)
+            .reduce((sum, s) => sum + Number(s.earned_tokens || 0), 0);
+          const totalCommissions = [...foxpayCommissions.values()]
+            .filter(c => c.referrer_player_id === player.player_id)
+            .reduce((sum, c) => sum + Number(c.credited_tokens || 0), 0);
+          const totalRoulette = [...foxpayRouletteSpinsMemory.values()]
+            .filter(s => s.player_id === player.player_id)
+            .reduce((sum, s) => sum + Number(s.credited_tokens || 0), 0);
+          const totalPurchases = [...foxpayPurchasesMemory.values()]
+            .filter(p => p.player_id === player.player_id && p.status === 'approved')
+            .reduce((sum, p) => sum + Number(p.fox_tokens_paid || 0), 0);
+
+          let netBets = 0;
+          const allBets = [...foxpayBetsMemory.values()].filter(b => b.player_id === player.player_id);
+          for (const b of allBets) {
+            const m = foxpayMatchesMemory.get(b.match_id);
+            if (m) {
+              netBets -= Number(b.amount);
+              if (m.status === 'resolved' && m.result === b.bet_type) {
+                let o = 1.00;
+                if (m.result === 'team_a') o = Number(m.odds_team_a || 1.00);
+                else if (m.result === 'team_b') o = Number(m.odds_team_b || 1.00);
+                else if (m.result === 'draw') o = Number(m.odds_draw || 1.00);
+                netBets += Math.floor(Number(b.amount) * o);
+              }
+            }
+          }
+
+          const documentedInflows = totalMined + totalCommissions + totalRoulette + totalPurchases;
+          const estimatedBalance = documentedInflows + netBets;
+          const discrepancy = currentActualBalance - estimatedBalance;
+
+          if (discrepancy > expectedPayout * 0.5) {
+            const timesCreditedExtra = Math.round(discrepancy / expectedPayout);
+            if (timesCreditedExtra > 0) {
+              report.push({
+                player_id: player.player_id,
+                username: player.username,
+                match_id: match.id,
+                match_name: `${match.team_a} vs ${match.team_b}`,
+                bet_amount: Number(bet.amount),
+                odds: odds,
+                expected_payout: expectedPayout,
+                discrepancy: discrepancy,
+                times_extra: timesCreditedExtra,
+                suggested_deduction: expectedPayout * timesCreditedExtra,
+                current_balance: currentActualBalance
+              });
+            }
+          }
+        }
+      }
+    } else {
+      const matchesRes = await pool.query("select * from foxpay_matches where status = 'resolved'");
+      for (const match of matchesRes.rows) {
+        const result = match.result;
+        let odds = 1.00;
+        if (result === 'team_a') odds = Number(match.odds_team_a || 1.00);
+        else if (result === 'team_b') odds = Number(match.odds_team_b || 1.00);
+        else if (result === 'draw') odds = Number(match.odds_draw || 1.00);
+
+        const betsRes = await pool.query('select * from foxpay_bets where match_id = $1 and bet_type = $2', [match.id, result]);
+        for (const bet of betsRes.rows) {
+          const expectedPayout = Math.floor(Number(bet.amount) * odds);
+          const playerRes = await pool.query('select * from foxpay_players where player_id = $1', [bet.player_id]);
+          const player = playerRes.rows[0];
+          if (!player) continue;
+
+          const currentActualBalance = Number(player.token_balance || 0);
+
+          const statsRes = await pool.query('select coalesce(sum(earned_tokens), 0) as total from foxpay_player_daily_stats where player_id = $1', [player.player_id]);
+          const totalMined = Number(statsRes.rows[0]?.total || 0);
+
+          const commRes = await pool.query('select coalesce(sum(credited_tokens), 0) as total from foxpay_commissions where referrer_player_id = $1', [player.player_id]);
+          const totalCommissions = Number(commRes.rows[0]?.total || 0);
+
+          const spinRes = await pool.query('select coalesce(sum(credited_tokens), 0) as total from foxpay_roulette_spins where player_id = $1', [player.player_id]);
+          const totalRoulette = Number(spinRes.rows[0]?.total || 0);
+
+          const purRes = await pool.query("select coalesce(sum(fox_tokens_paid), 0) as total from foxpay_purchases where player_id = $1 and status = 'approved'", [player.player_id]);
+          const totalPurchases = Number(purRes.rows[0]?.total || 0);
+
+          let netBets = 0;
+          const allBetsRes = await pool.query('select * from foxpay_bets where player_id = $1', [player.player_id]);
+          for (const b of allBetsRes.rows) {
+            const mRes = await pool.query('select * from foxpay_matches where id = $1', [b.match_id]);
+            const m = mRes.rows[0];
+            if (m) {
+              netBets -= Number(b.amount);
+              if (m.status === 'resolved' && m.result === b.bet_type) {
+                let o = 1.00;
+                if (m.result === 'team_a') o = Number(m.odds_team_a || 1.00);
+                else if (m.result === 'team_b') o = Number(m.odds_team_b || 1.00);
+                else if (m.result === 'draw') o = Number(m.odds_draw || 1.00);
+                netBets += Math.floor(Number(b.amount) * o);
+              }
+            }
+          }
+
+          const documentedInflows = totalMined + totalCommissions + totalRoulette + totalPurchases;
+          const estimatedBalance = documentedInflows + netBets;
+          const discrepancy = currentActualBalance - estimatedBalance;
+
+          if (discrepancy > expectedPayout * 0.5) {
+            const timesCreditedExtra = Math.round(discrepancy / expectedPayout);
+            if (timesCreditedExtra > 0) {
+              report.push({
+                player_id: player.player_id,
+                username: player.username,
+                match_id: match.id,
+                match_name: `${match.team_a} vs ${match.team_b}`,
+                bet_amount: Number(bet.amount),
+                odds: odds,
+                expected_payout: expectedPayout,
+                discrepancy: discrepancy,
+                times_extra: timesCreditedExtra,
+                suggested_deduction: expectedPayout * timesCreditedExtra,
+                current_balance: currentActualBalance
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return sendJson(response, 200, { ok: true, report });
+  } catch (error) {
+    console.error('Audit duplicates failed', error);
+    return sendJson(response, 500, { ok: false, error: 'audit_duplicates_failed' });
+  }
+}
+
 async function handleFoxPayAdminMaintenanceReset(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'maintenance_edit');
   if (!admin) return;
@@ -11989,6 +12147,9 @@ const server = createServer((request, response) => {
   }
   if (url.pathname === '/api/foxpay/admin/match/resolve') {
     return handleFoxPayAdminMatchResolve(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/match/audit-duplicates') {
+    return handleFoxPayAdminMatchAuditDuplicates(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
