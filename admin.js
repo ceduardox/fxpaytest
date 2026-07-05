@@ -930,7 +930,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
   btn.innerHTML = `<iconify-icon icon="ph:circle-notch-bold" class="spin" style="vertical-align: middle; margin-right: 6px;"></iconify-icon> Cargando historial...`;
 
   try {
-    const data = await api(`/api/foxpay/admin/user/history?player_id=${playerId}`);
+    const data = await api(`/user/history?player_id=${playerId}`);
     if (!data.ok) throw new Error(data.error || 'Failed to load history');
 
     const user = state.overview.players.find(p => p.player_id === playerId);
@@ -1005,8 +1005,6 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
         `;
       });
 
-      const totalNet = totalReturnAmount - totalBetAmount;
-
       betsHtml = `
         <div class="bets-table-wrap" style="display: block !important; max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
           <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -1026,19 +1024,16 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
             </tbody>
           </table>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.04);">
-          <div>Total Apostado: <strong style="color: #ff6b6b;">${fmt(totalBetAmount, 0)} FOX</strong></div>
-          <div>Total Retornado: <strong style="color: #46d39e;">${fmt(totalReturnAmount, 0)} FOX</strong></div>
-          <div>Neto de Apuestas: <strong style="color: ${totalNet >= 0 ? '#46d39e' : '#ff6b6b'};">${totalNet >= 0 ? `+${fmt(totalNet, 0)}` : `-${fmt(Math.abs(totalNet), 0)}`} FOX</strong></div>
-        </div>
       `;
     }
 
-    // 2. Generate daily stats HTML
+    // 2. Generate daily stats HTML & calculate total fox mined
     let dailyStatsHtml = '';
+    let totalFoxMined = 0;
     if (data.daily_stats && data.daily_stats.length > 0) {
       let rows = '';
       data.daily_stats.forEach(stat => {
+        totalFoxMined += Number(stat.earned_tokens || 0);
         rows += `
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
             <td data-label="Día" style="padding: 8px; font-size: 0.85rem;"><strong>${stat.daily_key}</strong></td>
@@ -1069,80 +1064,34 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
       dailyStatsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin historial diario registrado.</p>`;
     }
 
-    // 3. Generate transactions HTML
-    let txHtml = '';
-    const txList = [];
-    (data.purchases || []).forEach(p => {
-      txList.push({
-        type: 'Compra',
-        amount: `${money(p.amount_usdt)} USDT`,
-        status: p.status,
-        date: p.created_at,
-        color: '#46d39e',
-        icon: 'ph:arrow-down-left-bold'
-      });
-    });
-    (data.withdrawals || []).forEach(w => {
-      txList.push({
-        type: 'Retiro',
-        amount: `${money(w.amount_usdt)} USDT`,
-        status: w.status,
-        date: w.created_at,
-        color: '#ff6b6b',
-        icon: 'ph:arrow-up-right-bold'
-      });
-    });
-    txList.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    if (txList.length === 0) {
-      txHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin transacciones registradas.</p>`;
-    } else {
-      let txRows = '';
-      txList.forEach(tx => {
-        txRows += `
-          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-            <td data-label="Tipo" style="padding: 8px; font-size: 0.85rem;"><span style="color: ${tx.color}; font-weight: 600;"><iconify-icon icon="${tx.icon}" style="vertical-align: middle; margin-right: 4px;"></iconify-icon>${tx.type}</span></td>
-            <td data-label="Monto" style="padding: 8px; font-size: 0.85rem; font-weight: 600;">${tx.amount}</td>
-            <td data-label="Estado" style="padding: 8px; font-size: 0.85rem;">${statusPill(tx.status)}</td>
-            <td data-label="Fecha" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${new Date(tx.date).toLocaleDateString()}</td>
-          </tr>
-        `;
-      });
-      txHtml = `
-        <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tipo</th>
-                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
-                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
-                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${txRows}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
+    const netBets = totalReturnAmount - totalBetAmount;
+    const finalEstimatedBalance = totalFoxMined + netBets;
 
     container.innerHTML = `
       <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
         <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
-          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Apuestas (Mundial) - Completo</h4>
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Apuestas (Mundial)</h4>
           ${betsHtml}
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
-            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa</h4>
-            ${dailyStatsHtml}
+        <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa (FOX Minado)</h4>
+          ${dailyStatsHtml}
+        </div>
+
+        <div style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;">
+          <h4 style="margin-bottom: 4px; color: var(--accent);"><iconify-icon icon="ph:calculator-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Resumen de Balance Neto de Juego</h4>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>Total FOX Producido (Minado):</span>
+            <strong style="color: #46d39e;">+${fmt(totalFoxMined, 0)} FOX</strong>
           </div>
-          
-          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
-            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:swap-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Transacciones (USDT)</h4>
-            ${txHtml}
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>Resultado de Apuestas (Neto):</span>
+            <strong style="color: ${netBets >= 0 ? '#46d39e' : '#ff6b6b'};">${netBets >= 0 ? `+${fmt(netBets, 0)}` : `-${fmt(Math.abs(netBets), 0)}`} FOX</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700; padding-top: 4px; color: #fff;">
+            <span>Balance de Juego Estimado:</span>
+            <span style="color: var(--accent);">${fmt(finalEstimatedBalance, 0)} FOX</span>
           </div>
         </div>
       </div>
