@@ -892,13 +892,13 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
 
       tableRows += `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td style="padding: 10px 8px; font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${matchName}">${matchName}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem;">${new Date(bet.created_at).toLocaleDateString()}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${choiceLabel}</strong> <span style="color: var(--muted); font-size: 0.75rem;">(${oddValue.toFixed(2)})</span></td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; color: #ff6b6b;">-${fmt(bet.amount, 0)}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${returnAmount > 0 ? '#46d39e' : 'var(--muted)'}; font-weight: 500;">${returnAmount > 0 ? `+${fmt(returnAmount, 0)}` : '0'}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; color: ${netAmount >= 0 ? '#46d39e' : '#ff6b6b'}; font-weight: 600;">${netAmount >= 0 ? `+${fmt(netAmount, 0)}` : `-${fmt(Math.abs(netAmount), 0)}`}</td>
+          <td data-label="Partido" style="padding: 10px 8px; font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${matchName}">${matchName}</td>
+          <td data-label="Fecha" style="padding: 10px 8px; font-size: 0.85rem;">${new Date(bet.created_at).toLocaleDateString()}</td>
+          <td data-label="Apuesta" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${choiceLabel}</strong> <span style="color: var(--muted); font-size: 0.75rem;">(${oddValue.toFixed(2)})</span></td>
+          <td data-label="Monto" style="padding: 10px 8px; font-size: 0.85rem; color: #ff6b6b;">-${fmt(bet.amount, 0)}</td>
+          <td data-label="Estado" style="padding: 10px 8px; font-size: 0.85rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</td>
+          <td data-label="Retorno" style="padding: 10px 8px; font-size: 0.85rem; color: ${returnAmount > 0 ? '#46d39e' : 'var(--muted)'}; font-weight: 500;">${returnAmount > 0 ? `+${fmt(returnAmount, 0)}` : '0'}</td>
+          <td data-label="Neto" style="padding: 10px 8px; font-size: 0.85rem; color: ${netAmount >= 0 ? '#46d39e' : '#ff6b6b'}; font-weight: 600;">${netAmount >= 0 ? `+${fmt(netAmount, 0)}` : `-${fmt(Math.abs(netAmount), 0)}`}</td>
         </tr>
       `;
     });
@@ -906,7 +906,7 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
     const totalNet = totalReturnAmount - totalBetAmount;
 
     betsHtml = `
-      <div class="table-wrap" style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
+      <div class="bets-table-wrap" style="display: block !important; max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
             <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
