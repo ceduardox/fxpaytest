@@ -831,205 +831,6 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
   const actionIcon = user.account_status === 'disabled' ? 'ph:play-bold' : 'ph:trash-bold';
   const actionClass = user.account_status === 'disabled' ? 'approve-button' : 'danger-button';
 
-  // Find all bets for this player
-  const userBetsList = [];
-  if (state.overview && Array.isArray(state.overview.matches)) {
-    state.overview.matches.forEach(match => {
-      const myBet = match.userBets?.find(b => b.player_id === user.player_id);
-      if (myBet) {
-        userBetsList.push({
-          match,
-          bet: myBet
-        });
-      }
-    });
-  }
-  // Sort bets chronologically by date
-  userBetsList.sort((a, b) => new Date(a.bet.created_at) - new Date(b.bet.created_at));
-
-  let betsHtml = '';
-  let totalBetAmount = 0;
-  let totalReturnAmount = 0;
-
-  if (userBetsList.length === 0) {
-    betsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">No ha realizado apuestas en el Mundial.</p>`;
-  } else {
-    let tableRows = '';
-    userBetsList.forEach(({ match, bet }) => {
-      const matchName = `${match.flag_a || ''} ${match.team_a} vs ${match.team_b} ${match.flag_b || ''}`;
-      
-      // Determine bet type display name
-      let choiceLabel = 'Empate';
-      if (bet.bet_type === 'team_a') choiceLabel = match.team_a;
-      if (bet.bet_type === 'team_b') choiceLabel = match.team_b;
-      
-      // Determine odds
-      let oddValue = 1.00;
-      if (bet.bet_type === 'team_a') oddValue = Number(match.odds_team_a || 1.00);
-      if (bet.bet_type === 'team_b') oddValue = Number(match.odds_team_b || 1.00);
-      if (bet.bet_type === 'draw') oddValue = Number(match.odds_draw || 1.00);
-
-      let statusLabel = 'Pendiente';
-      let statusColor = 'var(--muted)';
-      let returnAmount = 0;
-      let netAmount = -Number(bet.amount);
-
-      if (match.status === 'resolved') {
-        if (match.result === bet.bet_type) {
-          statusLabel = 'Ganó 🟢';
-          statusColor = '#46d39e';
-          returnAmount = Math.floor(Number(bet.amount) * oddValue);
-          netAmount = returnAmount - Number(bet.amount);
-          totalReturnAmount += returnAmount;
-        } else {
-          statusLabel = 'Perdió 🔴';
-          statusColor = '#ff6b6b';
-          returnAmount = 0;
-          netAmount = -Number(bet.amount);
-        }
-      }
-      totalBetAmount += Number(bet.amount);
-
-      tableRows += `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td data-label="Partido" style="padding: 10px 8px; font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${matchName}">${matchName}</td>
-          <td data-label="Fecha" style="padding: 10px 8px; font-size: 0.85rem;">${new Date(bet.created_at).toLocaleDateString()}</td>
-          <td data-label="Apuesta" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${choiceLabel}</strong> <span style="color: var(--muted); font-size: 0.75rem;">(${oddValue.toFixed(2)})</span></td>
-          <td data-label="Monto" style="padding: 10px 8px; font-size: 0.85rem; color: #ff6b6b;">-${fmt(bet.amount, 0)}</td>
-          <td data-label="Estado" style="padding: 10px 8px; font-size: 0.85rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</td>
-          <td data-label="Retorno" style="padding: 10px 8px; font-size: 0.85rem; color: ${returnAmount > 0 ? '#46d39e' : 'var(--muted)'}; font-weight: 500;">${returnAmount > 0 ? `+${fmt(returnAmount, 0)}` : '0'}</td>
-          <td data-label="Neto" style="padding: 10px 8px; font-size: 0.85rem; color: ${netAmount >= 0 ? '#46d39e' : '#ff6b6b'}; font-weight: 600;">${netAmount >= 0 ? `+${fmt(netAmount, 0)}` : `-${fmt(Math.abs(netAmount), 0)}`}</td>
-        </tr>
-      `;
-    });
-
-    const totalNet = totalReturnAmount - totalBetAmount;
-
-    betsHtml = `
-      <div class="bets-table-wrap" style="display: block !important; max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-          <thead>
-            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Partido</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Apuesta</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Retorno</th>
-              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Neto</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-      </div>
-      <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.04);">
-        <div>Total Apostado: <strong style="color: #ff6b6b;">${fmt(totalBetAmount, 0)} FOX</strong></div>
-        <div>Total Retornado: <strong style="color: #46d39e;">${fmt(totalReturnAmount, 0)} FOX</strong></div>
-        <div>Neto de Apuestas: <strong style="color: ${totalNet >= 0 ? '#46d39e' : '#ff6b6b'};">${totalNet >= 0 ? `+${fmt(totalNet, 0)}` : `-${fmt(Math.abs(totalNet), 0)}`} FOX</strong></div>
-      </div>
-    `;
-  }
-
-  // Daily Stats table HTML (last 7 days)
-  let dailyStatsHtml = '';
-  if (Array.isArray(user.daily_stats) && user.daily_stats.length > 0) {
-    let rows = '';
-    const sortedStats = [...user.daily_stats].sort((a, b) => String(b.daily_key).localeCompare(String(a.daily_key)));
-    sortedStats.forEach(stat => {
-      rows += `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td data-label="Día" style="padding: 8px; font-size: 0.85rem;"><strong>${stat.daily_key}</strong></td>
-          <td data-label="Tokens" style="padding: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600;">+${fmt(stat.earned_tokens, 0)} FOX</td>
-          <td data-label="USD" style="padding: 8px; font-size: 0.85rem; color: #46d39e; font-weight: 500;">${money(stat.earned_usd)}</td>
-          <td data-label="Taps" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${fmt(stat.taps, 0)} taps</td>
-        </tr>
-      `;
-    });
-    dailyStatsHtml = `
-      <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-          <thead>
-            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Día</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tokens</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Equiv. USD</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Taps</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      </div>
-    `;
-  } else {
-    dailyStatsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin historial diario registrado.</p>`;
-  }
-
-  // Transactions (purchases & withdrawals) table HTML
-  let txHtml = '';
-  const userPurchases = (state.overview.purchases || []).filter(p => p.player_id === user.player_id);
-  const userWithdrawals = (state.overview.withdrawals || []).filter(w => w.player_id === user.player_id);
-  const txList = [];
-
-  userPurchases.forEach(p => {
-    txList.push({
-      type: 'Compra',
-      amount: `${money(p.amount_usdt)} USDT`,
-      status: p.status,
-      date: p.created_at,
-      color: '#46d39e',
-      icon: 'ph:arrow-down-left-bold'
-    });
-  });
-  userWithdrawals.forEach(w => {
-    txList.push({
-      type: 'Retiro',
-      amount: `${money(w.amount_usdt)} USDT`,
-      status: w.status,
-      date: w.created_at,
-      color: '#ff6b6b',
-      icon: 'ph:arrow-up-right-bold'
-    });
-  });
-
-  txList.sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
-
-  if (txList.length === 0) {
-    txHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin transacciones registradas.</p>`;
-  } else {
-    let txRows = '';
-    txList.forEach(tx => {
-      txRows += `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td data-label="Tipo" style="padding: 8px; font-size: 0.85rem;"><span style="color: ${tx.color}; font-weight: 600;"><iconify-icon icon="${tx.icon}" style="vertical-align: middle; margin-right: 4px;"></iconify-icon>${tx.type}</span></td>
-          <td data-label="Monto" style="padding: 8px; font-size: 0.85rem; font-weight: 600;">${tx.amount}</td>
-          <td data-label="Estado" style="padding: 8px; font-size: 0.85rem;">${statusPill(tx.status)}</td>
-          <td data-label="Fecha" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${new Date(tx.date).toLocaleDateString()}</td>
-        </tr>
-      `;
-    });
-    txHtml = `
-      <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-          <thead>
-            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tipo</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
-              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${txRows}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
   return `
     <details class="user-mobile-card user-admin-card" ${open ? 'open' : ''}>
       <summary class="user-admin-summary">
@@ -1106,24 +907,255 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
           </div>
         </section>
         
-        <section class="user-admin-balance-panel" style="grid-column: span 2; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
-          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold"></iconify-icon>Historial de Apuestas (Mundial)</h4>
-          ${betsHtml}
-        </section>
-
-        <section class="user-admin-balance-panel" style="grid-column: span 1; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
-          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold"></iconify-icon>Producción Diaria (Últimos 7 días)</h4>
-          ${dailyStatsHtml}
-        </section>
-
-        <section class="user-admin-balance-panel" style="grid-column: span 1; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
-          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:swap-bold"></iconify-icon>Historial de Transacciones (USDT)</h4>
-          ${txHtml}
+        <section class="user-admin-balance-panel" style="grid-column: span 2; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;" id="history-section-${user.player_id}">
+          <div style="text-align: center; padding: 15px;">
+            <button class="primary-button" type="button" onclick="loadPlayerHistoryOnDemand('${user.player_id}')" id="load-history-btn-${user.player_id}" style="padding: 10px 20px; font-size: 0.9rem; cursor: pointer; border-radius: 8px;">
+              <iconify-icon icon="ph:clock-counter-clockwise-bold" style="vertical-align: middle; margin-right: 6px; font-size: 1.2rem;"></iconify-icon>
+              Cargar Historial Completo (Apuestas, Producción y Transacciones)
+            </button>
+          </div>
+          <div id="player-history-container-${user.player_id}" style="display: none; margin-top: 15px;"></div>
         </section>
       </div>
     </details>
   `;
 }
+
+window.loadPlayerHistoryOnDemand = async function(playerId) {
+  const btn = $(`#load-history-btn-${playerId}`);
+  const container = $(`#player-history-container-${playerId}`);
+  if (!btn || !container) return;
+
+  btn.disabled = true;
+  btn.innerHTML = `<iconify-icon icon="ph:circle-notch-bold" class="spin" style="vertical-align: middle; margin-right: 6px;"></iconify-icon> Cargando historial...`;
+
+  try {
+    const data = await api(`/api/foxpay/admin/user/history?player_id=${playerId}`);
+    if (!data.ok) throw new Error(data.error || 'Failed to load history');
+
+    const user = state.overview.players.find(p => p.player_id === playerId);
+    if (!user) throw new Error('Player not found in state');
+
+    // 1. Generate bets HTML
+    const userBetsList = [];
+    if (state.overview && Array.isArray(state.overview.matches)) {
+      state.overview.matches.forEach(match => {
+        const myBet = match.userBets?.find(b => b.player_id === playerId);
+        if (myBet) {
+          userBetsList.push({
+            match,
+            bet: myBet
+          });
+        }
+      });
+    }
+    userBetsList.sort((a, b) => new Date(a.bet.created_at) - new Date(b.bet.created_at));
+
+    let betsHtml = '';
+    let totalBetAmount = 0;
+    let totalReturnAmount = 0;
+
+    if (userBetsList.length === 0) {
+      betsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">No ha realizado apuestas en el Mundial.</p>`;
+    } else {
+      let tableRows = '';
+      userBetsList.forEach(({ match, bet }) => {
+        const matchName = `${match.flag_a || ''} ${match.team_a} vs ${match.team_b} ${match.flag_b || ''}`;
+        
+        let choiceLabel = 'Empate';
+        if (bet.bet_type === 'team_a') choiceLabel = match.team_a;
+        if (bet.bet_type === 'team_b') choiceLabel = match.team_b;
+        
+        let oddValue = 1.00;
+        if (bet.bet_type === 'team_a') oddValue = Number(match.odds_team_a || 1.00);
+        if (bet.bet_type === 'team_b') oddValue = Number(match.odds_team_b || 1.00);
+        if (bet.bet_type === 'draw') oddValue = Number(match.odds_draw || 1.00);
+
+        let statusLabel = 'Pendiente';
+        let statusColor = 'var(--muted)';
+        let returnAmount = 0;
+        let netAmount = -Number(bet.amount);
+
+        if (match.status === 'resolved') {
+          if (match.result === bet.bet_type) {
+            statusLabel = 'Ganó 🟢';
+            statusColor = '#46d39e';
+            returnAmount = Math.floor(Number(bet.amount) * oddValue);
+            netAmount = returnAmount - Number(bet.amount);
+            totalReturnAmount += returnAmount;
+          } else {
+            statusLabel = 'Perdió 🔴';
+            statusColor = '#ff6b6b';
+            returnAmount = 0;
+            netAmount = -Number(bet.amount);
+          }
+        }
+        totalBetAmount += Number(bet.amount);
+
+        tableRows += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td data-label="Partido" style="padding: 10px 8px; font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${matchName}">${matchName}</td>
+            <td data-label="Fecha" style="padding: 10px 8px; font-size: 0.85rem;">${new Date(bet.created_at).toLocaleDateString()}</td>
+            <td data-label="Apuesta" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${choiceLabel}</strong> <span style="color: var(--muted); font-size: 0.75rem;">(${oddValue.toFixed(2)})</span></td>
+            <td data-label="Monto" style="padding: 10px 8px; font-size: 0.85rem; color: #ff6b6b;">-${fmt(bet.amount, 0)}</td>
+            <td data-label="Estado" style="padding: 10px 8px; font-size: 0.85rem; color: ${statusColor}; font-weight: 600;">${statusLabel}</td>
+            <td data-label="Retorno" style="padding: 10px 8px; font-size: 0.85rem; color: ${returnAmount > 0 ? '#46d39e' : 'var(--muted)'}; font-weight: 500;">${returnAmount > 0 ? `+${fmt(returnAmount, 0)}` : '0'}</td>
+            <td data-label="Neto" style="padding: 10px 8px; font-size: 0.85rem; color: ${netAmount >= 0 ? '#46d39e' : '#ff6b6b'}; font-weight: 600;">${netAmount >= 0 ? `+${fmt(netAmount, 0)}` : `-${fmt(Math.abs(netAmount), 0)}`}</td>
+          </tr>
+        `;
+      });
+
+      const totalNet = totalReturnAmount - totalBetAmount;
+
+      betsHtml = `
+        <div class="bets-table-wrap" style="display: block !important; max-height: 250px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Partido</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Apuesta</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Retorno</th>
+                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Neto</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.04);">
+          <div>Total Apostado: <strong style="color: #ff6b6b;">${fmt(totalBetAmount, 0)} FOX</strong></div>
+          <div>Total Retornado: <strong style="color: #46d39e;">${fmt(totalReturnAmount, 0)} FOX</strong></div>
+          <div>Neto de Apuestas: <strong style="color: ${totalNet >= 0 ? '#46d39e' : '#ff6b6b'};">${totalNet >= 0 ? `+${fmt(totalNet, 0)}` : `-${fmt(Math.abs(totalNet), 0)}`} FOX</strong></div>
+        </div>
+      `;
+    }
+
+    // 2. Generate daily stats HTML
+    let dailyStatsHtml = '';
+    if (data.daily_stats && data.daily_stats.length > 0) {
+      let rows = '';
+      data.daily_stats.forEach(stat => {
+        rows += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td data-label="Día" style="padding: 8px; font-size: 0.85rem;"><strong>${stat.daily_key}</strong></td>
+            <td data-label="Tokens" style="padding: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600;">+${fmt(stat.earned_tokens, 0)} FOX</td>
+            <td data-label="USD" style="padding: 8px; font-size: 0.85rem; color: #46d39e; font-weight: 500;">${money(stat.earned_usd)}</td>
+            <td data-label="Taps" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${fmt(stat.taps, 0)} taps</td>
+          </tr>
+        `;
+      });
+      dailyStatsHtml = `
+        <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Día</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tokens</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Equiv. USD</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Taps</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      dailyStatsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin historial diario registrado.</p>`;
+    }
+
+    // 3. Generate transactions HTML
+    let txHtml = '';
+    const txList = [];
+    (data.purchases || []).forEach(p => {
+      txList.push({
+        type: 'Compra',
+        amount: `${money(p.amount_usdt)} USDT`,
+        status: p.status,
+        date: p.created_at,
+        color: '#46d39e',
+        icon: 'ph:arrow-down-left-bold'
+      });
+    });
+    (data.withdrawals || []).forEach(w => {
+      txList.push({
+        type: 'Retiro',
+        amount: `${money(w.amount_usdt)} USDT`,
+        status: w.status,
+        date: w.created_at,
+        color: '#ff6b6b',
+        icon: 'ph:arrow-up-right-bold'
+      });
+    });
+    txList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (txList.length === 0) {
+      txHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin transacciones registradas.</p>`;
+    } else {
+      let txRows = '';
+      txList.forEach(tx => {
+        txRows += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td data-label="Tipo" style="padding: 8px; font-size: 0.85rem;"><span style="color: ${tx.color}; font-weight: 600;"><iconify-icon icon="${tx.icon}" style="vertical-align: middle; margin-right: 4px;"></iconify-icon>${tx.type}</span></td>
+            <td data-label="Monto" style="padding: 8px; font-size: 0.85rem; font-weight: 600;">${tx.amount}</td>
+            <td data-label="Estado" style="padding: 8px; font-size: 0.85rem;">${statusPill(tx.status)}</td>
+            <td data-label="Fecha" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${new Date(tx.date).toLocaleDateString()}</td>
+          </tr>
+        `;
+      });
+      txHtml = `
+        <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tipo</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${txRows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Apuestas (Mundial) - Completo</h4>
+          ${betsHtml}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa</h4>
+            ${dailyStatsHtml}
+          </div>
+          
+          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:swap-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Transacciones (USDT)</h4>
+            ${txHtml}
+          </div>
+        </div>
+      </div>
+    `;
+
+    btn.style.display = 'none';
+    container.style.display = 'block';
+  } catch (error) {
+    showAlert(`Error cargando historial: ${error.message}`, 'warn');
+    btn.disabled = false;
+    btn.innerHTML = `<iconify-icon icon="ph:clock-counter-clockwise-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon> Reintentar Cargar Historial`;
+  }
+};
 
 function renderUsersLegacy() {
   const query = $('#userSearch').value.toLowerCase();

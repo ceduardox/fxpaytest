@@ -8158,7 +8158,7 @@ async function handleFoxPayAdminOverview(request, response) {
       players = result.rows;
     }
     players = await enrichFoxPayPlayersForAdmin(players);
-    const dailyStats = await listFoxPayPlayerDailyStats(players.map((player) => player.player_id), 7);
+    const dailyStats = await listFoxPayPlayerDailyStats(players.map((player) => player.player_id), 1);
     const dailyStatsByPlayer = new Map();
     dailyStats.forEach((row) => {
       if (!dailyStatsByPlayer.has(row.player_id)) dailyStatsByPlayer.set(row.player_id, []);
@@ -8169,7 +8169,7 @@ async function handleFoxPayAdminOverview(request, response) {
       return {
         ...player,
         today_stats: playerStats.find((row) => row.daily_key === player.daily_key) || null,
-        daily_stats: playerStats,
+        daily_stats: [],
       };
     });
     const supportTickets = await listFoxPayAdminSupportTickets();
@@ -9743,6 +9743,61 @@ async function handleFoxPayAdminUserAddCoins(request, response, url) {
   } catch (error) {
     console.error('FoxPay user add coins failed', error);
     return sendJson(response, 500, { ok: false, error: 'foxpay_user_add_coins_failed' });
+  }
+}
+
+async function handleFoxPayAdminUserHistory(request, response, url) {
+  if (!requireFoxPayAdmin(request, response, 'users_view')) return;
+  const params = await readRequestParams(request, url);
+  const playerId = params.get('player_id') || '';
+  if (!playerId) {
+    return sendJson(response, 400, { ok: false, error: 'missing_player_id' });
+  }
+
+  try {
+    let dailyStats = [];
+    let purchases = [];
+    let withdrawals = [];
+
+    if (!pool) {
+      dailyStats = [...foxpayPlayerDailyStatsMemory.values()]
+        .filter((row) => row.player_id === playerId)
+        .sort((a, b) => String(b.daily_key).localeCompare(String(a.daily_key)));
+      purchases = Array.from(foxpayPurchasesMemory.values())
+        .filter((row) => row.player_id === playerId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      withdrawals = Array.from(foxpayWithdrawalsMemory.values())
+        .filter((row) => row.player_id === playerId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else {
+      const statsRes = await pool.query(
+        'select * from foxpay_player_daily_stats where player_id = $1 order by daily_key desc',
+        [playerId]
+      );
+      dailyStats = statsRes.rows.map(sanitizeFoxPayDailyStats);
+
+      const purRes = await pool.query(
+        'select * from foxpay_purchases where player_id = $1 order by created_at desc',
+        [playerId]
+      );
+      purchases = purRes.rows;
+
+      const witRes = await pool.query(
+        'select * from foxpay_withdrawals where player_id = $1 order by created_at desc',
+        [playerId]
+      );
+      withdrawals = witRes.rows;
+    }
+
+    return sendJson(response, 200, {
+      ok: true,
+      daily_stats: dailyStats,
+      purchases: purchases,
+      withdrawals: withdrawals
+    });
+  } catch (error) {
+    console.error('FoxPay admin user history fetch failed', error);
+    return sendJson(response, 500, { ok: false, error: 'foxpay_user_history_failed' });
   }
 }
 
@@ -11780,6 +11835,10 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/foxpay/admin/user/add-coins') {
     return handleFoxPayAdminUserAddCoins(request, response, url);
+  }
+
+  if (url.pathname === '/api/foxpay/admin/user/history') {
+    return handleFoxPayAdminUserHistory(request, response, url);
   }
 
   if (url.pathname === '/api/foxpay/admin/user/status') {
