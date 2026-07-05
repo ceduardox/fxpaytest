@@ -10443,6 +10443,29 @@ async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminCreateBackup(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'finance_edit');
+  if (!admin) return;
+
+  try {
+    if (!pool) {
+      return sendJson(response, 200, { ok: true, message: 'Running in memory mode. No Postgres tables to backup.' });
+    }
+
+    const dateSuffix = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const timestamp = dateSuffix + '_' + new Date().toTimeString().split(' ')[0].replace(/:/g, '');
+    
+    await pool.query(`create table foxpay_players_bk_${timestamp} as select * from foxpay_players`);
+    await pool.query(`create table foxpay_matches_bk_${timestamp} as select * from foxpay_matches`);
+    await pool.query(`create table foxpay_bets_bk_${timestamp} as select * from foxpay_bets`);
+
+    return sendJson(response, 200, { ok: true, message: `Backup creado con éxito: foxpay_players_bk_${timestamp}` });
+  } catch (error) {
+    console.error('Database backup failed', error);
+    return sendJson(response, 500, { ok: false, error: 'backup_failed' });
+  }
+}
+
 async function handleFoxPayAdminMaintenanceReset(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'maintenance_edit');
   if (!admin) return;
@@ -12186,6 +12209,9 @@ const server = createServer((request, response) => {
   }
   if (url.pathname === '/api/foxpay/admin/match/audit-duplicates') {
     return handleFoxPayAdminMatchAuditDuplicates(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/match/create-backup') {
+    return handleFoxPayAdminCreateBackup(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
