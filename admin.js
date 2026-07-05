@@ -4693,7 +4693,7 @@ async function deductExtraPayout(playerId, username, amount) {
 // Bind backup events
 document.addEventListener('DOMContentLoaded', () => {
   $('#btnDownloadBackupJson')?.addEventListener('click', () => {
-    window.open('/api/foxpay/admin/match/download-backup', '_blank');
+    window.open('/api/foxpay/admin/match/download-backup?token=' + encodeURIComponent(state.authToken || ''), '_blank');
   });
 
   $('#btnCreateDbBackup')?.addEventListener('click', async () => {

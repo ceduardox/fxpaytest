@@ -8099,7 +8099,8 @@ async function handleFoxPayAdminPushTest(request, response, url) {
 }
 
 function requireFoxPayAdmin(request, response, permission = 'view') {
-  const sessionToken = request.headers['x-admin-session'] || '';
+  const urlObj = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  const sessionToken = request.headers['x-admin-session'] || urlObj.searchParams.get('token') || '';
   const sessionAdmin = verifyFoxPayAdminSession(sessionToken);
   if (sessionAdmin) {
     const effectiveAdmin = foxPayAdminWithPermissions(sessionAdmin);
