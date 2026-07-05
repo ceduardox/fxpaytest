@@ -4619,30 +4619,93 @@ async function openAuditDuplicatesModal() {
   const container = $('#auditReportContainer');
   if (!modal || !container) return;
 
-  container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);"><iconify-icon icon="ph:spinner-bold" class="spin" style="font-size: 2rem;"></iconify-icon><br>Escaneando discrepancias y auditoría...</div>';
+  container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);"><iconify-icon icon="ph:spinner-bold" class="spin" style="font-size: 2rem;"></iconify-icon><br>Cargando partidos resueltos...</div>';
   modal.showModal();
 
   try {
     const res = await api('/match/audit-duplicates');
-    if (!res.ok) throw new Error(res.error || 'Error al obtener la auditoría');
+    if (!res.ok) throw new Error(res.error || 'Error al obtener partidos');
 
-    const report = res.report || [];
-    if (report.length === 0) {
-      container.innerHTML = '<div style="text-align: center; padding: 30px; color: #46d39e; font-weight: 500;"><iconify-icon icon="ph:check-circle-bold" style="font-size: 2.5rem; display: block; margin: 0 auto 10px;"></iconify-icon>Todo en orden. No se detectan duplicaciones de cobro de apuestas con saldo excedente.</div>';
+    const matches = res.matches || [];
+    if (matches.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--muted);"><iconify-icon icon="ph:info-bold" style="font-size: 2.5rem; display: block; margin: 0 auto 10px;"></iconify-icon>No hay partidos resueltos registrados para auditar.</div>';
+      return;
+    }
+
+    let matchOptions = matches.map(m => {
+      const matchLabel = `${m.team_a} vs ${m.team_b} (${m.result === 'team_a' ? m.team_a : m.result === 'team_b' ? m.team_b : 'Empate'})`;
+      return `<option value="${m.id}">${escapeAttr(matchLabel)}</option>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 120px auto; gap: 15px; align-items: flex-end;">
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px;">Seleccione Partido Resuelto:</label>
+            <select id="auditMatchSelect" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; font-weight: 600; outline: none;">
+              ${matchOptions}
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px;">Veces pagadas:</label>
+            <input type="number" id="auditTimesPaid" min="2" max="10" value="3" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; font-weight: 700; text-align: center; outline: none;">
+          </div>
+          <div>
+            <button type="button" class="primary-button" onclick="calculateMatchDeductions()" style="padding: 10px 20px; font-weight: 700; height: 42px; border-radius: 6px; cursor: pointer;">
+              Calcular Deducciones
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="auditWinnersResult" style="margin-top: 15px;">
+        <p style="color: var(--muted); font-size: 0.85rem; text-align: center; padding: 20px;">Seleccione un partido arriba y presione Calcular.</p>
+      </div>
+    `;
+
+  } catch (err) {
+    container.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff5b8c;">Error: ${escapeAttr(err.message)}</div>`;
+  }
+}
+
+async function calculateMatchDeductions() {
+  const select = $('#auditMatchSelect');
+  const timesInput = $('#auditTimesPaid');
+  const resultDiv = $('#auditWinnersResult');
+  if (!select || !timesInput || !resultDiv) return;
+
+  const matchId = select.value;
+  const timesPaid = parseInt(timesInput.value) || 1;
+  const timesExtra = timesPaid - 1;
+
+  if (timesPaid < 2) {
+    showAlert('El número de veces pagadas debe ser 2 o más para calcular cobros duplicados.');
+    return;
+  }
+
+  resultDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);"><iconify-icon icon="ph:spinner-bold" class="spin" style="font-size: 1.5rem;"></iconify-icon><br>Consultando ganadores...</div>';
+
+  try {
+    const res = await api(`/match/audit-duplicates?match_id=${encodeURIComponent(matchId)}`);
+    if (!res.ok) throw new Error(res.error || 'Error al consultar ganadores');
+
+    const winners = res.winners || [];
+    if (winners.length === 0) {
+      resultDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">No se encontraron apuestas ganadoras en este partido.</div>';
       return;
     }
 
     let rows = '';
-    report.forEach(item => {
+    winners.forEach(w => {
+      const suggestedDeduction = w.expected_payout * timesExtra;
       rows += `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(item.username)}</strong></td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; color: var(--muted);">${escapeAttr(item.match_name)}</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right;">${fmt(item.expected_payout, 0)} FOX</td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,91,140,0.15); color: #ff5b8c; padding: 2px 6px; border-radius: 4px; font-weight: 700;">+${item.times_extra} veces</span></td>
-          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(item.suggested_deduction, 0)} FOX</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(w.username)}</strong></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: var(--muted);">${fmt(w.bet_amount, 0)} FOX</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: #46d39e; font-weight: 500;">+${fmt(w.expected_payout, 0)} FOX</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,91,140,0.15); color: #ff5b8c; padding: 2px 6px; border-radius: 4px; font-weight: 700;">+${timesExtra} extra</span></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(suggestedDeduction, 0)} FOX</td>
           <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
-            <button type="button" class="danger-button compact-button" onclick="deductExtraPayout('${item.player_id}', '${escapeAttr(item.username)}', ${item.suggested_deduction})" style="background: #ff5b8c; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+            <button type="button" class="danger-button compact-button" onclick="deductExtraPayout('${w.player_id}', '${escapeAttr(w.username)}', ${suggestedDeduction})" style="background: #ff5b8c; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
               Descontar
             </button>
           </td>
@@ -4650,26 +4713,28 @@ async function openAuditDuplicatesModal() {
       `;
     });
 
-    container.innerHTML = `
-      <table style="width: 100%; border-collapse: collapse; text-align: left;">
-        <thead>
-          <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Partido</th>
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Premio Único</th>
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Cobros Extra</th>
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Descuento Sugerido</th>
-            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
+    resultDiv.innerHTML = `
+      <div class="bets-table-wrap" style="display: block !important; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Monto Apostado</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Premio Único</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Cobros Extra</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Descuento Sugerido</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
     `;
 
   } catch (err) {
-    container.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff5b8c;">Error: ${escapeAttr(err.message)}</div>`;
+    resultDiv.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff5b8c;">Error: ${escapeAttr(err.message)}</div>`;
   }
 }
 
