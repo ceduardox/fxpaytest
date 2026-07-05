@@ -4691,29 +4691,27 @@ async function deductExtraPayout(playerId, username, amount) {
 }
 
 // Bind backup events
-document.addEventListener('DOMContentLoaded', () => {
-  $('#btnDownloadBackupJson')?.addEventListener('click', () => {
-    window.open('/api/foxpay/admin/match/download-backup?token=' + encodeURIComponent(state.authToken || ''), '_blank');
-  });
+$('#btnDownloadBackupJson')?.addEventListener('click', () => {
+  window.open('/api/foxpay/admin/match/download-backup?token=' + encodeURIComponent(state.authToken || ''), '_blank');
+});
 
-  $('#btnCreateDbBackup')?.addEventListener('click', async () => {
-    const btn = $('#btnCreateDbBackup');
-    if (!btn) return;
-    btn.disabled = true;
-    btn.textContent = 'Creando respaldo...';
-    try {
-      const res = await api('/match/create-backup', {}, 'POST');
-      if (res.ok) {
-        showAlert(res.message || 'Respaldo DB creado con éxito.', 'success');
-      } else {
-        throw new Error(res.error || 'Fallo al respaldar');
-      }
-    } catch (err) {
-      showAlert(`Error de respaldo: ${err.message}`);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Crear Respaldo SQL (DB)';
+$('#btnCreateDbBackup')?.addEventListener('click', async () => {
+  const btn = $('#btnCreateDbBackup');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Creando respaldo...';
+  try {
+    const res = await api('/match/create-backup', {}, 'POST');
+    if (res.ok) {
+      showAlert(res.message || 'Respaldo DB creado con éxito.', 'success');
+    } else {
+      throw new Error(res.error || 'Fallo al respaldar');
     }
-  });
+  } catch (err) {
+    showAlert(`Error de respaldo: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Crear Respaldo SQL (DB)';
+  }
 });
 
