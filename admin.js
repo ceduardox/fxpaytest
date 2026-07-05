@@ -4627,8 +4627,6 @@ async function openAuditDuplicatesModal() {
     if (!res.ok) throw new Error(res.error || 'Error al obtener partidos');
 
     const matches = res.matches || [];
-    const playerSummaries = res.player_summaries || [];
-    const summaryTotals = res.summary_totals || {};
     if (matches.length === 0) {
       container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--muted);"><iconify-icon icon="ph:info-bold" style="font-size: 2.5rem; display: block; margin: 0 auto 10px;"></iconify-icon>No hay partidos resueltos registrados para auditar.</div>';
       return;
@@ -4639,55 +4637,7 @@ async function openAuditDuplicatesModal() {
       return `<option value="${m.id}">${escapeAttr(matchLabel)}</option>`;
     }).join('');
 
-    const summaryRows = playerSummaries.slice(0, 80).map((row) => {
-      const difference = Number(row.difference || 0);
-      const tone = difference > 0 ? '#ff5b8c' : (difference < 0 ? '#ffaa00' : '#46d39e');
-      return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
-          <td data-label="Usuario" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(row.username || row.player_id)}</strong></td>
-          <td data-label="Total Correcto" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: #46d39e; font-weight: 600;">${fmt(row.total_correct, 0)} FOX</td>
-          <td data-label="Total Real" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: var(--accent); font-weight: 600;">${fmt(row.total_real, 0)} FOX</td>
-          <td data-label="Diferencia" style="padding: 10px 8px; font-size: 0.85rem; text-align: right; color: ${tone}; font-weight: 700;">${difference > 0 ? '+' : ''}${fmt(difference, 0)} FOX</td>
-        </tr>
-      `;
-    }).join('');
-
     container.innerHTML = `
-      <section class="audit-summary-block">
-        <div class="audit-summary-cards">
-          <article class="audit-summary-card">
-            <small>Total correcto</small>
-            <strong>${fmt(summaryTotals.total_correct, 0)} FOX</strong>
-          </article>
-          <article class="audit-summary-card">
-            <small>Total real</small>
-            <strong>${fmt(summaryTotals.total_real, 0)} FOX</strong>
-          </article>
-          <article class="audit-summary-card">
-            <small>Diferencia</small>
-            <strong>${Number(summaryTotals.difference || 0) > 0 ? '+' : ''}${fmt(summaryTotals.difference, 0)} FOX</strong>
-          </article>
-          <article class="audit-summary-card">
-            <small>Usuarios con exceso</small>
-            <strong>${fmt(summaryTotals.players_with_excess, 0)}</strong>
-          </article>
-        </div>
-        <div class="bets-table-wrap audit-table-wrap" style="display: block !important; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
-                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Total Correcto</th>
-                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Total Real</th>
-                <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Diferencia</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${summaryRows || '<tr><td colspan="4" style="padding: 14px; text-align: center; color: var(--muted);">Sin usuarios para resumir.</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </section>
       <div class="audit-toolbar">
         <div class="audit-toolbar-grid">
           <div>

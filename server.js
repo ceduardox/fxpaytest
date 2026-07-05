@@ -10370,127 +10370,6 @@ async function handleFoxPayAdminMatchResolve(request, response, url) {
   }
 }
 
-async function buildFoxPayAuditSummary() {
-  const players = [];
-  const minedMap = new Map();
-  const commissionsMap = new Map();
-  const rouletteMap = new Map();
-  const purchasesMap = new Map();
-  const netBetsMap = new Map();
-
-  const addToMap = (target, key, amount) => {
-    const normalizedKey = String(key || '').trim();
-    if (!normalizedKey) return;
-    target.set(normalizedKey, Number(target.get(normalizedKey) || 0) + Number(amount || 0));
-  };
-
-  if (!pool) {
-    [...foxpayPlayers.values()].forEach((player) => {
-      players.push({
-        player_id: player.player_id,
-        username: player.username || player.player_id,
-        token_balance: Number(player.token_balance || 0),
-      });
-    });
-    [...foxpayPlayerDailyStatsMemory.values()].forEach((row) => addToMap(minedMap, row.player_id, row.earned_tokens));
-    [...foxpayCommissions.values()].forEach((row) => addToMap(commissionsMap, row.referrer_player_id, row.credited_tokens));
-    [...foxpayRouletteSpinsMemory.values()].forEach((row) => addToMap(rouletteMap, row.player_id, row.credited_tokens));
-    [...foxpayPurchasesMemory.values()]
-      .filter((row) => row.status === 'approved')
-      .forEach((row) => addToMap(purchasesMap, row.player_id, row.fox_tokens_paid));
-
-    [...foxpayBetsMemory.values()].forEach((bet) => {
-      const match = foxpayMatchesMemory.get(bet.match_id);
-      if (!match) return;
-      addToMap(netBetsMap, bet.player_id, -Number(bet.amount || 0));
-      if (match.status === 'resolved' && match.result === bet.bet_type) {
-        let odds = 1;
-        if (match.result === 'team_a') odds = Number(match.odds_team_a || 1);
-        else if (match.result === 'team_b') odds = Number(match.odds_team_b || 1);
-        else if (match.result === 'draw') odds = Number(match.odds_draw || 1);
-        addToMap(netBetsMap, bet.player_id, Math.floor(Number(bet.amount || 0) * odds));
-      }
-    });
-  } else {
-    const [playersRes, minedRes, commissionsRes, rouletteRes, purchasesRes, betsRes] = await Promise.all([
-      pool.query('select player_id, username, token_balance from foxpay_players'),
-      pool.query('select player_id, coalesce(sum(earned_tokens), 0) as total from foxpay_player_daily_stats group by player_id'),
-      pool.query('select referrer_player_id as player_id, coalesce(sum(credited_tokens), 0) as total from foxpay_commissions group by referrer_player_id'),
-      pool.query('select player_id, coalesce(sum(credited_tokens), 0) as total from foxpay_roulette_spins group by player_id'),
-      pool.query("select player_id, coalesce(sum(fox_tokens_paid), 0) as total from foxpay_purchases where status = 'approved' group by player_id"),
-      pool.query(
-        `select b.player_id, b.amount, b.bet_type, m.status as match_status, m.result as match_result, m.odds_team_a, m.odds_team_b, m.odds_draw
-         from foxpay_bets b
-         join foxpay_matches m on m.id = b.match_id`
-      ),
-    ]);
-
-    players.push(...playersRes.rows.map((row) => ({
-      player_id: row.player_id,
-      username: row.username || row.player_id,
-      token_balance: Number(row.token_balance || 0),
-    })));
-    minedRes.rows.forEach((row) => addToMap(minedMap, row.player_id, row.total));
-    commissionsRes.rows.forEach((row) => addToMap(commissionsMap, row.player_id, row.total));
-    rouletteRes.rows.forEach((row) => addToMap(rouletteMap, row.player_id, row.total));
-    purchasesRes.rows.forEach((row) => addToMap(purchasesMap, row.player_id, row.total));
-    betsRes.rows.forEach((bet) => {
-      addToMap(netBetsMap, bet.player_id, -Number(bet.amount || 0));
-      if (bet.match_status === 'resolved' && bet.match_result === bet.bet_type) {
-        let odds = 1;
-        if (bet.match_result === 'team_a') odds = Number(bet.odds_team_a || 1);
-        else if (bet.match_result === 'team_b') odds = Number(bet.odds_team_b || 1);
-        else if (bet.match_result === 'draw') odds = Number(bet.odds_draw || 1);
-        addToMap(netBetsMap, bet.player_id, Math.floor(Number(bet.amount || 0) * odds));
-      }
-    });
-  }
-
-  const playerSummaries = players.map((player) => {
-    const totalMined = Number(minedMap.get(player.player_id) || 0);
-    const totalCommissions = Number(commissionsMap.get(player.player_id) || 0);
-    const totalRoulette = Number(rouletteMap.get(player.player_id) || 0);
-    const totalPurchases = Number(purchasesMap.get(player.player_id) || 0);
-    const netBets = Number(netBetsMap.get(player.player_id) || 0);
-    const totalCorrect = totalMined + totalCommissions + totalRoulette + totalPurchases + netBets;
-    const totalReal = Number(player.token_balance || 0);
-    const difference = totalReal - totalCorrect;
-
-    return {
-      player_id: player.player_id,
-      username: player.username || player.player_id,
-      total_correct: totalCorrect,
-      total_real: totalReal,
-      difference,
-      components: {
-        mined: totalMined,
-        commissions: totalCommissions,
-        roulette: totalRoulette,
-        purchases: totalPurchases,
-        net_bets: netBets,
-      },
-    };
-  }).sort((left, right) => {
-    if (right.difference !== left.difference) return right.difference - left.difference;
-    return String(left.username || '').localeCompare(String(right.username || ''));
-  });
-
-  const totals = playerSummaries.reduce((acc, row) => {
-    acc.total_correct += Number(row.total_correct || 0);
-    acc.total_real += Number(row.total_real || 0);
-    acc.difference += Number(row.difference || 0);
-    if (row.difference > 0) acc.players_with_excess += 1;
-    return acc;
-  }, {
-    total_correct: 0,
-    total_real: 0,
-    difference: 0,
-    players_with_excess: 0,
-  });
-
-  return { playerSummaries, totals };
-}
-
 async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'finance_edit');
   if (!admin) return;
@@ -10502,7 +10381,6 @@ async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
     if (!pool) {
       // In-memory fallback
       if (!matchId) {
-        const auditSummary = await buildFoxPayAuditSummary();
         const matches = [...foxpayMatchesMemory.values()]
           .filter((m) => m.status === 'resolved')
           .map(m => ({
@@ -10516,12 +10394,7 @@ async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
             odds_draw: m.odds_draw,
             created_at: m.created_at
           }));
-        return sendJson(response, 200, {
-          ok: true,
-          matches,
-          player_summaries: auditSummary.playerSummaries,
-          summary_totals: auditSummary.totals,
-        });
+        return sendJson(response, 200, { ok: true, matches });
       } else {
         const match = foxpayMatchesMemory.get(matchId);
         if (!match) {
@@ -10551,14 +10424,8 @@ async function handleFoxPayAdminMatchAuditDuplicates(request, response, url) {
       }
     } else {
       if (!matchId) {
-        const auditSummary = await buildFoxPayAuditSummary();
         const mRes = await pool.query("select id, team_a, team_b, status, result, odds_team_a, odds_team_b, odds_draw, created_at from foxpay_matches where status = 'resolved' order by created_at desc");
-        return sendJson(response, 200, {
-          ok: true,
-          matches: mRes.rows,
-          player_summaries: auditSummary.playerSummaries,
-          summary_totals: auditSummary.totals,
-        });
+        return sendJson(response, 200, { ok: true, matches: mRes.rows });
       } else {
         const mRes = await pool.query("select * from foxpay_matches where id = $1", [matchId]);
         const match = mRes.rows[0];
