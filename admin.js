@@ -1082,7 +1082,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
     if (Array.isArray(data.purchases)) {
       data.purchases.forEach(p => {
         if (p.status === 'approved') {
-          totalPurchasesFox += Number(p.tokens_rewarded || 0);
+          totalPurchasesFox += Number(p.fox_tokens_paid || p.tokens_rewarded || 0);
         }
       });
     }
