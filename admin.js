@@ -1091,12 +1091,206 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
     const documentedInflows = totalFoxMined + totalCommissionsFox + totalRouletteFox + totalPurchasesFox;
     const currentActualBalance = Number(user.token_balance || 0);
     
-    // Difference between real balance and estimated balance represents manual admin adjustments
+    // Difference between real balance and estimated balance represents manual admin adjustments / migration initial balances
     const estimatedBalance = documentedInflows + netBets;
     const adminAdjustments = currentActualBalance - estimatedBalance;
 
+    // 3. Build chronological ledger
+    const ledger = [];
+
+    // Minado
+    if (data.daily_stats && data.daily_stats.length > 0) {
+      data.daily_stats.forEach(stat => {
+        ledger.push({
+          date: new Date(stat.daily_key + 'T12:00:00Z'),
+          dateStr: stat.daily_key,
+          type: 'Minería ⛏️',
+          desc: `Minería diaria (${fmt(stat.taps, 0)} taps)`,
+          amount: Number(stat.earned_tokens || 0),
+          color: 'var(--accent)'
+        });
+      });
+    }
+
+    // Comisiones
+    if (Array.isArray(data.commissions)) {
+      data.commissions.forEach(c => {
+        ledger.push({
+          date: new Date(c.created_at),
+          dateStr: new Date(c.created_at).toLocaleDateString() + ' ' + new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          type: 'Comisión Red 👥',
+          desc: `Unilevel Nivel ${c.level || 1} (Ref: ${c.buyer_player_id || 'Usuario'})`,
+          amount: Number(c.credited_tokens || 0),
+          color: '#46d39e'
+        });
+      });
+    }
+
+    // Ruleta
+    if (Array.isArray(data.roulette_spins)) {
+      data.roulette_spins.forEach(s => {
+        ledger.push({
+          date: new Date(s.created_at),
+          dateStr: new Date(s.created_at).toLocaleDateString() + ' ' + new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          type: 'Ruleta 🎡',
+          desc: `Premio: ${s.reward_label || 'Tokens'}`,
+          amount: Number(s.credited_tokens || 0),
+          color: '#46d39e'
+        });
+      });
+    }
+
+    // Compras
+    if (Array.isArray(data.purchases)) {
+      data.purchases.forEach(p => {
+        if (p.status === 'approved') {
+          ledger.push({
+            date: new Date(p.created_at),
+            dateStr: new Date(p.created_at).toLocaleDateString() + ' ' + new Date(p.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: 'Compra 📦',
+            desc: `Adquisición Paquete ${p.package_id || ''}`,
+            amount: Number(p.fox_tokens_paid || p.tokens_rewarded || 0),
+            color: '#46d39e'
+          });
+        }
+      });
+    }
+
+    // Retiros
+    if (Array.isArray(data.withdrawals)) {
+      data.withdrawals.forEach(w => {
+        if (w.status !== 'rejected') {
+          ledger.push({
+            date: new Date(w.created_at),
+            dateStr: new Date(w.created_at).toLocaleDateString() + ' ' + new Date(w.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: 'Retiro 📤',
+            desc: `Solicitud de retiro ${w.status === 'approved' ? '(Aprobado)' : '(Pendiente)'}`,
+            amount: -Number(w.tokens || 0),
+            color: '#ff6b6b'
+          });
+        } else {
+          ledger.push({
+            date: new Date(w.created_at),
+            dateStr: new Date(w.created_at).toLocaleDateString() + ' ' + new Date(w.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: 'Retiro Solicitado 📤',
+            desc: `Solicitud de retiro de ${fmt(w.tokens, 0)} FOX`,
+            amount: -Number(w.tokens || 0),
+            color: 'var(--muted)'
+          });
+          ledger.push({
+            date: new Date(w.reviewed_at || w.created_at),
+            dateStr: new Date(w.reviewed_at || w.created_at).toLocaleDateString() + ' ' + new Date(w.reviewed_at || w.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: 'Retiro Rechazado 🟢',
+            desc: `Retiro rechazado (Saldo devuelto)`,
+            amount: Number(w.tokens || 0),
+            color: '#46d39e'
+          });
+        }
+      });
+    }
+
+    // Apuestas de Mundial
+    if (Array.isArray(data.bets)) {
+      data.bets.forEach(b => {
+        const matchName = `${b.team_a} vs ${b.team_b}`;
+        let choiceLabel = 'Empate';
+        if (b.bet_type === 'team_a') choiceLabel = b.team_a;
+        if (b.bet_type === 'team_b') choiceLabel = b.team_b;
+        
+        let oddValue = 1.00;
+        if (b.bet_type === 'team_a') oddValue = Number(b.odds_team_a || 1.00);
+        if (b.bet_type === 'team_b') oddValue = Number(b.odds_team_b || 1.00);
+        if (b.bet_type === 'draw') oddValue = Number(b.odds_draw || 1.00);
+
+        ledger.push({
+          date: new Date(b.created_at),
+          dateStr: new Date(b.created_at).toLocaleDateString() + ' ' + new Date(b.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          type: 'Apuesta ⚽',
+          desc: `Apuesta a ${choiceLabel} (${oddValue.toFixed(2)}) en ${matchName}`,
+          amount: -Number(b.amount || 0),
+          color: '#ff6b6b'
+        });
+
+        if (b.match_status === 'resolved') {
+          if (b.match_result === b.bet_type) {
+            const returnVal = Math.floor(Number(b.amount) * oddValue);
+            ledger.push({
+              date: new Date(b.updated_at || b.created_at),
+              dateStr: new Date(b.updated_at || b.created_at).toLocaleDateString() + ' ' + new Date(b.updated_at || b.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+              type: 'Premio Apuesta 🏆',
+              desc: `Ganancia apuesta acertada en ${matchName}`,
+              amount: returnVal,
+              color: '#46d39e'
+            });
+          }
+        }
+      });
+    }
+
+    // Sort chronologically
+    ledger.sort((a, b) => a.date - b.date);
+
+    // Sum verification
+    let tempSum = 0;
+    ledger.forEach(item => {
+      tempSum += item.amount;
+    });
+
+    const diff = currentActualBalance - tempSum;
+    if (Math.abs(diff) > 1) {
+      ledger.unshift({
+        date: new Date(user.created_at || '2026-05-29'),
+        dateStr: new Date(user.created_at || '2026-05-29').toLocaleDateString(),
+        type: 'Saldo Inicial / Migración 📦',
+        desc: 'Saldo inicial en wallet (Migrado o ajustado previamente)',
+        amount: diff,
+        color: '#46d39e'
+      });
+    }
+
+    // Recalculate balances
+    let running = 0;
+    let ledgerRows = '';
+    ledger.forEach(item => {
+      running += item.amount;
+      const isPositive = item.amount >= 0;
+      ledgerRows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td data-label="Fecha" style="padding: 10px 8px; font-size: 0.85rem; color: var(--muted);">${item.dateStr}</td>
+          <td data-label="Operación" style="padding: 10px 8px; font-size: 0.85rem;"><strong>${item.type}</strong></td>
+          <td data-label="Detalle" style="padding: 10px 8px; font-size: 0.85rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.desc}">${item.desc}</td>
+          <td data-label="Monto" style="padding: 10px 8px; font-size: 0.85rem; font-weight: 600; color: ${item.color};">${isPositive ? '+' : ''}${fmt(item.amount, 0)} FOX</td>
+          <td data-label="Saldo Acumulado" style="padding: 10px 8px; font-size: 0.85rem; font-weight: 700; color: var(--accent);">${fmt(running, 0)} FOX</td>
+        </tr>
+      `;
+    });
+
+    const ledgerHtml = `
+      <div class="bets-table-wrap" style="display: block !important; max-height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Operación</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Detalle</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
+              <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Saldo Acumulado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ledgerRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+
     container.innerHTML = `
       <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:list-dashes-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Libro Contable Completo (Extracto de Wallet FOX)</h4>
+          ${ledgerHtml}
+        </div>
+
         <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
           <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Historial de Apuestas (Mundial)</h4>
           ${betsHtml}
@@ -1132,7 +1326,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
 
           ${Math.abs(adminAdjustments) > 1 ? `
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
-            <span>5. Ajustes manuales / GFOX del Administrador:</span>
+            <span>5. Ajustes manuales / Saldo inicial de migración:</span>
             <strong style="color: ${adminAdjustments >= 0 ? '#46d39e' : '#ff6b6b'};">${adminAdjustments >= 0 ? '+' : ''}${fmt(adminAdjustments, 0)} FOX</strong>
           </div>
           ` : ''}

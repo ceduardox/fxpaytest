@@ -9760,6 +9760,7 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
     let withdrawals = [];
     let commissions = [];
     let rouletteSpins = [];
+    let bets = [];
 
     if (!pool) {
       dailyStats = [...foxpayPlayerDailyStatsMemory.values()]
@@ -9776,6 +9777,24 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       rouletteSpins = [...foxpayRouletteSpinsMemory.values()]
         .filter((row) => row.player_id === playerId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      bets = [...foxpayBetsMemory.values()]
+        .filter((row) => row.player_id === playerId)
+        .map(b => {
+          const match = foxpayMatchesMemory.get(b.match_id) || {};
+          return {
+            ...b,
+            team_a: match.team_a,
+            team_b: match.team_b,
+            flag_a: match.flag_a,
+            flag_b: match.flag_b,
+            match_status: match.status,
+            match_result: match.result,
+            odds_team_a: match.odds_team_a,
+            odds_team_b: match.odds_team_b,
+            odds_draw: match.odds_draw
+          };
+        })
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     } else {
       const statsRes = await pool.query(
@@ -9807,6 +9826,16 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         [playerId]
       );
       rouletteSpins = spinRes.rows;
+
+      const betsRes = await pool.query(
+        `select b.*, m.team_a, m.team_b, m.flag_a, m.flag_b, m.status as match_status, m.result as match_result, m.odds_team_a, m.odds_team_b, m.odds_draw 
+         from foxpay_bets b 
+         join foxpay_matches m on b.match_id = m.id 
+         where b.player_id = $1 
+         order by b.created_at desc`,
+        [playerId]
+      );
+      bets = betsRes.rows;
     }
 
     return sendJson(response, 200, {
@@ -9815,7 +9844,8 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
       purchases: purchases,
       withdrawals: withdrawals,
       commissions: commissions,
-      roulette_spins: rouletteSpins
+      roulette_spins: rouletteSpins,
+      bets: bets
     });
   } catch (error) {
     console.error('FoxPay admin user history fetch failed', error);
