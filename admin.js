@@ -4614,3 +4614,106 @@ document.addEventListener('change', async (e) => {
   }
 });
 
+async function openAuditDuplicatesModal() {
+  const modal = $('#auditDuplicatesModal');
+  const container = $('#auditReportContainer');
+  if (!modal || !container) return;
+
+  container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);"><iconify-icon icon="ph:spinner-bold" class="spin" style="font-size: 2rem;"></iconify-icon><br>Escaneando discrepancias y auditoría...</div>';
+  modal.showModal();
+
+  try {
+    const res = await api('/match/audit-duplicates');
+    if (!res.ok) throw new Error(res.error || 'Error al obtener la auditoría');
+
+    const report = res.report || [];
+    if (report.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 30px; color: #46d39e; font-weight: 500;"><iconify-icon icon="ph:check-circle-bold" style="font-size: 2.5rem; display: block; margin: 0 auto 10px;"></iconify-icon>Todo en orden. No se detectan duplicaciones de cobro de apuestas con saldo excedente.</div>';
+      return;
+    }
+
+    let rows = '';
+    report.forEach(item => {
+      rows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td style="padding: 10px 8px; font-size: 0.85rem;"><strong>${escapeAttr(item.username)}</strong></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; color: var(--muted);">${escapeAttr(item.match_name)}</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right;">${fmt(item.expected_payout, 0)} FOX</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;"><span style="background: rgba(255,91,140,0.15); color: #ff5b8c; padding: 2px 6px; border-radius: 4px; font-weight: 700;">+${item.times_extra} veces</span></td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: right; font-weight: 700; color: #ff5b8c;">-${fmt(item.suggested_deduction, 0)} FOX</td>
+          <td style="padding: 10px 8px; font-size: 0.85rem; text-align: center;">
+            <button type="button" class="danger-button compact-button" onclick="deductExtraPayout('${item.player_id}', '${escapeAttr(item.username)}', ${item.suggested_deduction})" style="background: #ff5b8c; color: #fff; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+              Descontar
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    container.innerHTML = `
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted);">Partido</th>
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Premio Único</th>
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Cobros Extra</th>
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: right;">Descuento Sugerido</th>
+            <th style="padding: 10px 8px; font-size: 0.8rem; color: var(--muted); text-align: center;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    `;
+
+  } catch (err) {
+    container.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff5b8c;">Error: ${escapeAttr(err.message)}</div>`;
+  }
+}
+
+async function deductExtraPayout(playerId, username, amount) {
+  if (!confirm(`¿Estás seguro de que deseas descontar ${fmt(amount, 0)} FOX al usuario ${username} como devolución de cobro duplicado?`)) return;
+
+  try {
+    const res = await api('/user/adjust-balance', { player_id: playerId, amount: -amount }, 'POST');
+    if (res.ok) {
+      showAlert(`Se ha descontado ${fmt(amount, 0)} FOX a ${username} correctamente.`, 'success');
+      void openAuditDuplicatesModal();
+      void loadData();
+    } else {
+      throw new Error(res.error || 'Error al aplicar deducción');
+    }
+  } catch (err) {
+    showAlert(err.message);
+  }
+}
+
+// Bind backup events
+document.addEventListener('DOMContentLoaded', () => {
+  $('#btnDownloadBackupJson')?.addEventListener('click', () => {
+    window.open('/api/foxpay/admin/match/download-backup', '_blank');
+  });
+
+  $('#btnCreateDbBackup')?.addEventListener('click', async () => {
+    const btn = $('#btnCreateDbBackup');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Creando respaldo...';
+    try {
+      const res = await api('/match/create-backup', {}, 'POST');
+      if (res.ok) {
+        showAlert(res.message || 'Respaldo DB creado con éxito.', 'success');
+      } else {
+        throw new Error(res.error || 'Fallo al respaldar');
+      }
+    } catch (err) {
+      showAlert(`Error de respaldo: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Crear Respaldo SQL (DB)';
+    }
+  });
+});
+
