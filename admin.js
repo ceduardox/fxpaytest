@@ -1124,7 +1124,6 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
     </details>
   `;
 }
-}
 
 function renderUsersLegacy() {
   const query = $('#userSearch').value.toLowerCase();
