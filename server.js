@@ -10136,11 +10136,22 @@ async function handleFoxPayAdminMatchClose(request, response, url) {
     const params = await readRequestParams(request, url);
     const id = params.get('id');
     if (!id) return sendJson(response, 400, { ok: false, error: 'missing_id' });
+    
     if (pool) {
+      const mRes = await pool.query('select status from foxpay_matches where id = $1', [id]);
+      if (mRes.rows[0]?.status === 'resolved') {
+        return sendJson(response, 400, { ok: false, error: 'match_already_resolved', message: 'No se puede cerrar un partido que ya ha sido resuelto.' });
+      }
       await pool.query('update foxpay_matches set status = $1 where id = $2', ['closed', id]);
     } else {
       const match = foxpayMatchesMemory.get(id);
-      if (match) { match.status = 'closed'; foxpayMatchesMemory.set(id, match); }
+      if (match) {
+        if (match.status === 'resolved') {
+          return sendJson(response, 400, { ok: false, error: 'match_already_resolved', message: 'No se puede cerrar un partido que ya ha sido resuelto.' });
+        }
+        match.status = 'closed';
+        foxpayMatchesMemory.set(id, match);
+      }
     }
     return sendJson(response, 200, { ok: true });
   } catch (error) {
@@ -10161,11 +10172,17 @@ async function handleFoxPayAdminMatchToggleDisabled(request, response, url) {
     if (pool) {
       const mRes = await pool.query('select status from foxpay_matches where id = $1', [id]);
       const currentStatus = mRes.rows[0]?.status;
+      if (currentStatus === 'resolved') {
+        return sendJson(response, 400, { ok: false, error: 'match_already_resolved', message: 'No se puede deshabilitar un partido que ya ha sido resuelto.' });
+      }
       nextStatus = currentStatus === 'disabled' ? 'open' : 'disabled';
       await pool.query('update foxpay_matches set status = $1 where id = $2', [nextStatus, id]);
     } else {
       const match = foxpayMatchesMemory.get(id);
       if (match) {
+        if (match.status === 'resolved') {
+          return sendJson(response, 400, { ok: false, error: 'match_already_resolved', message: 'No se puede deshabilitar un partido que ya ha sido resuelto.' });
+        }
         nextStatus = match.status === 'disabled' ? 'open' : 'disabled';
         match.status = nextStatus;
         foxpayMatchesMemory.set(id, match);
