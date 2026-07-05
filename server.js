@@ -9714,6 +9714,39 @@ async function handleFoxPayAdminUserDelete(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminUserAdjustBalance(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'finance_edit');
+  if (!admin) return;
+  
+  try {
+    const params = await readRequestParams(request, url);
+    const playerId = params.get('player_id') || '';
+    const amount = Math.floor(Number(params.get('amount') || 0));
+    
+    if (!playerId || amount === 0) {
+      return sendJson(response, 400, { ok: false, error: 'invalid_params' });
+    }
+
+    if (pool) {
+      const result = await pool.query(
+        'update foxpay_players set token_balance = token_balance + $1, updated_at = now() where player_id = $2 returning *',
+        [amount, playerId]
+      );
+      if (!result.rowCount) return sendJson(response, 404, { ok: false, error: 'user_not_found' });
+    } else {
+      const player = foxpayPlayers.get(playerId);
+      if (!player) return sendJson(response, 404, { ok: false, error: 'user_not_found' });
+      player.token_balance = Math.max(0, (Number(player.token_balance) || 0) + amount);
+      foxpayPlayers.set(playerId, player);
+    }
+
+    return sendJson(response, 200, { ok: true });
+  } catch (error) {
+    console.error('Adjust balance failed', error);
+    return sendJson(response, 500, { ok: false, error: 'adjust_balance_failed' });
+  }
+}
+
 async function handleFoxPayAdminUserAddCoins(request, response, url) {
   if (!requireFoxPayAdmin(request, response, 'users_edit')) return;
   const params = await readRequestParams(request, url);
@@ -12119,6 +12152,9 @@ const server = createServer((request, response) => {
 
   if (url.pathname === '/api/foxpay/admin/user/add-coins') {
     return handleFoxPayAdminUserAddCoins(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/user/adjust-balance') {
+    return handleFoxPayAdminUserAdjustBalance(request, response, url);
   }
 
   if (url.pathname === '/api/foxpay/admin/user/history') {
