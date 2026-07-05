@@ -1119,7 +1119,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
           date: new Date(c.created_at),
           dateStr: new Date(c.created_at).toLocaleDateString() + ' ' + new Date(c.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
           type: 'Comisión Red 👥',
-          desc: `Unilevel Nivel ${c.level || 1} (Ref: ${c.buyer_player_id || 'Usuario'})`,
+          desc: `Unilevel Nivel ${c.level || 1} (Compra: ${c.buyer_username || c.buyer_player_id || 'Usuario'} | $${Number(c.amount_usdt || 0).toFixed(0)} USDT)`,
           amount: Number(c.credited_tokens || 0),
           color: '#46d39e'
         });

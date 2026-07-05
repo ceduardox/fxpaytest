@@ -9774,6 +9774,13 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       commissions = [...foxpayCommissions.values()]
         .filter((row) => row.referrer_player_id === playerId)
+        .map(c => {
+          const buyer = foxpayPlayers.get(c.buyer_player_id) || {};
+          return {
+            ...c,
+            buyer_username: buyer.username || c.buyer_player_id
+          };
+        })
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       rouletteSpins = [...foxpayRouletteSpinsMemory.values()]
         .filter((row) => row.player_id === playerId)
@@ -9816,7 +9823,11 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
       withdrawals = witRes.rows;
 
       const commRes = await pool.query(
-        'select * from foxpay_commissions where referrer_player_id = $1 order by created_at desc',
+        `select c.*, p.username as buyer_username 
+         from foxpay_commissions c 
+         left join foxpay_players p on c.buyer_player_id = p.player_id 
+         where c.referrer_player_id = $1 
+         order by c.created_at desc`,
         [playerId]
       );
       commissions = commRes.rows;
