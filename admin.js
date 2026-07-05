@@ -1064,8 +1064,36 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
       dailyStatsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin historial diario registrado.</p>`;
     }
 
+    let totalCommissionsFox = 0;
+    if (Array.isArray(data.commissions)) {
+      data.commissions.forEach(c => {
+        totalCommissionsFox += Number(c.credited_tokens || 0);
+      });
+    }
+
+    let totalRouletteFox = 0;
+    if (Array.isArray(data.roulette_spins)) {
+      data.roulette_spins.forEach(s => {
+        totalRouletteFox += Number(s.credited_tokens || 0);
+      });
+    }
+
+    let totalPurchasesFox = 0;
+    if (Array.isArray(data.purchases)) {
+      data.purchases.forEach(p => {
+        if (p.status === 'approved') {
+          totalPurchasesFox += Number(p.tokens_rewarded || 0);
+        }
+      });
+    }
+
     const netBets = totalReturnAmount - totalBetAmount;
-    const finalEstimatedBalance = totalFoxMined + netBets;
+    const documentedInflows = totalFoxMined + totalCommissionsFox + totalRouletteFox + totalPurchasesFox;
+    const currentActualBalance = Number(user.token_balance || 0);
+    
+    // Difference between real balance and estimated balance represents manual admin adjustments
+    const estimatedBalance = documentedInflows + netBets;
+    const adminAdjustments = currentActualBalance - estimatedBalance;
 
     container.innerHTML = `
       <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
@@ -1080,18 +1108,48 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
         </div>
 
         <div style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;">
-          <h4 style="margin-bottom: 4px; color: var(--accent);"><iconify-icon icon="ph:calculator-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Resumen de Balance Neto de Juego</h4>
+          <h4 style="margin-bottom: 4px; color: var(--accent);"><iconify-icon icon="ph:calculator-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Auditoría de Balance y Flujo de FOX</h4>
+          
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
-            <span>Total FOX Producido (Minado):</span>
+            <span>1. Total FOX Producido (Minería):</span>
             <strong style="color: #46d39e;">+${fmt(totalFoxMined, 0)} FOX</strong>
           </div>
+          
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
-            <span>Resultado de Apuestas (Neto):</span>
-            <strong style="color: ${netBets >= 0 ? '#46d39e' : '#ff6b6b'};">${netBets >= 0 ? `+${fmt(netBets, 0)}` : `-${fmt(Math.abs(netBets), 0)}`} FOX</strong>
+            <span>2. Comisiones Unilevel (Referidos):</span>
+            <strong style="color: #46d39e;">+${fmt(totalCommissionsFox, 0)} FOX</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700; padding-top: 4px; color: #fff;">
-            <span>Balance de Juego Estimado:</span>
-            <span style="color: var(--accent);">${fmt(finalEstimatedBalance, 0)} FOX</span>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>3. Premios de la Ruleta:</span>
+            <strong style="color: #46d39e;">+${fmt(totalRouletteFox, 0)} FOX</strong>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>4. Recompensas por Compras/Packs:</span>
+            <strong style="color: #46d39e;">+${fmt(totalPurchasesFox, 0)} FOX</strong>
+          </div>
+
+          ${Math.abs(adminAdjustments) > 1 ? `
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>5. Ajustes manuales / GFOX del Administrador:</span>
+            <strong style="color: ${adminAdjustments >= 0 ? '#46d39e' : '#ff6b6b'};">${adminAdjustments >= 0 ? '+' : ''}${fmt(adminAdjustments, 0)} FOX</strong>
+          </div>
+          ` : ''}
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px; margin-top: 4px;">
+            <span>Total Ingresos Documentados:</span>
+            <strong style="color: #fff;">+${fmt(documentedInflows + (Math.abs(adminAdjustments) > 1 ? adminAdjustments : 0), 0)} FOX</strong>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px; color: #ff6b6b;">
+            <span>Resultado de Apuestas (Neto):</span>
+            <strong>${netBets >= 0 ? `+${fmt(netBets, 0)}` : `-${fmt(Math.abs(netBets), 0)}`} FOX</strong>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: 700; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); color: var(--accent);">
+            <span>Balance Actual en Cuenta:</span>
+            <span>${fmt(currentActualBalance, 0)} FOX</span>
           </div>
         </div>
       </div>

@@ -9758,6 +9758,8 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
     let dailyStats = [];
     let purchases = [];
     let withdrawals = [];
+    let commissions = [];
+    let rouletteSpins = [];
 
     if (!pool) {
       dailyStats = [...foxpayPlayerDailyStatsMemory.values()]
@@ -9767,6 +9769,12 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         .filter((row) => row.player_id === playerId)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       withdrawals = Array.from(foxpayWithdrawalsMemory.values())
+        .filter((row) => row.player_id === playerId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      commissions = [...foxpayCommissions.values()]
+        .filter((row) => row.referrer_player_id === playerId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      rouletteSpins = [...foxpayRouletteSpinsMemory.values()]
         .filter((row) => row.player_id === playerId)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     } else {
@@ -9787,13 +9795,27 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         [playerId]
       );
       withdrawals = witRes.rows;
+
+      const commRes = await pool.query(
+        'select * from foxpay_commissions where referrer_player_id = $1 order by created_at desc',
+        [playerId]
+      );
+      commissions = commRes.rows;
+
+      const spinRes = await pool.query(
+        'select * from foxpay_roulette_spins where player_id = $1 order by created_at desc',
+        [playerId]
+      );
+      rouletteSpins = spinRes.rows;
     }
 
     return sendJson(response, 200, {
       ok: true,
       daily_stats: dailyStats,
       purchases: purchases,
-      withdrawals: withdrawals
+      withdrawals: withdrawals,
+      commissions: commissions,
+      roulette_spins: rouletteSpins
     });
   } catch (error) {
     console.error('FoxPay admin user history fetch failed', error);
