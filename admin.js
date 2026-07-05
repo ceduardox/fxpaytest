@@ -1284,6 +1284,78 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
       </div>
     `;
 
+    // 4. Generate referrals HTML
+    let referralsHtml = '';
+    if (data.referrals && data.referrals.length > 0) {
+      let rows = '';
+      data.referrals.forEach(ref => {
+        rows += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td data-label="Usuario" style="padding: 8px; font-size: 0.85rem;"><strong>${ref.username || ref.player_id}</strong></td>
+            <td data-label="Paquete" style="padding: 8px; font-size: 0.85rem; font-weight: 600; color: var(--accent);">${ref.active_package_id || 'free'}</td>
+            <td data-label="Saldo" style="padding: 8px; font-size: 0.85rem; color: #46d39e; font-weight: 500;">${fmt(ref.token_balance, 0)} FOX</td>
+            <td data-label="Registro" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${ref.created_at ? new Date(ref.created_at).toLocaleDateString() : 'Sin fecha'}</td>
+          </tr>
+        `;
+      });
+      referralsHtml = `
+        <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Usuario</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Paquete Activo</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Saldo FOX</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha Registro</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      referralsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">No posee referidos directos en su red.</p>`;
+    }
+
+    // 5. Generate referral purchases HTML
+    let refPurchasesHtml = '';
+    if (data.referral_purchases && data.referral_purchases.length > 0) {
+      let rows = '';
+      data.referral_purchases.forEach(p => {
+        rows += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <td data-label="Usuario" style="padding: 8px; font-size: 0.85rem;"><strong>${p.buyer_username || p.player_id}</strong></td>
+            <td data-label="Paquete" style="padding: 8px; font-size: 0.85rem;">${p.package_id || 'N/A'}</td>
+            <td data-label="Monto" style="padding: 8px; font-size: 0.85rem; font-weight: 600; color: #46d39e;">$${Number(p.amount_usdt).toFixed(0)} USDT</td>
+            <td data-label="Estado" style="padding: 8px; font-size: 0.85rem;">${statusPill(p.status)}</td>
+            <td data-label="Fecha" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${new Date(p.created_at).toLocaleDateString()}</td>
+          </tr>
+        `;
+      });
+      refPurchasesHtml = `
+        <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Referido</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Paquete</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Monto USD</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
+                <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      refPurchasesHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin compras de paquetes en su red.</p>`;
+    }
+
     container.innerHTML = `
       <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
         <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
@@ -1299,6 +1371,18 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
         <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
           <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa (FOX Minado)</h4>
           ${dailyStatsHtml}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:users-three-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Miembros de su Red (Referidos Directos)</h4>
+            ${referralsHtml}
+          </div>
+          
+          <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
+            <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:shopping-cart-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Compras de Paquetes en su Red (USDT)</h4>
+            ${refPurchasesHtml}
+          </div>
         </div>
 
         <div style="padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;">

@@ -9761,6 +9761,8 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
     let commissions = [];
     let rouletteSpins = [];
     let bets = [];
+    let referrals = [];
+    let referralPurchases = [];
 
     if (!pool) {
       dailyStats = [...foxpayPlayerDailyStatsMemory.values()]
@@ -9800,6 +9802,30 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
             odds_team_a: match.odds_team_a,
             odds_team_b: match.odds_team_b,
             odds_draw: match.odds_draw
+          };
+        })
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      const playerObj = foxpayPlayers.get(playerId) || {};
+      const playerUsername = playerObj.username || '';
+      referrals = [...foxpayPlayers.values()]
+        .filter(p => p.referrer_id === playerId || (playerUsername && p.referrer_id === playerUsername))
+        .map(p => ({
+          player_id: p.player_id,
+          username: p.username,
+          email: p.email,
+          active_package_id: p.active_package_id,
+          token_balance: p.token_balance,
+          created_at: p.created_at
+        }));
+      const refIds = new Set(referrals.map(r => r.player_id));
+      referralPurchases = [...foxpayPurchasesMemory.values()]
+        .filter(p => refIds.has(p.player_id))
+        .map(p => {
+          const buyer = foxpayPlayers.get(p.player_id) || {};
+          return {
+            ...p,
+            buyer_username: buyer.username || p.player_id
           };
         })
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -9847,6 +9873,24 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
         [playerId]
       );
       bets = betsRes.rows;
+
+      const refRes = await pool.query(
+        `select player_id, username, email, active_package_id, token_balance, created_at 
+         from foxpay_players 
+         where referrer_id = $1 or referrer_id = (select username from foxpay_players where player_id = $1 limit 1)`,
+        [playerId]
+      );
+      referrals = refRes.rows;
+
+      const refPurRes = await pool.query(
+        `select p.*, pl.username as buyer_username 
+         from foxpay_purchases p 
+         join foxpay_players pl on p.player_id = pl.player_id 
+         where pl.referrer_id = $1 or pl.referrer_id = (select username from foxpay_players where player_id = $1 limit 1)
+         order by p.created_at desc`,
+        [playerId]
+      );
+      referralPurchases = refPurRes.rows;
     }
 
     return sendJson(response, 200, {
@@ -9856,7 +9900,9 @@ async function handleFoxPayAdminUserHistory(request, response, url) {
       withdrawals: withdrawals,
       commissions: commissions,
       roulette_spins: rouletteSpins,
-      bets: bets
+      bets: bets,
+      referrals: referrals,
+      referral_purchases: referralPurchases
     });
   } catch (error) {
     console.error('FoxPay admin user history fetch failed', error);
