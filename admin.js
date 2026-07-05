@@ -932,6 +932,104 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
     `;
   }
 
+  // Daily Stats table HTML (last 7 days)
+  let dailyStatsHtml = '';
+  if (Array.isArray(user.daily_stats) && user.daily_stats.length > 0) {
+    let rows = '';
+    const sortedStats = [...user.daily_stats].sort((a, b) => String(b.daily_key).localeCompare(String(a.daily_key)));
+    sortedStats.forEach(stat => {
+      rows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td data-label="Día" style="padding: 8px; font-size: 0.85rem;"><strong>${stat.daily_key}</strong></td>
+          <td data-label="Tokens" style="padding: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600;">+${fmt(stat.earned_tokens, 0)} FOX</td>
+          <td data-label="USD" style="padding: 8px; font-size: 0.85rem; color: #46d39e; font-weight: 500;">${money(stat.earned_usd)}</td>
+          <td data-label="Taps" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${fmt(stat.taps, 0)} taps</td>
+        </tr>
+      `;
+    });
+    dailyStatsHtml = `
+      <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Día</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tokens</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Equiv. USD</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Taps</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    dailyStatsHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin historial diario registrado.</p>`;
+  }
+
+  // Transactions (purchases & withdrawals) table HTML
+  let txHtml = '';
+  const userPurchases = (state.overview.purchases || []).filter(p => p.player_id === user.player_id);
+  const userWithdrawals = (state.overview.withdrawals || []).filter(w => w.player_id === user.player_id);
+  const txList = [];
+
+  userPurchases.forEach(p => {
+    txList.push({
+      type: 'Compra',
+      amount: `${money(p.amount_usdt)} USDT`,
+      status: p.status,
+      date: p.created_at,
+      color: '#46d39e',
+      icon: 'ph:arrow-down-left-bold'
+    });
+  });
+  userWithdrawals.forEach(w => {
+    txList.push({
+      type: 'Retiro',
+      amount: `${money(w.amount_usdt)} USDT`,
+      status: w.status,
+      date: w.created_at,
+      color: '#ff6b6b',
+      icon: 'ph:arrow-up-right-bold'
+    });
+  });
+
+  txList.sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
+
+  if (txList.length === 0) {
+    txHtml = `<p style="color: var(--muted); font-size: 0.85rem; margin: 10px 0;">Sin transacciones registradas.</p>`;
+  } else {
+    let txRows = '';
+    txList.forEach(tx => {
+      txRows += `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td data-label="Tipo" style="padding: 8px; font-size: 0.85rem;"><span style="color: ${tx.color}; font-weight: 600;"><iconify-icon icon="${tx.icon}" style="vertical-align: middle; margin-right: 4px;"></iconify-icon>${tx.type}</span></td>
+          <td data-label="Monto" style="padding: 8px; font-size: 0.85rem; font-weight: 600;">${tx.amount}</td>
+          <td data-label="Estado" style="padding: 8px; font-size: 0.85rem;">${statusPill(tx.status)}</td>
+          <td data-label="Fecha" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${new Date(tx.date).toLocaleDateString()}</td>
+        </tr>
+      `;
+    });
+    txHtml = `
+      <div class="bets-table-wrap" style="display: block !important; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Tipo</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Monto</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Estado</th>
+              <th style="padding: 8px; font-size: 0.8rem; color: var(--muted);">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${txRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   return `
     <details class="user-mobile-card user-admin-card" ${open ? 'open' : ''}>
       <summary class="user-admin-summary">
@@ -1012,9 +1110,20 @@ function renderAdminUserCard(user = {}, sponsorText, open = false) {
           <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:soccer-ball-bold"></iconify-icon>Historial de Apuestas (Mundial)</h4>
           ${betsHtml}
         </section>
+
+        <section class="user-admin-balance-panel" style="grid-column: span 1; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold"></iconify-icon>Producción Diaria (Últimos 7 días)</h4>
+          ${dailyStatsHtml}
+        </section>
+
+        <section class="user-admin-balance-panel" style="grid-column: span 1; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:swap-bold"></iconify-icon>Historial de Transacciones (USDT)</h4>
+          ${txHtml}
+        </section>
       </div>
     </details>
   `;
+}
 }
 
 function renderUsersLegacy() {
