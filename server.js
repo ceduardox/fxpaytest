@@ -10466,6 +10466,47 @@ async function handleFoxPayAdminCreateBackup(request, response, url) {
   }
 }
 
+async function handleFoxPayAdminDownloadBackup(request, response, url) {
+  const admin = requireFoxPayAdmin(request, response, 'finance_edit');
+  if (!admin) return;
+
+  try {
+    let players = [];
+    let bets = [];
+    let matches = [];
+
+    if (!pool) {
+      players = [...foxpayPlayers.values()];
+      bets = [...foxpayBetsMemory.values()];
+      matches = [...foxpayMatchesMemory.values()];
+    } else {
+      const pRes = await pool.query('select player_id, username, token_balance, game_fox_balance, created_at from foxpay_players');
+      players = pRes.rows;
+      const bRes = await pool.query('select * from foxpay_bets');
+      bets = bRes.rows;
+      const mRes = await pool.query('select * from foxpay_matches');
+      matches = mRes.rows;
+    }
+
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      generator: admin.username || 'system',
+      players,
+      bets,
+      matches
+    };
+
+    response.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="foxpay_backup_${new Date().toISOString().split('T')[0]}.json"`
+    });
+    return response.end(JSON.stringify(backupData, null, 2));
+  } catch (error) {
+    console.error('Download backup failed', error);
+    return sendJson(response, 500, { ok: false, error: 'download_backup_failed' });
+  }
+}
+
 async function handleFoxPayAdminMaintenanceReset(request, response, url) {
   const admin = requireFoxPayAdmin(request, response, 'maintenance_edit');
   if (!admin) return;
@@ -12212,6 +12253,9 @@ const server = createServer((request, response) => {
   }
   if (url.pathname === '/api/foxpay/admin/match/create-backup') {
     return handleFoxPayAdminCreateBackup(request, response, url);
+  }
+  if (url.pathname === '/api/foxpay/admin/match/download-backup') {
+    return handleFoxPayAdminDownloadBackup(request, response, url);
   }
   if (url.pathname === '/api/foxpay/admin/maintenance/reset') {
     return handleFoxPayAdminMaintenanceReset(request, response, url);
