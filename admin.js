@@ -1029,17 +1029,24 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
 
     // 2. Generate daily stats HTML & calculate total fox mined
     let dailyStatsHtml = '';
-    let totalFoxMined = 0;
+    let totalWalletFoxMined = 0;
+    let totalFreeGameFoxMined = 0;
     if (data.daily_stats && data.daily_stats.length > 0) {
       let rows = '';
       data.daily_stats.forEach(stat => {
-        totalFoxMined += Number(stat.earned_tokens || 0);
+        const minedAmount = Number(stat.earned_tokens || 0);
+        const isFreeModeStat = String(stat.active_package_id || 'free') === 'free';
+        if (isFreeModeStat) {
+          totalFreeGameFoxMined += minedAmount;
+        } else {
+          totalWalletFoxMined += minedAmount;
+        }
         rows += `
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
             <td data-label="Día" style="padding: 8px; font-size: 0.85rem;"><strong>${stat.daily_key}</strong></td>
-            <td data-label="Tokens" style="padding: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600;">+${fmt(stat.earned_tokens, 0)} FOX</td>
+            <td data-label="Tokens" style="padding: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600;">+${fmt(stat.earned_tokens, 0)} ${isFreeModeStat ? 'GFOX' : 'FOX'}</td>
             <td data-label="USD" style="padding: 8px; font-size: 0.85rem; color: #46d39e; font-weight: 500;">${money(stat.earned_usd)}</td>
-            <td data-label="Taps" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${fmt(stat.taps, 0)} taps</td>
+            <td data-label="Taps" style="padding: 8px; font-size: 0.85rem; color: var(--muted);">${fmt(stat.taps, 0)} taps${isFreeModeStat ? ' - modo free' : ''}</td>
           </tr>
         `;
       });
@@ -1088,7 +1095,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
     }
 
     const netBets = totalReturnAmount - totalBetAmount;
-    const documentedInflows = totalFoxMined + totalCommissionsFox + totalRouletteFox + totalPurchasesFox;
+    const documentedInflows = totalWalletFoxMined + totalCommissionsFox + totalRouletteFox + totalPurchasesFox;
     const currentActualBalance = Number(user.token_balance || 0);
     
     // Difference between real balance and estimated balance represents manual admin adjustments / migration initial balances
@@ -1098,9 +1105,10 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
     // 3. Build chronological ledger
     const ledger = [];
 
-    // Minado
+    // Minado acreditado al wallet FOX
     if (data.daily_stats && data.daily_stats.length > 0) {
       data.daily_stats.forEach(stat => {
+        if (String(stat.active_package_id || 'free') === 'free') return;
         ledger.push({
           date: new Date(stat.daily_key + 'T12:00:00Z'),
           dateStr: stat.daily_key,
@@ -1265,7 +1273,12 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
       `;
     });
 
+    const ledgerModeNote = totalFreeGameFoxMined > 0
+      ? `<p style="margin: 0 0 12px; color: var(--muted); font-size: 0.85rem;">La produccion en modo free se registra como saldo de juego y no entra a este extracto del wallet FOX.</p>`
+      : '';
+
     const ledgerHtml = `
+      ${ledgerModeNote}
       <div class="bets-table-wrap" style="display: block !important; max-height: 350px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; width: 100%;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
@@ -1369,7 +1382,7 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
         </div>
         
         <div class="user-admin-balance-panel" style="border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.15);">
-          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa (FOX Minado)</h4>
+          <h4 style="margin-bottom: 12px;"><iconify-icon icon="ph:chart-bar-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Producción Diaria Completa (${totalFreeGameFoxMined > 0 ? 'FOX / GFOX' : 'FOX Minado'})</h4>
           ${dailyStatsHtml}
         </div>
 
@@ -1389,10 +1402,17 @@ window.loadPlayerHistoryOnDemand = async function(playerId) {
           <h4 style="margin-bottom: 4px; color: var(--accent);"><iconify-icon icon="ph:calculator-bold" style="vertical-align: middle; margin-right: 6px;"></iconify-icon>Auditoría de Balance y Flujo de FOX</h4>
           
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
-            <span>1. Total FOX Producido (Minería):</span>
-            <strong style="color: #46d39e;">+${fmt(totalFoxMined, 0)} FOX</strong>
+            <span>1. Total FOX Producido al Wallet:</span>
+            <strong style="color: #46d39e;">+${fmt(totalWalletFoxMined, 0)} FOX</strong>
           </div>
           
+          ${totalFreeGameFoxMined > 0 ? `
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
+            <span>1B. Produccion Modo Free (No wallet):</span>
+            <strong style="color: var(--muted);">+${fmt(totalFreeGameFoxMined, 0)} GFOX</strong>
+          </div>
+          ` : ''}
+
           <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 6px;">
             <span>2. Comisiones Unilevel (Referidos):</span>
             <strong style="color: #46d39e;">+${fmt(totalCommissionsFox, 0)} FOX</strong>
