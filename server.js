@@ -2078,7 +2078,10 @@ async function seedWorldCupMatches() {
 
     // New Matches July 7
     { id: 'wc_2026_07_07_1', team_a: 'Argentina', team_b: 'Egipto', flag_a: '🇦🇷', flag_b: '🇪🇬', venue: 'Octavos de Final', match_date: '2026-07-07T17:00:00Z', odds_team_a: 1.37, odds_draw: 5.00, odds_team_b: 12.00 },
-    { id: 'wc_2026_07_07_2', team_a: 'Suiza', team_b: 'Colombia', flag_a: '🇨🇭', flag_b: '🇨🇴', venue: 'Octavos de Final', match_date: '2026-07-07T20:00:00Z', odds_team_a: 3.70, odds_draw: 3.15, odds_team_b: 2.32 }
+    { id: 'wc_2026_07_07_2', team_a: 'Suiza', team_b: 'Colombia', flag_a: '🇨🇭', flag_b: '🇨🇴', venue: 'Octavos de Final', match_date: '2026-07-07T20:00:00Z', odds_team_a: 3.70, odds_draw: 3.15, odds_team_b: 2.32 },
+
+    // New Matches July 9
+    { id: 'wc_2026_07_09_1', team_a: 'Francia', team_b: 'Marruecos', flag_a: '🇫🇷', flag_b: '🇲🇦', venue: 'Cuartos de Final', match_date: '2026-07-09T20:00:00Z', odds_team_a: 1.62, odds_draw: 3.60, odds_team_b: 6.00 }
   ];
 
   if (!pool) {
